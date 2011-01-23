@@ -1,0 +1,16 @@
+Requirements:
+  at least JDK 1.6
+
+Setup:
+  - create a folder with the contents of the installation archive
+  - set the environment variable JAVA_HOME accordingly.
+  - set the environment variable MANDEL_HOME to the installation folder.
+
+  - the file .mandtool in the installation folder contains all
+    necessary settings
+
+Calling:
+  The bin folder contains the startup script mand.bat
+  - to call the GUI:  mand
+  - to call the calculation server: mand -c Mand -s
+  - to call any mandel command use mand -c <cmd> <options>
