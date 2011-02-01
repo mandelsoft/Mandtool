@@ -1,0 +1,21 @@
+Mandtool Tool Set (Copyright 2011, Uwe Krueger)
+
+This Java Archive contains the toolset for working with Mandelbrot set areas.
+It includes a GUI (applet and standalone), a calculation server and various
+tools to work with areas on the command line level to archive, rename and sync
+folders containing area related data files.
+
+The toolset is maintained by
+  Uwe Krüger
+  Karlsruhe
+  Germany
+  uwe.krueger@beauty-of-chaos.de
+  http://www.beauty-of-chaos.de
+
+On the web site you will find a default image database that can be browsed
+online, or used as an extension base for your own image database.
+The URL for using as an extension database is
+  http://beauty-of-chaos.de/mandel/mandel
+
+Have fun
+Uwe Krüger

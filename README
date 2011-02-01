@@ -14,3 +14,16 @@ Calling:
   - to call the GUI:  mand
   - to call the calculation server: mand -c Mand -s
   - to call any mandel command use mand -c <cmd> <options>
+
+  As log as the database locazed in MANDEL_HOME is usedm the commands
+  can be called from any folder. If you want to use another database
+  on your machine the the cammand should be started from the
+  appropriate root folder. For the UI, the root folder can be passed
+  as argument to the explorer command.
+
+Native GMP Support:
+  - Only available for MS Windows 32 bit platforms, not for 64 bit.
+  - Please install the MS Redistributable Package.
+  - You can verify, whether the DLL works correctly with the command
+       bin\mand -c com.mandelsoft.mand.MandIter
+    It should not provide an error and notify, that the DLL is used.

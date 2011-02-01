@@ -1,0 +1,641 @@
+             Mandtool - A Toolset for Exploring the Mandelbrot Set
+                              by Uwe Krueger
+
+1. Overview
+
+The Mandtool is a graphical user interface for displaying, creating and
+coloring of mandelbrot images. It is part of a toolset consisting mainly of
+three major tools: area selection, generation and processing of mandelbrot
+images.
+
+The graphical user interface can be used to work on a local data base of
+requests and images or to browser image bases provided by web sites like the
+one hosted by www.beauty-of-chaos.de. Since version 1.0 it is also possible
+to extends remote image bases with a areas hold in a local image base.
+
+This tutorial is based on version 1.0 of the tool set. Unfortunately it is
+far from being complete. I have tried to focus on central topics required to
+work with the tool.
+
+1.1 Tool Overview
+   - Mandtool:    graphical user interface for displaying, creating and
+                  coloring of mandelbrot images
+   - Mand:        calculation request processing to generate raw iteration
+                  data files for requested areas of the mandelbrot set.
+   - MandelCache: maintaining a folder based cache for file meta data intended
+                  for use by the URL based access to mandelbrot images
+   - Image Base Sync: Sync a productive and working version of an image base
+   - Archiver     Archive a delta between a productive and  working version
+                  and deploy it on the productive version. (This is used
+                  to update the image base on the tool's website from my
+                  local database.)
+
+The Mandtool is used to feed the request processing tool with new
+calculation requests and to work with raw iteration data provided by this
+processing tool to create appealing mandelbrot images.
+
+1.2 Basic Layout
+
+The toolset works on a set of files accessible via filesystem or http requests.
+Those files describe:
+- configuration information of an image base (the .mandtool file),
+- area lists (for example the favorites and todo list),
+- colormaps for coloring mandel images and
+- area related information.
+
+The set of related files typically resides in a single directory tree described
+by a configuration file used by all parts of the toolset. This configuration
+file describes the used file system layout and the places for dedicated files.
+For example it describes where the favorites should be stored, or where
+colormap, request and image files should be stored or searched for.
+
+The central elements are files providing area information and additional data.
+The tool manages a hierarchy of sub areas based an a root area (typically
+describing the coodinates for the whole mandelbrot view). To identity the
+relation of the different areas to each other a dedicated naming scheme will
+be used for those areas that is also used to name the files related to a
+dedicated area. Those files may describe area meta data, processing requests,
+raw raster data, colormaps and mapping information.
+
+Starting with the root area it is possible to drill down into already
+processed sub areas or to create new subareas together with the appropriate
+calculation requests for the processing environment.
+
+It is possible to work on a closed area database in the way that it does not
+span multiple, independently managed locations. A second possibility is to
+combine and/or extend multiple foreign image bases, for example by accessing
+data bases accessible via a web server like the one under
+www.beauty-of-chaos.de.
+
+1.3 Labeling Areas
+
+The tool manages a hierarchy of sub areas and provides unique names for
+every selected sub area that allow to identify the location of the area in the
+hierarchy. The root area has the name '0'. The selected sub areas of an image
+are labeled with the letters 'a'-'z'. This letter is just appended to the name
+of the enclosing area to provide the name for the sub area. The letter does
+not depend on the location of the sub area in relation to its enclosing area.
+This way it is possible to have up to 26 sub areas that can be freely choosen
+using the mandtool.
+
+When choosing the name a leading 0 followed by letters is removed. So, the
+direct sub areas of the root area get the names 'a' to 'z'. As a result there
+will be area names like aa (the first sub area of area a), ab, or aaabcaa.
+To shorten the names every sequence of identical letters (more than one) are
+substituted the length of the sequence followed by the letter that is repeated.
+Therefore the name aaabcaa is compressed to the short version 3abc2a.
+
+1.3.1 Qualified names
+
+Each area is described by an area name (called mandel name). It describes the
+location in the area tree. For each area there might be several variations.
+The name of such a variation is called Qualified Mandel Name. It consists
+of a mandel name followed by a dash and a qualifier describing the variation.
+This might be another resolution, typically labeled with <width>x<height>. But
+it is also possible to vary the image proportion. Basically such variations
+should still relate to the original area. Examples for qualified names are
+ac3ad-4000x3000 or ac3ad-poster. A special case for a qualified name is the
+original mandel name (without a dash suffix).
+
+1.3.2 Located names
+
+If used in the multi image base mode, each used image base gets a label
+to identify the origin of the area and to support independent name spaces
+for the different data bases allowing sub areas for foreign area trees.
+The configuration files described the mapping between labels and image
+base locations (URLs). These labels are used to extend the name scheme for
+mandel names and qualified mandel names.
+
+The label is appended to an area name separated by an '@' to describe the origin
+of the area. If a subsequent sub area specification in another db follows,
+it is appended with a preceding '~'.
+
+For example the name a3b@root describes the area a3b in the foreign image base
+labeled 'root'. The name a3b@root~2ab then describes the local sub area 2ab for
+this foreign area located in the local image base. If there are more nesting
+levels the name may be more complex, for example a3b@root~c@lvl1~2ab.
+
+Qualified names may also be local or remote. For example a3b@root-local,
+a3b-4000x3000@root or even a3b@root-variation@other.
+
+1.4 Mandel Lists and Folders
+
+1.4.1 Lists
+The tool manages a set of so-called mandel lists. A mandel list contains
+a set of qualified area names. It can be visualized as a text table or as a
+galery of thumbnail views and used to navigate directly to a dedicated area
+instead of diving into the tree subarea by subarea.
+
+There are several standard lists known ans exploited by the tool: favorites,
+todos, key areas, tool and window memory, unseen and the window history. While
+favorites, todos, key areas and memory lists are maintained
+by the user the unseen and history lists are implicitly handled by the tool.
+Additionaly there may be lists created by the user.
+
+Persistent lists are stored in list files, for example the files favorites,
+todos and seen in the root folder of an image base.
+
+1.4.2 Folders
+The lists are organized by a folder tree. Every folder of this tree may
+(or may not) contain a list. The tool manages a predefined root tree that
+organizes the standard lists managed by the tool plus the optional user lists.
+The intermediate folders of this tree do not contain lists, they area just used
+to structure the list folders down the tree.
+
+1.4.3 Folder Tree Files
+Typically the list files may contain a whole folder sub tree instead of a
+pure plain single list (exception: the seen file and the (key) area file just
+contain a plain list). Those files contain a folder hierarchy and the qualified
+names for the lists associated with the folders. In non-readonly mode those
+sub trees can be manipulated using the list browser window of the mandtool,
+either by buttons or by drag'n drop.
+
+The file syntax is as follows:
+
+  file     ::= { <line> }
+  line     ::= <comment> | <empty> | <qualified name> \n | <folder>
+  comment  ::= '#' { <any char> \n }
+  empty    ::= \n
+  folder   ::= <foldername> [ <thumbnail> ] '{' \n
+               { <attribute> }
+               { <line> }
+               '}' \n
+  thumbnail::= '[' <qualified name> ']'
+  attribute::= <name> '=' <value> \n
+
+1.5 Lists with a special meaning
+
+Some lists are known by the tool. This means that there is a special
+support for those lists and/or the content of the lists is used
+for navigation and/or visualization purposes.
+
+1.5.1 The Favorites
+
+The favorites list is a list with a standard shortcut in the main window's
+Lists submenu. This allows a quick manipulation of the list by the user.
+
+The favorites file used to persist the favorites list may contain a
+whole folder tree of list folders maintained by the user. But there is only
+a quick access for the root list. Nevertheless alls contained areas in all
+folders are taken as favorites. The folder tree can be used to hierachically
+organize the favorites instead of using a flat list.
+
+The meaning of the list is to remember special favorite areas. This is
+supported by the tool by the possibility of highlighting. If an area is
+somewhere in the favorites folder tree a thick border for sub area highlights
+will be used for all parents of this area. This means, all
+highlighed subareas that contain a favorite area will be specially marked.
+This allows for a concious navigation down the tree towards favorites.
+
+Addtionally favorites will be indicated in the Info Popup.
+
+1.5.2 The Todos
+
+The meaning of the list is to remember areas that need further investigations
+not jet started. The Todos are handled like the favorites but without the
+highlighting support.
+
+1.5.3 The Key areas
+
+The meaning of this list is to mark special key areas that are used for
+variations in the sub area selection. Typically there is a starting
+area where the investigation begins. Down a selected area there are many
+intermediate (well known or boring structures) until the effect of the
+selection is visible. Thoses areas are intended to be marked as key areas.
+
+This may require an example. Have a look at area 3abac3aba on the
+image base at www.beauty-of-chaos.de. Here multiple subareas will be found
+used as different anchor points of 'mirroring'. For example the sub area a
+is followed by some intermediate areas until the 'mirrored' result is visible
+in area 3abac3ab4a. Both areas have been selected as key areas.
+(This a quite new feature introduced with version 1.0, so it not yet widely
+used in this image base.)
+
+Key areas allow a fast navigation, by going up to the next key area and
+listing all direct sub key areas for the actual area. Addtionally the
+upstream navigation can be enabled to use the automark feature to highlight
+the start area in the navigation taget.
+
+But this way of usage is just a proposal, you can use key areas as you want.
+Like favorites key areas are indicated in the Info Popup.
+
+1.5.4 The Memory
+
+The memory can be used to remember certain areas while using the tool.
+Those lists are held in memory and are lost when thetool exists.
+
+There are two flavors of memory list: the window memory and the tool memory.
+While the window memory is local to a main display window, the tool memory
+is shared among all windows created by the same tool instance.
+
+Like other standard lists, the memory is again a folder tree. For the top level
+shared memory list there is a manipulation and navigation shortcut in the
+main window's context menu.
+
+1.5.5 The Unseen
+
+The unseen list is a built-in flat list showing all areas not yet seen.
+Therefor the tool manages a seen-list file where all areas are stored that have
+at least been visited once.
+
+This list is only available in non-readonly mode.
+
+1.5.6 The History
+
+The tools stores the viewing history of a main window in the window's history
+list. The history list is indexed by a history number. It can be used
+to navigate back to ares visited in the past. Like the window memory this
+list is non-persistent and gets lost when the window is closed.
+
+2 Mandtool Windows
+
+The mandtool is the central part of the tool set. Its most prominent window
+is the main display window used for displaying an image for an area,
+interactive navigation down the tree and inspecting and selecting of
+new sub areas. Shortly, it's the UI for the whole tools set.
+The main window is available as applet, also.
+
+Besides the central main window there are lot of secondary windows that
+can be opened from the main window to assist for supporting tasks. This
+section contains a detailed description for all those windows.
+
+2.1 Main Window
+
+The main window displays an area of the choosen fractal type. So far,
+only the mandelbrot set is supported.
+
+It supports some mouse actions for navigation and image manipulation. First
+of all, the window corners are sensitive for single clicks
+(like invisible buttons):
+  - Upper left:   display area attributes in a separate window
+  - Upper right:  display colormap window for colormap manipulation
+  - Lower left:   go up to parent area
+  - Lower right;  toggle sub area display mode
+
+Clicking into a sub area (whether hightlighted or not) will issue actions
+on this sub area.
+  - double click
+     * without key: select sub area to display in main window (dive into)
+     * shift key:   show sub area attributes
+     * control key: edit area attributes for unprocessed sub area
+                    calculation requests (in non-readonly mode)
+  - single click with alt key:
+     display directly nested sub areas in the selected sub area
+
+If the Julia Image window is active the julia coordinate of the displayed
+image can be adjusted by moving the mouse while keeping the ALT key pressed.
+
+2.1.1 Sub Area creation (in non-readonly mode)
+
+Dragging can be used to create a new sub area or to modify an existing one.
+Clicking somewhere on the main window and moving the mouse with keeping the
+mouse button pressed draws a new rectangle for a new sub area. Relaesing the
+button show the sub area creation screen.
+
+The same screen appears when selecting an already existing sub area calculation
+request for modification. While this window is shown it is possible to modify
+the dedicated rectangle on the main window. Selecting the border of the
+rectangle and moving the mouse keeping the mouse button pressed changes the
+size of the area. Clicking inside the area while pressing the shit key and
+moving the mouse will relocate the area. This modification mode will be shown
+by changing the cursor to a resize or move cursor.
+
+2.1.2 Sub area highlight
+
+Sub areas are shown as rectangles on the main window. There are several
+borders to indicate different states of the sub area.
+  - solid line
+    regular sub area with already available raster and/or image data.
+    Those areas can be selected by a double click.
+  - dashed line
+    the shown sub area is scheduled to be calculated and the rsater data is
+    not yet available to display the sub area.
+  - thick line
+    the area is hightlighted because the area or one of its nested areas
+    fullfills the selected hightlight criteria. This can be selected via
+    the hightlight context menu.
+
+2.1.3 Main Context Menu
+
+Pressing the context menu mouse button on the main window will show the
+main context menu. It provides access to nearly all available functions.
+The following menu entries can be found:
+  - List Shortcuts.
+      This sub menu leads by default to some important area lists.
+    - Favorites
+      It allows to add the currently displayed image to
+      the user's favorites list, or to remove it again.
+    - Todos
+      It allows to add the currently displayed image to
+      the user's todo list, or to remove it again.
+    - Key Areas
+      It allows to add the currently displayed image to
+      the key area list, or to remove it again.
+    - Memory
+      It allows to add the currently displayed image to
+      a temoporary in-memory list, or to remove it again.
+      Additionally it can be used to load one of the stored
+      areas via a further sub menu.
+  - Mark
+      The mark sub menu can be used to manage one explicitly remembered
+      area. The marked area is always highlighted on the main display and
+      it can be used for quick navigation, establishing links between
+      two areas and to initiate a journey from the currently displayed
+      area to the marked one.
+  - Sub area hightlight sub menu.
+      On the main window hightlighted sub areas
+      are show with thick lines. This menu can be used to select the
+      hightlight criteria. It can be choosen to switch among
+          * no hightlighting at all
+          * new raster images
+          * favorites
+          * last area, if zooming out
+  - Sub area sub menu.
+      Here it is possible to switch on and off the display of nested
+      sub areas on the main display. Additionally it contains a sub menu
+      showing all direct sub areas that allows to load them.
+  - Links.
+      This sub menu show explicitly maintained links for the currently
+      displayed area. Links can be established via the Mark sub menu.
+
+  - Colormap.
+      Show the colormap window. It visualizes the currently used colormap
+      and allows to manipulate it.
+  - Rotate.
+      Start and stop the rotation of the current colormap
+  - Image Control.
+      Show the image control window. It provides access to several settings
+      controlling the raster mapping and display behaviour. It also allows
+      to choose among different variants found for the actual area.
+
+  - Image Meta Data.
+      Show the area meta data window.
+  - Parent.
+      Navigate to the parent image
+  - Key Area.
+      Navigate back to the last key area up the area tree.
+
+  - Last Fork.
+      Navigate back to the last area with more than one sub areas.
+  - Variation.
+      Show the variation creation window.
+  - Refine.
+      Show the image refinement creation window.
+  - Derived Lists.
+      Provide access to various area lists derived for the currently
+      displayed area. They describe subsets of all (transitive) sub areas
+      according to dedicated criteria.
+
+  - Lists sub menu.
+      Show the mandel lists window. It provides tabs for the most
+      promitenmt lists, like Unseen (not in readonly mode), Favorites, Todos,
+      Variants and (main window area) History.
+  - List Browser.
+      Start a new list browser window. Thre may be multiple browser windows. It
+      shows the list folder tree and a single currently selected list. The
+      list folder tree contains all the lists available in the currently
+      running instance of the tool. In non-readonly mode it also allows
+      to modify the non-constant folder tree and the list content.
+
+  - Julia.
+      Show the julia window.
+  - Slide Show.
+      Start various slide shows or stop a currently running one.
+  - New Window.
+      Create a new main window displaying the same image.
+  - Save.
+      In non-readonly mode save the currently displayed image as a mandel
+      image file containing the raster, the colormap and the mapping.
+  - Home.
+      Return to the root area image.
+  - Tool Control.
+      Internal usage. Don't switch on the auto rescan mode.
+
+  - About.
+      Show the about box window.
+  - Close.
+      Close the actual main window. If the last main window is closed
+      the explorer tool exists. An applet cannot be closed.
+
+2.1.4 The Info Popup
+
+If you move the mouse pointer to the middle of the upper window border
+an info popup appears. It show the most prominent info of the currently
+displayed area: Is it a key area and/or a favorite. How many subareas do exist.
+The magification, the minimal and maximal iteration cound and the
+calculation time.
+
+2.1.5 Area Mark
+Per main window it is possible to explicitly mark one area. This area is
+remembered for the main window and can be used like a selected entry in
+a mandel list.
+
+Here comes the list of features for a marked area:
+- It is always highlighted on the main display window (if it is a subarea
+  of the actually displayed area.
+- There is a direct navigation to this area, per double click on the main
+  display or using the direct navigation link in the Mark submenu of the
+  main window's context menu.
+- It can be used to establish and remove a link between the actually shown
+  area and the marked one. Links allow a direct forward and backward navigation
+  for the actually shown area using the Links submenu of the main window's
+  context menu.
+- It is possible to toggle between marked an actual area.
+- The marked area can be used as a second area for the slide show mode.
+  So, If a mark is set the slideshow submenu on the main window's context menu
+  allows for the Journey option, to start a journey from the actual area to
+  the marked one.
+
+2.1.6 Slide Shows
+
+2.2 Sub area creation or Modification window
+
+2.3 Colormap Window
+
+2.4 Image Control
+
+2.5 Area Lists Window
+
+2.6 List Browser
+
+2.7 Julia Window
+
+The julia window shows a the julia image for dedicated coordinates of the
+mandelbrot image show in the main view. This coordinates can be adjusted
+by moving the mouse while pressing the ALT key.
+
+2.8 Variation Window
+
+The variation window allows to create a new calculation request with a
+variation name for the same basic image area. Basically this feature is used
+to create images with diffent resolutions. For each variation it is possible
+to adjust the covered area to adjust the area for the new image ratio.
+
+2.9 Refinement Window
+
+The refinement window allows to create a refinement request for the currently
+shown raster image. Every raster creation is limited by a maximum iteration
+depth. If the maximum is too small for the selected area the contours of
+the mandelbrot set are frayed. With arefinement request the raster data is
+recalculated with a modified (hopefully increased) maximum value for the
+iteration depth. Recalculatio means that only those pixels are recalculated
+that so far are considered to belong to the mandelbrot set.
+
+2.10 Galeries
+
+There are two types of galeries; list galeries and folder galeries.
+
+2.10.1 List Galery
+A list galery show large thumbnails of the images described by the contained
+qualified mandel names. As the regular list views they can be used as drop
+targets for a set of qualified names or a whole folder (which is replaced by
+the contained list).
+
+If no displayable image information can be found for an area, it as shown as
+a black and white version of the root image.
+
+2.10.2 Folder Galery
+The folder galery shows a thumbnail view of the folders contained in a folder.
+Thumbnails names can be assigned to modifiable folders using the context menu.
+Thumbnails are always qualified mandel names. Typically an area should be
+choosen that can act as a prototype for the areas contained in the assciated
+list or folder subtree.
+
+3. Raster Transformation
+
+The area calculation programs does the iterations for all pixels of the
+selected area according to the area location and size and the intended image
+size. The raw set of iterations values is stored in as image raster data.
+
+This raster data can the be used by the display tool to generate a displayable
+image. This is done by mapping the iteration values to color values in the RGB
+color domain for each pixel.
+
+This transformation is done in a two step approach. First the set of iteration
+values of an rea is compressed to a manageable set of color index values. This
+is a closed range between 0 and a maximum size. To map these succeeding entries
+to colors in a second step a colormap is used. A colormap maps color index
+values to read RGB color values. Both mappings, the iteration value to  color
+indices mapping and the colormap describing the mapping of color indices to RGB
+values must match.
+
+Both steps are done at different points in time. The creation of the mapping
+table for iteration values to color indices is done once whenever a raster
+data file is loaded by the display tool or whenever the mapping parameters
+are changed. The second step is always be done when the colormap is changed.
+This can be done interactively by selecting a new colormap or by modifiying
+the actual colormap using the colormap window. The recoloring of the displayed
+image according to the colormap modification is done on the fly to directly
+get feedback for the modification.
+
+The first mapping is determined according dedicated parameterized rules. So
+far, three different algorithms are supported by the diaply tool.
+  - cyclic: successive assignment of iteration values to color indices
+            according to the size of the selected colormap
+  - statistic: analysing the histogram of found iteration values of the
+            raster data according to the size of the selected colormap.
+  - optimal: using the histogram to generate an optiomal mapping by
+            determining a minimum color index range.
+
+The mapping method together with its parameterization is provided by a mapper
+that is able to apply the method to a given raw raster data.
+
+3.1 Cyclic Mapper
+
+The cyclic mapping requires no further attribution. It uses the given
+colormap size and the iteration range of the raster data to successivly
+assigning iteration values to color indices in a round robin manner. Color
+indices are repeatingly used until the whole iteration range is covered.
+
+The result is nor really appealing in most cases. For dedicated areas it
+might result in interesting effects.
+
+3.2 Statistc  Mapper
+
+The statistic mapper analyzes the raster data to generate a histogram for
+the used interation values. It then joins adjacent iteration values to one
+color index until the requested target mapping size is reached.
+
+It used two parameters:
+  adjustment factor: for each join step the resulting frequency of the
+                     iteration values in the resulting iteration value area
+  adjustment limit
+
+3.3 Optimal Mapper
+
+
+4. Data File Types
+
+The toolset uses a common file container format to store all its data files.
+Such a container may contain several kinds of data, exclusively or in
+combination.
+   - Image Area Meta Data
+   - Colormap
+   - Raster Mapper Specification
+   - Raster Mapping
+   - Final Image
+
+Besides the Data Files there is also a config and some list files. Please
+refer to section 'configuration' for those files.
+
+There are typical combinations directly used by the tool. Those combinations
+will use dedicated file suffixes when created by the tool set. But this suffix
+typically has no influence on the usage of the file. All tools of the tool set
+look into the container inventory and use the files according to their content.
+The suffix is only used for human readability.
+
+4.1 Colormaps
+
+Colormap typically use the suffix .cm and contain only a colormap data section.
+The display tool shows those files, when found in the tool's search path on
+the colormap selection tab of the image control window.
+
+All other types always contain at least the Image Area Meta data section.
+
+4.2 Mandel Processing Request
+
+A processing or calculation request contains the meta data section, only.
+This section then only contains the area and image size specification and no
+further are information. Those information is enriched later on by the
+calculation processor.
+
+Processing requests use the suffix .md (Mandel data).
+
+4.3 Mandel Raster Files
+
+Raster files are generated by the calculation tool for processing requests.
+They contain the enriched meta data section together with the iteration data.
+
+The toolset uses the suffix .mr (mandel raster) for those files.
+
+Raster files can directly be displayed by the browsing tool. It uses the
+current colormap and the preconfigured mapper setting to generate the raster
+mapping and the displayable image on-the-fly.
+
+4.4 Mandel Image Files
+
+Mandel image files are container files containing all relevant information
+to generate a displayable image: the raster data, a mapper specification or
+a mapping and a colormap. Addtionally, it carries the meta data section of
+the mandel area.
+
+The toolset uses the suffix .mi (mandel image) for those files.
+
+Mandel image files can directly be displayed by the browsing tool. It fully
+describes all relevant information and requires no additional information from
+the browser to determine the final displayable image.
+
+The image section of the container is not used so far.
+
+4.5 Image files
+
+Besides those files the display tool may convert raster based images into
+regular images files with a format supported by your java platform (typically
+jpeg, gif, tif and png file types should be available).
+
+Those files can only be generated by the tool for further usage by other
+tool sets but are not intended to be processed by the mandel tool set.
+
+5. Configuration
+
+6. Toolset

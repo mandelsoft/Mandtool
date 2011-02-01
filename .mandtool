@@ -1,0 +1,47 @@
+#
+# standard toolset configuration file
+#
+
+# ${dir} is the folder containing the .mandtool file
+data.dir=${dir}/data
+path.info.save=${data.dir}/requests
+path.raster.seen=${data.dir}/raster
+path.variant.save=${data.dir}/variants
+path.raster.save=${data.dir}/new
+path.rasterimage.save=${data.dir}/images
+path.image.save=${data.dir}/images
+path.backup=${data.dir}/backup
+path.colormap.save=${data.dir}/colormaps
+
+# list of additional mandel list tree files, maintained as separate files
+lists.dir=${dir}/lists
+path.lists=${lists.dir}/galery;
+
+# some info about the author
+username=Uwe Kr\u00FCger
+sitename=mandelsoft
+
+# if this variable exists (empty) the author (if set) of an
+# image is shown on the main display screen.
+# If this variable has a content it will be used as default
+# copyright notice on the main display screen
+copyright=
+
+# always switch this off if you have a database of a reasonable size
+autorescan=false
+
+# set this property to declare an http proxy to be used for accessing URLs
+#proxy=
+
+#
+# if you want to refer to a set of remote databases
+# that should be included and used as an extension base for the local one
+# use these variables to define the root folders of the databases.
+# the example uses the database from beauty-of-chaos.de
+# (see http://www.beauty-of-chaos.de)
+# the path may contain multiple entries.
+# The path variable described a list of labels (path.base=<label>{;<label>}.
+# For each label there must be a location property (db.location.<label>=...)
+# that contains the URL for the remote image database.
+#path.base=boc
+db.location.boc=http://beauty-of-chaos.de/mandel/mandel

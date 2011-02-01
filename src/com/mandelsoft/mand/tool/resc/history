@@ -1,0 +1,83 @@
+Version 0.5
+   first released beta version
+
+Version 0.6
+   - dynamic precision gmp support
+   - unseen handling for multiple users and locations
+   - list with times
+   - creator records
+   - nested mandtool settings
+   - display of selected nested sub areas (ALT-click)
+   - URL mandel scanner with mandel cache file
+
+Version 0.7
+   - todo list
+   - help screen
+   * 0.7.1
+   - proxy support for URL scanners
+   - autoscan flag
+   - avoid duplicate mapping creation
+   * 0.7.2
+   - alternate area specification
+
+Version 0.8
+   - more image meta data
+   - folder lists to organize favorites
+   - mandel list browser with DnD support
+   - temporary memory based colormaps
+   - cached folders and mandel scanner
+   - tree mapping to support ultra high iteration depth
+   - persistent color favorites
+   - display settings for main windows
+   - applet version
+   - distributed calculation server
+   * 0.8.1
+   - Slideshow support
+   - Colormap rotation
+   * 0.8.2
+   - window and program memory list for mandel areas
+   * 0.8.3
+   - configurable image pixel tooltip: pixel info/subarea info
+   * 0.8.4
+   - image and folder galeries
+   - applet galery
+   - leaf and pending mandel lists
+   - derived mandel list
+   - scanner rescan propagation to dependent list models
+   - list and galery item context menus
+   - trip slide shows
+
+Version 0.9
+   - user lists
+   - pixel tooltip with subarea counts
+   - fix bugs in readonly mode
+   - optimize http access
+   * 0.9.1 
+   - async galery loader
+   - folder lock fix
+   - unseen list for area
+   * 0.9.2
+   - ticker for list galeries
+   - ticker option for galery applet
+   - oops, misunderstanding in proxy handling
+   - home navigation for sub area based derived lists
+   - area tagging
+   - key areas
+   - marked area navigation
+   - fork navigation
+   - list shortcuts
+   - fix inaccurate sub area creation
+   - archiver
+
+Version 1.0
+   - rework scanner API
+   - support usage of nested image databases
+   - memorize actual mark
+   - direct key area navigation
+   - area links
+   - info field in area parameter view
+   - info popup
+   - configurable auto mark
+   - journey to marked area
+
+

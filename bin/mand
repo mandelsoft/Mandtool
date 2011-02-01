@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if [ -z "$MANDEL_HOME" ]; then
+  echo "Error: MANDEL_HOME not set"
+  exit 1
+fi
+
+if [ -z "$JAVA_HOME" ]; then
+  echo "Error: JAVA_HOME not set"
+  exit 1
+fi
+ 
+if [ -z "$*" ]; then
+  SPLASH="-splash:$MANDEL_HOME/bin/images/plash.png"
+fi
+
+"$JAVA_HOME/bin/java" $SPLASH -Djava.library.path="$MANDEL_HOME/lib/linux" -Xmx1024M -classpath "$MANDEL_HOME/lib/Mandelbrot.jar" com.mandelsoft.mand.tools.Cmd "$@"
+ 

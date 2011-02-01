@@ -1,0 +1,374 @@
+/*
+ *  Copyright 2011 Uwe Krueger.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+package com.mandelsoft.swing;
+
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableModel;
+
+/**
+ *
+ * @author Uwe Krüger
+ */
+
+public class TablePanel<T extends TableModel>
+        extends ActionPanel {
+
+  private JLabel label;
+  private JTable table;
+  private JScrollPane scrollpane;
+  private T model;
+  private String title;
+
+  protected TablePanel()
+  {
+    setup(null,null,null);
+  }
+
+  public TablePanel(String header, T model)
+  {
+    setup(header, model, null);
+  }
+
+  public TablePanel(String header, T model, ActionListener action)
+  {
+    setup(header, model, action);
+  }
+
+  public void setModel(T model)
+  {
+    this.model=model;
+    this.table.setModel(model);
+    table.getRowSorter().toggleSortOrder(0);
+  }
+
+  public void setTitle(String name)
+  {
+    if (label!=null) label.setText(name);
+    else title=name;
+  }
+
+  public String getTitle()
+  {
+    return label==null?title:label.getText();
+  }
+
+  public void setFillsViewportHeight(boolean fillsViewportHeight)
+  {
+    table.setFillsViewportHeight(fillsViewportHeight);
+  }
+
+  private boolean busy;
+  private Cursor origcursor;
+
+  protected void setBusy(boolean b)
+  {
+    if (b!=busy) {
+      if (b) {
+        System.out.println("-------------------------------------------------");
+        System.out.println("set busy");
+        origcursor=getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+      }
+      else {
+        System.out.println("orig cursor");
+        setCursor(origcursor);
+      }
+      firePropertyChange("busy",!b,b);
+    }
+    busy=b;
+  }
+
+  private void setup(String header, T model, ActionListener action)
+  {
+    JLabel c;
+
+    if (debug) System.out.println("*** creating "+this);
+    if (action!=null) addActionListener(action);
+    if (!com.mandelsoft.util.Utils.isEmpty(header)) {
+      label=c=new JLabel(header);
+      label.setHorizontalAlignment(JLabel.CENTER);
+      addContent(label, GBC(0, 0, GBC.HORIZONTAL).setAnchor(GBC.CENTER));
+    }
+    else {
+      c=new JLabel("height");
+    }
+    table=createTable();
+    setupTable(table);
+    if (model!=null) setModel(model);
+    table.getSelectionModel().addListSelectionListener(
+            new TableListener());
+    table.addMouseListener(new MouseAdapter() {
+
+      @Override
+      public void mouseClicked(MouseEvent event)
+      { // check for double click
+        //System.out.println("mouse clicked");
+        if (event.getClickCount()<2)
+          return;
+
+//          // find column of click and
+//          int row=table.rowAtPoint(event.getPoint());
+//
+//          // translate to table model index and sort
+//          int modelRow=table.convertRowIndexToModel(row);
+//          System.out.println("row index: "+row+"; model index: "+modelRow);
+        fireActionPerformed(ActionEvent.ACTION_PERFORMED, null);
+      }
+
+      @Override
+      public void mouseReleased(MouseEvent e)
+      {
+        handlePopup(e);
+      }
+
+      @Override
+      public void mousePressed(MouseEvent e)
+      {
+        handlePopup(e);
+      }
+
+      public void handlePopup(MouseEvent e)
+      {
+        //System.out.println("check table ctx popup event");
+        if (e.isPopupTrigger() && ctxmenu!=null) {
+          // find row of click and
+          int row=table.rowAtPoint(e.getPoint());
+          // translate to table model index
+          
+          int modelRow;
+          
+          if (row>=0) modelRow=table.convertRowIndexToModel(row);
+          else        modelRow=-1;
+
+          // find column of click and
+          int col=table.columnAtPoint(e.getPoint());
+          // translate to table model index
+          int modelCol;
+          if (col>=0) modelCol=table.convertColumnIndexToModel(col);
+          else        modelCol=-1;
+
+          System.out.println("CTX POPUP at "+e.getPoint().getX()+","+
+                                             e.getPoint().getY()+" ("
+                                             +modelRow+","+modelCol+")");
+          ctxmenu.handleContextMenu(table, e, modelRow, modelCol);
+        }
+      }
+    });
+
+    FontMetrics m=c.getFontMetrics(c.getFont());
+    getTable().setPreferredScrollableViewportSize(new Dimension(
+            (int)(m.charWidth('W')*40), (int)(m.getHeight()*6)));
+
+    addContent(scrollpane=new JScrollPane(table), GBC(0, 1, GBC.BOTH));
+  }
+
+  protected JTable createTable()
+  {
+    return new IJTable();
+  }
+
+  protected void setupTable(JTable table)
+  {
+    table.setAutoCreateRowSorter(true);
+    //rastertable.setFillsViewportHeight(true);
+    
+    table.setShowGrid(false);
+    //rastertable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+    table.setAutoCreateRowSorter(true);
+    table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+  }
+
+  protected void setSelection(int row, int column)
+  {
+//    setSelection(row);
+  }
+
+//  protected void setSelection(int row)
+//  {
+//  }
+
+  public T getModel()
+  {
+    return model;
+  }
+
+  public JTable getTable()
+  {
+    return table;
+  }
+
+  public JScrollPane getScrollPane()
+  {
+    return scrollpane;
+  }
+
+  public int convertRowIndexToModel(int index)
+  {
+    return table.convertRowIndexToModel(index);
+  }
+
+  public int convertColumnIndexToModel(int index)
+  {
+    return table.convertColumnIndexToModel(index);
+  }
+
+  public int getSelectedIndex()
+  {
+    int index=table.getSelectedRow();
+    int ix2=table.getSelectionModel().getLeadSelectionIndex();
+
+    //System.out.println("sel idx="+index+", lead="+ix2);
+    index=ix2;
+    if (index>=0) {
+      index=convertRowIndexToModel(index);
+    }
+    return index;
+  }
+
+  public int getSelectedColumn()
+  {
+    int index=table.getSelectedColumn();
+
+    if (index>=0) {
+      index=convertColumnIndexToModel(index);
+    }
+    return index;
+  }
+
+  private class TableListener implements ListSelectionListener {
+
+    public void valueChanged(ListSelectionEvent e)
+    {
+      ListSelectionModel lsm=(ListSelectionModel)e.getSource();
+      if (e.getValueIsAdjusting()) return;
+      int col=table.getSelectedColumn();
+      int index=table.getSelectedRow();
+      int ix2=table.getSelectionModel().getLeadSelectionIndex();
+//      System.out.println("selected: "+index+"/"+ix2+" "+lsm.getMaxSelectionIndex()+
+//                                    "@"+col);
+      index=ix2;
+      if (index<0) return;
+      index=table.convertRowIndexToModel(index);
+      setSelection(index,table.convertColumnIndexToModel(col));
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////
+  // listener support
+  ////////////////////////////////////////////////////////////////
+
+  public void addActionListener(ActionListener l)
+  {
+    listenerList.add(ActionListener.class, l);
+  }
+
+  public void removeActionListener(ActionListener l)
+  {
+    listenerList.remove(ActionListener.class, l);
+  }
+
+  public ActionListener[] getActionListeners()
+  {
+    return getListeners(ActionListener.class);
+  }
+
+  protected void fireActionPerformed(int id, String cmd)
+  {
+    // Guaranteed to return a non-null array
+    Object[] listeners=listenerList.getListenerList();
+    ActionEvent e=null;
+    // Process the listeners last to first, notifying
+    // those that are interested in this event
+    for (int i=listeners.length-2; i>=0; i-=2) {
+      if (listeners[i]==ActionListener.class) {
+        // Lazily create the event:
+        if (e==null)
+          e=new ActionEvent(this, id, cmd);
+        ((ActionListener)listeners[i+1]).actionPerformed(e);
+      }
+    }
+  }
+
+  ///////////////////////////////////////////////////////////////////////
+  // Context Menu
+  ///////////////////////////////////////////////////////////////////////
+
+  public interface ContextMenuHandler extends DnDJTable.ContextMenuHandler  {
+  }
+
+  //////////////////////////////////////////////////////////////////////////
+  // Context Menu outside of list
+
+  private class Listener extends MouseAdapter {
+    @Override
+    public void mouseReleased(MouseEvent e)
+    {
+      handlePopup(e);
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e)
+    {
+      handlePopup(e);
+    }
+
+    public void handlePopup(MouseEvent e)
+    {
+      if (e.isPopupTrigger()&&ctxmenu!=null) {
+        System.out.println("CTX POPUP at panel");
+        ctxmenu.handleContextMenu(TablePanel.this, e, -1, -1);
+      }
+    }
+  }
+
+  private DnDJTable.ContextMenuHandler ctxmenu;
+  private Listener           listener;
+
+  synchronized
+  public void setContextMenuHandler(DnDJTable.ContextMenuHandler h)
+  {
+    if (h==null) {
+      if (ctxmenu!=null) removeMouseListener(listener);
+    }
+    else {
+      if (ctxmenu==null) {
+        if (listener==null) listener=new Listener();
+        addMouseListener(listener);
+        scrollpane.getViewport().addMouseListener(listener);
+      }
+    }
+    ctxmenu=h;
+
+  }
+
+  synchronized
+  public DnDJTable.ContextMenuHandler getContextMenuHandler()
+  {
+    return ctxmenu;
+  }
+}
