@@ -652,7 +652,7 @@ public class MandelAreaViewDialog extends MandelDialog {
 
     protected void updateSlave()
     {
-      if (qname!=null) infofield.setText(getInfoString());
+      if (qname!=null && infofield!=null) infofield.setText(getInfoString());
     }
 
     class UpdateListener implements PropertyChangeListener {

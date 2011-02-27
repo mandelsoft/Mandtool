@@ -598,6 +598,26 @@ public class MandelImagePanel  extends GBCPanel
     }
   }
 
+  ///////////////////////////////////////////
+  public class EnvListener implements LinkListener {
+    private void update(MandelName n)
+    {
+      if (getMandelName().equals(n)) updateLinks();
+    }
+
+    public void linkAdded(MandelName src, MandelName dst)
+    {
+      update(src);
+      update(dst);
+    }
+
+    public void linkRemoved(MandelName src, MandelName dst)
+    {
+      update(src);
+      update(dst);
+    }
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // MandelImagePanel
   /////////////////////////////////////////////////////////////////////////
@@ -613,7 +633,10 @@ public class MandelImagePanel  extends GBCPanel
   private QualifiedMandelName lastname;
   private QualifiedMandelName name;
   private MandelListMenu      subareas;
+
   private MandelListModelMenu links;
+  private LinkListener        linkListener;
+
   private MandelImage         image;
   private MapperModel         mappermodel;
   private ColormapModel       colormapmodel;
@@ -698,6 +721,7 @@ public class MandelImagePanel  extends GBCPanel
 
     this.links=new MandelListModelMenu("Links",this,null);
     this.links.setSorted(true);
+    this.linkListener=new EnvListener();
    
     this.slideshowmodel=new DefaultSlideShowModel(new SlideShowDestination() {
 
@@ -928,8 +952,10 @@ public class MandelImagePanel  extends GBCPanel
     (clearMarkAction=new ClearMarkAction()).setEnabled(false);
     (gotoMarkAction=new GotoMarkAction()).setEnabled(false);
     (memorizeMarkAction=new MemorizeMarkAction()).setEnabled(false);
-    (linkFromMarkAction=new LinkFromMarkAction()).setEnabled(false);
-    (unlinkFromMarkAction=new UnlinkFromMarkAction()).setEnabled(false);
+    if (!isReadonly()) {
+      (linkFromMarkAction=new LinkFromMarkAction()).setEnabled(false);
+      (unlinkFromMarkAction=new UnlinkFromMarkAction()).setEnabled(false);
+    }
     showSubAction=new ShowSubAction();
     hideSubAction=new HideSubAction();
     refreshSubAction=new RefreshSubAction();
@@ -1007,6 +1033,7 @@ public class MandelImagePanel  extends GBCPanel
       }
     };
     getEnvironment().getAllScanner().addMandelScannerListener(msl);
+    getEnvironment().addLinkListener(linkListener);
   }
 
   @Override
@@ -1017,6 +1044,7 @@ public class MandelImagePanel  extends GBCPanel
     if (msl!=null) {
       getEnvironment().getAllScanner().removeMandelScannerListener(msl);
     }
+    getEnvironment().removeLinkListener(linkListener);
     cancel();
   }
 
@@ -1488,7 +1516,8 @@ public class MandelImagePanel  extends GBCPanel
   }
 
   public MandelInfo getMandelInfo()
-  { return image.getMandelData().getInfo();
+  { 
+    return image==null?null:image.getMandelData().getInfo();
   }
 
   public MapperModel getMapperModel()
@@ -1533,7 +1562,12 @@ public class MandelImagePanel  extends GBCPanel
 
   private void updateLinks()
   {
-    links.setMandelListModel(getEnvironment().getLinkModel(name.getMandelName()));
+    MandelListModel m=getEnvironment().getLinkModel(name.getMandelName());
+    if (m==null) {
+//      m=new DefaultMandelListTableModel(new ArrayMandelList(),
+//                                        getEnvironment().getAllScanner());
+    }
+    links.setMandelListModel(m);
   }
   
   private void setImageData(MandelAreaImage img)
@@ -2184,7 +2218,6 @@ public class MandelImagePanel  extends GBCPanel
     {
       if (marked!=null) {
         getEnvironment().addLink(marked.getMandelName(), getMandelName());
-        updateLinks();
       }
     }
   }
@@ -2200,7 +2233,6 @@ public class MandelImagePanel  extends GBCPanel
     {
       if (marked!=null) {
         getEnvironment().removeLink(marked.getMandelName(), getMandelName());
-        updateLinks();
       }
     }
   }
@@ -2800,6 +2832,7 @@ public class MandelImagePanel  extends GBCPanel
   synchronized
   public void updateInfo(MandelInfo info, Rectangle rect)
   {
+    if (getMandelInfo()==null) return;
     //System.out.println("parent is "+getMandelInfo());
     ToolUtils.updateInfo(info, rect, getMandelInfo(),filterscale);
   }
@@ -2807,7 +2840,7 @@ public class MandelImagePanel  extends GBCPanel
   synchronized
   public void updateRect(VisibleRect rect, MandelInfo info)
   {
-    if (inupdate) return;
+    if (inupdate || getMandelInfo()==null) return;
     ToolUtils.updateRect(info,rect,getMandelInfo(),filterscale);
     //System.out.println("update rect "+rect+"("+inupdate+")");
   }

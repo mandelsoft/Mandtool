@@ -837,12 +837,22 @@ public class BufferedComponent extends JComponent
 
     public void activate()
     {
+      activate(false);
+    }
+
+    public void activate(boolean subst)
+    {
       if (!active) {
+        if (subst && getName()!=null) {
+          VisibleRect old=getRect(getName());
+          if (old!=null && old!=this) {
+            old.discard();
+          }
+        }
         active=true;
         rects.add(this);
       }
     }
-    
     
     public boolean isVisible()
     { return visible;

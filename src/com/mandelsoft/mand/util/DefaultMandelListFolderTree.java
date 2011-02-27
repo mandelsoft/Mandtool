@@ -58,6 +58,13 @@ public class DefaultMandelListFolderTree implements MandelListFolderTree {
     return true;
   }
 
+  public void clear()
+  {
+    MandelListFolder f=getRoot();
+    MandelList       l=f.getMandelList();
+    f.clear();
+    if (l!=null) l.clear();
+  }
 
   public void refresh()
   {

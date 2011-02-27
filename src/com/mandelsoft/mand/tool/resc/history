@@ -79,5 +79,10 @@ Version 1.0
    - info popup
    - configurable auto mark
    - journey to marked area
+   * 1.0.1
+   - fix empty links
+   - fix sub area modification
+   - link update support for multiple windows
+   - refinement list support to find completed refinement requests
 
 

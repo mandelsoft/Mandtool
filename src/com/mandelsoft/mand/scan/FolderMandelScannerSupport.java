@@ -350,7 +350,7 @@ public abstract class FolderMandelScannerSupport extends MandelScannerSupport {
   { Map<AbstractFile,MandelHeader> m;
     MandelHandle mh;
     ColormapHandle ch;
-
+    
     try {
       String base=f.getName();
       int ix=base.lastIndexOf('.');

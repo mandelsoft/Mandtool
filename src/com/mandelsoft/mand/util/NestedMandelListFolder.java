@@ -64,56 +64,6 @@ public class NestedMandelListFolder extends ArrayMandelListFolder {
     else return super.valid();
   }
 
-  protected boolean readContent(BufferedReader r) throws IOException
-  { String line;
-    MandelList list=getMandelList();
-
-    while ((line=r.readLine())!=null) {
-      line=line.trim();
-      if (line.startsWith("#")||line.length()==0) continue;
-      int ix=line.indexOf('=');
-      if (line.endsWith("{")) {
-        String n=line.substring(0,line.length()-1).trim();
-        String t=null;
-        //System.out.println("line: "+n);
-        if (n.endsWith("]")) {
-          ix=n.indexOf("[");
-          if (ix>0) {
-            t=n.substring(ix+1,n.length()-1).trim();
-            n=n.substring(0,ix).trim();
-            //System.out.println("thumb "+t);
-          }
-          else {
-            throw new IOException("illegal sub folder name syntax");
-          }
-        }
-        //System.out.println("->"+n);
-        NestedMandelListFolder f=createSubFolder(n);
-        if (t!=null) f.setThumbnailName(QualifiedMandelName.create(t));
-        if (!f.readContent(r)) {
-          throw new IOException("illegal sub folder syntax");
-        }
-      }
-      else if (line.equals("}")) return true;
-      else if (ix>0) {
-        String name=line.substring(0, ix).trim();
-        String value=line.substring(ix+1).trim();
-        setProperty(name, value);
-      }
-      else {
-        if (hasMandelList()) {
-          QualifiedMandelName name=QualifiedMandelName.create(line);
-          //System.out.println("put entry "+name+" into "+getMandelName());
-          list.add(name);
-        }
-        else {
-          throw new IOException("list entry in plain folder without list");
-        }
-      }
-    }
-    return false;
-  }
-
   public NestedMandelListFolder createSubFolder(String name)
   {
     NestedMandelListFolder f=createNestedFolder(name);

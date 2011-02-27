@@ -55,6 +55,7 @@ public class MandelListModelMenu extends MandelListMenu {
       model.addMandelListListener(listener);
       update();
     }
+    else clear();
   }
 
   private void update()

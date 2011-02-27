@@ -36,6 +36,7 @@ public interface MandelListFolderTree {
 
   boolean valid();
   void refresh();
+  void clear();
   void save() throws IOException;
   void save(File f) throws IOException;
 
@@ -60,6 +61,7 @@ public interface MandelListFolderTree {
     {
       BufferedReader br=new BufferedReader(new InputStreamReader(is));
       try {
+        tree.clear();
         readContent(tree.getRoot(), br);
       }
       finally {

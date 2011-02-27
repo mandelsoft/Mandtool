@@ -154,8 +154,8 @@ public class MandelFileName {
         suffix=base.substring(ix);
         base=base.substring(0,ix);
       }
-      
-      mfn=new MandelFileName(QualifiedMandelName._create(base),suffix);
+      QualifiedMandelName qn=QualifiedMandelName._create(base);
+      if (qn!=null) mfn=new MandelFileName(qn,suffix);
     }
     catch (IllegalArgumentException e) {
       mfn=null;

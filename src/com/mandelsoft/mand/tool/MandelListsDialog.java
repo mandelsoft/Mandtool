@@ -25,11 +25,9 @@ import com.mandelsoft.mand.tool.ctx.MandelListContextMenuHandler;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.TablePanel;
 import java.awt.Component;
-import java.awt.Font;
+import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 /**
@@ -40,7 +38,10 @@ public class MandelListsDialog extends ControlDialog {
   public MandelListsDialog(MandelWindowAccess owner)
   {
     super(owner, "Mandel Lists");
-    setMinimumSize(getSize());
+    Dimension d=new Dimension((int)getSize().getWidth()+60,
+                              (int)getSize().getHeight());
+    setSize(d);
+    setMinimumSize(d);
     System.out.println("minimal size is "+this.getMinimumSize());
     setResizable(true);
   }
@@ -68,6 +69,10 @@ public class MandelListsDialog extends ControlDialog {
     if (getEnvironment().getAreasModel()!=null) {
       addTab("Key Areas", new AreasPanel(),
                        "marked root areas for backward navigation");
+    }
+    if (getEnvironment().getRefinementsModel()!=null) {
+      addTab("Refinements", new RefinementsPanel(),
+                       "available refinements");
     }
   }
 
@@ -291,6 +296,16 @@ public class MandelListsDialog extends ControlDialog {
     {
       super(null, getEnvironment().getAreasModel(), null,
                !getEnvironment().isReadonly());
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // refinements tab
+  /////////////////////////////////////////////////////////////////////////
+  private class RefinementsPanel extends MandelListPanel {
+    public RefinementsPanel()
+    {
+      super(null,getEnvironment().getRefinementsModel(),null);
     }
   }
 }

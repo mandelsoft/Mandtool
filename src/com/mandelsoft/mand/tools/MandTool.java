@@ -48,12 +48,12 @@ public class MandTool extends Command{
         g.setFont(tfont);
         g.setColor(new Color(200,200,0));
         g.drawString("Mandelbrot", 240, 170);
-        g.drawString("Explorer", 270, 220);
+        g.drawString("Explorer", 260, 220);
         g.setFont(ofont);
         g.setColor(new Color(200,200,200));
         g.drawString("Mandtool, Version "+
                      bundle.getString("Application.version"), 300, 360);
-        g.drawString("by Uwe Krüger, 2011",40,360);
+        g.drawString("by Uwe Krüger, 2009-2011",40,360);
         sp.update();
 //        try {
 //          Thread.sleep(10000);

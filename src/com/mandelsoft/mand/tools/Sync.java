@@ -103,7 +103,8 @@ public class Sync extends Copy<SyncHandler> {
     { String ngap=gap+"  ";
       System.out.println(gap+"syncing folder "+s.getPath());
       List<QualifiedMandelName> list=new ArrayList<QualifiedMandelName>();
-      for (QualifiedMandelName n:s.getMandelList()) {
+      MandelList l=s.getMandelList();
+      if (l!=null) for (QualifiedMandelName n:l) {
         list.add(n);
         if (!old.contains(n)) {
           set.add(n);
@@ -113,13 +114,18 @@ public class Sync extends Copy<SyncHandler> {
           //System.out.println(ngap+"keeping "+n);
         }
       }
-      for (QualifiedMandelName n:d.getMandelList()) {
-        if (!list.contains(n)) {
-          list.add(n);
+      l=d.getMandelList();
+      if (l!=null) {
+        for (QualifiedMandelName n:d.getMandelList()) {
+          if (!list.contains(n)) {
+            list.add(n);
+          }
         }
+        l.clear();
+        l.addAll(list);
       }
-      d.getMandelList().clear();
-      d.getMandelList().addAll(list);
+
+      // sync sub folders
       for (MandelListFolder f :s) {
         MandelListFolder n=null;
         Iterator<MandelListFolder> i=d.iterator();
@@ -254,6 +260,7 @@ public class Sync extends Copy<SyncHandler> {
     if (exec.getClass()!=VerboseSyncHandler.class) {
       exec.syncTree(src.getFavorites(),dst.getFavorites(),"favorites");
       exec.syncTree(src.getTodos(),dst.getTodos(),"todos");
+      exec.syncTree(src.getLinks(),dst.getLinks(),"links");
       exec.syncList(src.getSeenRasters(),dst.getSeenRasters(),"seen");
       exec.syncList(src.getAreas(),dst.getAreas(),"areas");
 

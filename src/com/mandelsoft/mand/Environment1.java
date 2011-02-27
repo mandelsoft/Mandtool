@@ -548,6 +548,7 @@ public class Environment1 implements MandelConstants  {
   private MandelList variants;
   private MandelList leafs;
   private MandelList pending;
+  private MandelList refinements;
 
   public MandelList getNewRasters()
   { return newrasters;
@@ -565,6 +566,10 @@ public class Environment1 implements MandelConstants  {
   { return pending;
   }
 
+  public MandelList getRefinements()
+  { return refinements;
+  }
+
   private void setupDerivedLists()
   {
      //System.out.println("new rasters");
@@ -579,7 +584,92 @@ public class Environment1 implements MandelConstants  {
     //System.out.println("pending");
     pending=new PendingImageList();
     //System.out.println("areas");
+    if (!isReadonly())
+      refinements=new RefinementList();
   }
+
+  ///////////////////////////////////////////////////////////////////////////
+
+  private class RefinementList extends UniqueArrayMandelList {
+
+    RefinementList()
+    {
+      _refresh();
+    }
+
+    @Override
+    public void refresh(boolean soft)
+    {
+      this.clear();
+      if (!soft) getAllScanner().rescan(false);
+      _refresh();
+    }
+
+    private void _refresh()
+    {
+      MandelScanner ref=getImageDataScanner();
+      Set<QualifiedMandelName> refset=ref.getQualifiedMandelNames();
+
+//      // find refinement requests
+//      for (MandelHandle h:getInfoScanner().getMandelHandles()) {
+//        QualifiedMandelName n=h.getName();
+//        if (refset.contains(n)) {
+//          boolean found=false;
+//          try {
+//            MandelData info=h.getInfo();
+//            Set<MandelHandle> set=ref.getMandelHandles(n);
+//            for (MandelHandle i:set) {
+//              try {
+//                MandelData data=i.getInfo();
+//                if (data.getInfo().isSameSpec(info.getInfo())) {
+//                  found=true;
+//                }
+//              }
+//              catch (IOException ex) {
+//                System.out.println("cannot read "+i.getFile()+": "+ex);
+//              }
+//            }
+//          }
+//          catch (IOException ex) {
+//            System.out.println("cannot read "+h.getFile()+": "+ex);
+//          }
+//          if (found) {
+//            System.out.println("obsolete request for "+h.getFile());
+//            backupInfoFile(h.getFile());
+//          }
+//          else {
+//            //System.out.println"refinement request for "+h.getFile());
+//            add(n);
+//          }
+//        }
+//      }
+
+      // find completed refinement requests
+      for (QualifiedMandelName n:refset) {
+        MandelData best=null;
+        Set<MandelHandle> set=ref.getMandelHandles(n);
+        if (set.size()>1) for (MandelHandle i:set) {
+          try {
+            MandelData data=i.getInfo();
+//            System.out.println("found double: "+
+//                               data.getInfo().getLimitIt()+": "+i.getFile());
+            if (best==null) best=data;
+            else {
+              if (data.getInfo().getLimitIt()>best.getInfo().getLimitIt()) {          
+                best=data;
+              }
+            }
+          }
+          catch (IOException ex) {
+            System.out.println("cannot read "+i.getFile()+": "+ex);
+          }
+        }
+        if (best!=null) add(n);
+      }
+    }
+  }
+
+  ///////////////////////////////////////////////////////////////////////////
 
   private class NewRasterList extends ScannerBasedList {
     protected MandelScanner getScanner()
@@ -855,7 +945,8 @@ public class Environment1 implements MandelConstants  {
     String v=getProperty(Settings.VARIANT_SEEN_PATH);
 
     if (f==null || isReadonly()) return false;
-    
+    if (!f.isFile()) return false;
+
     QualifiedMandelName mn=QualifiedMandelName.create(f);
     if (unseenrasters!=null && unseenrasters.contains(mn)) {
       if (debug) System.out.println(mn+" set to seen: "+f);
@@ -870,6 +961,44 @@ public class Environment1 implements MandelConstants  {
     }
     if (!Utils.isEmpty(mn.getQualifier()) && !Utils.isEmpty(v)) s=v;
 
+    //
+    // remove old refinement versions
+    Set<MandelHandle> set=getImageDataScanner().getMandelHandles(mn);
+    if (set.size()>1) {
+      MandelData best=null;
+      for (MandelHandle i:set) {
+        try {
+          MandelData data=i.getInfo();
+          if (best==null) best=data;
+          else {
+            if (data.getInfo().getLimitIt()>best.getInfo().getLimitIt()) {
+              best=data;
+            }
+          }
+        }
+        catch (IOException ex) {
+          System.out.println("cannot read "+i.getFile()+": "+ex);
+        }
+      }
+      if (best!=null && best.getFile().equals(f)) {
+        System.out.println("found refined replacement "+f);
+        for (MandelHandle i:set) {
+          AbstractFile d=i.getFile();
+          if (d.isFile()) {
+            if (!d.equals(f)) {
+              try {
+                MandelFolder folder=MandelFolder.getMandelFolder(d.getFile().
+                                                   getParentFile());
+                System.out.println("  removing "+d);
+                folder.remove(d.getFile());
+              }
+              catch (IOException ex) {
+              }
+            }
+          }
+        }
+      }
+    }
     //System.out.println("seen path: "+s);
     if (Utils.isEmpty(s)) return false;
     if (Utils.isEmpty(n)) return false;

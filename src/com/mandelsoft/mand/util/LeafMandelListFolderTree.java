@@ -42,6 +42,11 @@ public class LeafMandelListFolderTree implements MandelListFolderTree {
     return root;
   }
 
+  public void clear()
+  {
+    list.clear();
+  }
+  
   public void refresh()
   {
     list.refresh(false);

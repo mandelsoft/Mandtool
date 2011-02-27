@@ -194,7 +194,7 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
 
       public void actionPerformed(ActionEvent e)
       {
-        rect.activate();
+        rect.activate(true);
         updateSlave();
         rect.setVisible(true);
       }

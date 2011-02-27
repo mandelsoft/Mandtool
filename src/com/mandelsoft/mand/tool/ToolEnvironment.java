@@ -75,6 +75,7 @@ public class ToolEnvironment extends Environment {
   private MandelListTableModel variants;
   private MandelListTableModel leafs;
   private MandelListTableModel pending;
+  private MandelListTableModel refinements;
 
   private ComposedMandelListFolderTreeModel lists;
   private ColormapListModel colormaps;
@@ -158,6 +159,7 @@ public class ToolEnvironment extends Environment {
     variants=new VariantsModel();
     leafs=new LeafModel();
     pending=new PendingModel();
+    if (getRefinements()!=null) refinements=new RefinementModel();
 
     lists=new ComposedMandelListFolderTreeModel("lists",getAllScanner());
     lists.setModifiable(!isReadonly());
@@ -189,42 +191,57 @@ public class ToolEnvironment extends Environment {
     colormaps=new ExtendedColormapListModel(getColormaps());
   }
 
+  //////////////////////////////////////////////////////////////////////////
+  // link support
+
   public void addLink(MandelName src, MandelName dst)
-  {
+  { boolean done=false;
+
     if (tlinks==null || isReadonly()) return;
-    _addLink(src,dst);
-    _addLink(dst,src);
+    done|=_addLink(src,dst);
+    done|=_addLink(dst,src);
+    if (done) handleAddLink(src,dst);
   }
 
   public void removeLink(MandelName src, MandelName dst)
-  {
+  { boolean done=false;
+
     if (tlinks==null || isReadonly()) return;
-    _removeLink(src,dst);
-    _removeLink(dst,src);
+    done|=_removeLink(src,dst);
+    done|=_removeLink(dst,src);
+    if (done) handleRemoveLink(src,dst);
   }
 
-  public void _removeLink(MandelName src, MandelName dst)
-  {
-    if (tlinks==null || isReadonly()) return;
-     MandelListFolder f=tlinks.getChild(tlinks.getRoot(), src.getName());
-     if (f!=null) {
-       MandelListModel m=tlinks.getMandelListModel(f);
-       m.remove(new QualifiedMandelName(dst));
-       if (m.getList().isEmpty()) {
-         tlinks.removeFolder(f);
-       }
-     }
+  public boolean _removeLink(MandelName src, MandelName dst)
+  { boolean done=false;
+
+    if (tlinks==null||isReadonly()) return done;
+    MandelListFolder f=tlinks.getChild(tlinks.getRoot(), src.getName());
+    if (f!=null) {
+      MandelListModel m=tlinks.getMandelListModel(f);
+      QualifiedMandelName qn=new QualifiedMandelName(dst);
+      done=f.contains(qn);
+      m.remove(qn);
+      if (m.getList().isEmpty()) {
+        tlinks.removeFolder(f);
+      }
+    }
+    return done;
   }
 
-  private void _addLink(MandelName src, MandelName dst)
-  {
-    if (tlinks==null || isReadonly()) return;
+  private boolean _addLink(MandelName src, MandelName dst)
+  { boolean done=false;
+
+    if (tlinks==null || isReadonly()) return done;
      MandelListFolder f=tlinks.getChild(tlinks.getRoot(), src.getName());
      if (f==null) {
        f=tlinks.insertFolder(src.getName(), tlinks.getRoot());
        f.setThumbnailName(new QualifiedMandelName(src));
      }
-     tlinks.add(f, new QualifiedMandelName(dst));
+     QualifiedMandelName qn=new QualifiedMandelName(dst);
+     done=!f.contains(qn);
+     tlinks.add(f, qn);
+     return done;
   }
 
   public MandelListModel getLinkModel(MandelName n)
@@ -234,6 +251,34 @@ public class ToolEnvironment extends Environment {
     if (f==null) return null;
     return tlinks.getMandelListModel(f);
   }
+
+  private Set<LinkListener> llisteners=new HashSet<LinkListener>();
+
+  public void addLinkListener(LinkListener h)
+  {
+    llisteners.add(h);
+  }
+
+  public void removeLinkListener(LinkListener h)
+  {
+    llisteners.remove(h);
+  }
+
+  private void handleAddLink(MandelName src, MandelName dst)
+  { 
+    for (LinkListener h:llisteners) {
+      h.linkAdded(src,dst);
+    }
+  }
+
+  private void handleRemoveLink(MandelName src, MandelName dst)
+  {
+    for (LinkListener h:llisteners) {
+      h.linkRemoved(src,dst);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////
 
   public WindowControlAction getToolControlAction()
   { return toolControl;
@@ -289,14 +334,22 @@ public class ToolEnvironment extends Environment {
   { return unseenrasters;
   }
 
+  public MandelListTableModel getPendingModel()
+  { return pending;
+  }
+
   public MandelListTableModel getVariantsModel()
   { return variants;
+  }
+
+  public MandelListTableModel getRefinementsModel()
+  { return refinements;
   }
 
   public ColormapListModel getColormapListModel()
   { return colormaps;
   }
-  
+
   @Override
   public boolean handleRasterSeen(AbstractFile f)
   {
@@ -741,6 +794,14 @@ public class ToolEnvironment extends Environment {
     public PendingModel()
     {
       super(getPending(),getImageDataScanner(),getAllScanner());
+    }
+  }
+
+  private class RefinementModel extends AutoRefreshMandelListTableModel {
+
+    public RefinementModel()
+    {
+      super(getRefinements(),getImageDataScanner());
     }
   }
 

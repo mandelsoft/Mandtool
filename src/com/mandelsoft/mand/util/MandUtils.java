@@ -32,6 +32,8 @@ import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.scan.MandelScannerUtils;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -246,6 +248,7 @@ public class MandUtils extends MandArith {
     if (a==null) return b;
     if (b==null) return a;
 
+    MandelHandle r=a;
     if (b.getHeader().hasRaster()&&!a.getHeader().hasRaster()) a=b;
     if (b.getHeader().hasModifiableImage()&&!a.getHeader().hasModifiableImage()) a=b;
    
@@ -255,6 +258,16 @@ public class MandUtils extends MandArith {
       &&(b.getQualifier()==null)
       ==(a.getQualifier()==null)) a=b;
 
+    if (a==r && a.getName().equals(b.getName())) {
+      try {
+        MandelData d1=a.getInfo();
+        MandelData d2=b.getInfo();
+        if (d2.getInfo().getLimitIt()>d1.getInfo().getLimitIt()) a=b;
+      }
+      catch (IOException ex) {
+        System.out.println("error reading info: "+ex);
+      }
+    }
     return a;
   }
   
