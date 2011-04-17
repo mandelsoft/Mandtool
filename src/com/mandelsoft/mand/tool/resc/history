@@ -84,5 +84,7 @@ Version 1.0
    - fix sub area modification
    - link update support for multiple windows
    - refinement list support to find completed refinement requests
-
+   * 1.0.2
+   - fix new raster list
+   - fix mark link option for readonly mode
 

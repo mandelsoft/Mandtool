@@ -88,9 +88,7 @@ public class MandelImageDB implements MandelConstants  {
   }
 
   public MandelImageDB(MandelImageDBFactory fac, AbstractFile dir)
-  { String path=null;
-    String cpath=null;
-    String npath=null;
+  { 
     String p;
     
     try {
@@ -120,9 +118,6 @@ public class MandelImageDB implements MandelConstants  {
     commonSetup(fac.getTool());
 
     if (!this.readonly) {
-      newraster=new PathMandelScanner(npath, MandelScanner.RASTER,
-                                      settings.isLocal(), scannercache);
-
       ttodos=createMandelListFolderTree(Settings.TODO);
       todos=ttodos.getRoot().getMandelList();
       seenrasters=createMandelList(Settings.SEEN);
@@ -167,6 +162,10 @@ public class MandelImageDB implements MandelConstants  {
                        settings.getProperty(Settings.INFO_PRIO_PATH),
                        MandelScanner.INFO, settings.isLocal(), scannercache);
 
+    if (!this.readonly) {
+      newraster=new PathMandelScanner(npath, MandelScanner.RASTER,
+                                      settings.isLocal(), scannercache);
+    }
 
     copyright=settings.getProperty(Settings.COPYRIGHT);
     if (copyright!=null) {

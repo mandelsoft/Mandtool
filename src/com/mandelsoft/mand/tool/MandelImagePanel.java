@@ -1325,10 +1325,14 @@ public class MandelImagePanel  extends GBCPanel
     mark.add(it);
     it=new JMenuItem(memorizeMarkAction);
     mark.add(it);
-    it=new JMenuItem(linkFromMarkAction);
-    mark.add(it);
-    it=new JMenuItem(unlinkFromMarkAction);
-    mark.add(it);
+    if (linkFromMarkAction!=null) {
+      it=new JMenuItem(linkFromMarkAction);
+      mark.add(it);
+    }
+    if (unlinkFromMarkAction!=null) {
+      it=new JMenuItem(unlinkFromMarkAction);
+      mark.add(it);
+    }
     it=new JMenuItem(swapMarkAction);
     mark.add(it);
     it=new JMenuItem(clearMarkAction);
@@ -2108,8 +2112,10 @@ public class MandelImagePanel  extends GBCPanel
       swapMarkAction.setEnabled(true);
       clearMarkAction.setEnabled(true);
       memorizeMarkAction.setEnabled(true);
-      linkFromMarkAction.setEnabled(true);
-      unlinkFromMarkAction.setEnabled(true);
+      if (linkFromMarkAction!=null)
+        linkFromMarkAction.setEnabled(true);
+      if (unlinkFromMarkAction!=null)
+        unlinkFromMarkAction.setEnabled(true);
       if (getMandelName().isHigher(n.getMandelName())) {
         updateSubRects();
       }
