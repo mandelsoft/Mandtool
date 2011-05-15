@@ -75,7 +75,8 @@ public class ToolEnvironment extends Environment {
   private MandelListTableModel variants;
   private MandelListTableModel leafs;
   private MandelListTableModel pending;
-  private MandelListTableModel refinements;
+  private MandelListTableModel unseenrefinements;
+  private MandelListTableModel refinerequests;
 
   private ComposedMandelListFolderTreeModel lists;
   private ColormapListModel colormaps;
@@ -159,7 +160,10 @@ public class ToolEnvironment extends Environment {
     variants=new VariantsModel();
     leafs=new LeafModel();
     pending=new PendingModel();
-    if (getRefinements()!=null) refinements=new RefinementModel();
+    // first refinement requests and then unseen unseenrefinements
+    // refresh order of listeners is important
+    if (getRefinementRequests()!=null) refinerequests=new RefinementRequestsModel();
+    if (getUnseenRefinements()!=null) unseenrefinements=new UnseenRefinementModel();
 
     lists=new ComposedMandelListFolderTreeModel("lists",getAllScanner());
     lists.setModifiable(!isReadonly());
@@ -342,8 +346,12 @@ public class ToolEnvironment extends Environment {
   { return variants;
   }
 
-  public MandelListTableModel getRefinementsModel()
-  { return refinements;
+  public MandelListTableModel getUnseenRefinementsModel()
+  { return unseenrefinements;
+  }
+
+  public MandelListTableModel getRefinementRequestsModel()
+  { return refinerequests;
   }
 
   public ColormapListModel getColormapListModel()
@@ -377,6 +385,13 @@ public class ToolEnvironment extends Environment {
   {
     super.seenModified();
     if (unseenrasters!=null) unseenrasters.fireTableDataChanged();
+  }
+
+  @Override
+  protected void unseenRefinementsModified()
+  {
+    super.unseenRefinementsModified();
+    if (unseenrefinements!=null) unseenrefinements.fireTableDataChanged();
   }
 
   private void setupFrame(JFrame frame)
@@ -797,14 +812,22 @@ public class ToolEnvironment extends Environment {
     }
   }
 
-  private class RefinementModel extends AutoRefreshMandelListTableModel {
+  private class UnseenRefinementModel extends AutoRefreshMandelListTableModel {
 
-    public RefinementModel()
+    public UnseenRefinementModel()
     {
-      super(getRefinements(),getImageDataScanner());
+      super(getUnseenRefinements(),getImageDataScanner());
     }
   }
 
+  private class RefinementRequestsModel extends AutoRefreshMandelListTableModel {
+
+    public RefinementRequestsModel()
+    {
+      super(getRefinementRequests(),getInfoScanner());
+    }
+  }
+  
   /////////////////////////////////////////////////////////////////////////
 
   static public interface Listener {

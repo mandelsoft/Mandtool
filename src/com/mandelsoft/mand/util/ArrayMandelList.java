@@ -16,6 +16,7 @@
  */
 package com.mandelsoft.mand.util;
 
+import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,5 +44,11 @@ public class ArrayMandelList extends ArrayBaseList<QualifiedMandelName>
     IO.read(this, is, src);
   }
 
-
+  public QualifiedMandelName get(MandelName n)
+  {
+    for (QualifiedMandelName q:this) {
+      if (q.getMandelName().equals(n)) return q;
+    }
+    return null;
+  }
 }

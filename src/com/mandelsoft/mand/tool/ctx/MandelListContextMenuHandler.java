@@ -38,6 +38,7 @@ import com.mandelsoft.mand.tool.MandelAreaViewDialog;
 import com.mandelsoft.mand.tool.MandelImageAreaDialog;
 import com.mandelsoft.mand.tool.MandelImagePanel;
 import com.mandelsoft.mand.tool.MandelListModel;
+import com.mandelsoft.mand.tool.MandelListModelMenu;
 import com.mandelsoft.mand.tool.MandelListModelSource;
 import com.mandelsoft.mand.tool.MandelWindowAccess;
 import java.util.Set;
@@ -140,6 +141,23 @@ public abstract class MandelListContextMenuHandler
       if (sel==null) return;
       MandelWindowAccess access=getMandelWindowAccess();
       access.getEnvironment().getMemoryModel().add(sel);
+    }
+  }
+
+   private class SetMarkAction extends ContextAction {
+
+    public SetMarkAction()
+    {
+      super("Set mark");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      QualifiedMandelName sel=getSelectedItem();
+      if (sel==null) return;
+      MandelWindowAccess access=getMandelWindowAccess();
+      MandelImagePanel mp=access.getMandelImagePane();
+      mp.setMark(sel);
     }
   }
 
@@ -257,6 +275,7 @@ public abstract class MandelListContextMenuHandler
   protected Action removeCurrentImageAction=new RemoveCurrentImageAction();
   protected Action removeImageAction=new RemoveImageAction();
   protected Action addMemoryAction=new AddMemoryAction();
+  protected Action setMarkAction=new SetMarkAction();
   protected Action showMetaAction=new ShowMetaAction();
   protected Action showImageAction=new ShowImageAction();
   protected Action loadImageAction=new LoadImageAction();
@@ -327,6 +346,9 @@ public abstract class MandelListContextMenuHandler
           if (sel.getQualifier()!=null) {
             menu.add(loadRegImageAction);
           }
+          menu.add(setMarkAction);
+          MandelListModel m=mp.getEnvironment().getLinkModel(sel.getMandelName());
+          menu.add(new MandelListModelMenu("Links", mp, m));
         }
       }
       else {

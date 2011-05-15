@@ -31,6 +31,8 @@ import com.mandelsoft.mand.tool.History;
 import com.mandelsoft.mand.tool.MandelImagePanel;
 import com.mandelsoft.mand.tool.ToolEnvironment;
 import com.mandelsoft.mand.tool.mapper.MapperModel;
+import com.mandelsoft.swing.BufferedComponent;
+import com.mandelsoft.util.Utils;
 import java.awt.Window;
 
 /**
@@ -45,7 +47,9 @@ public class MandToolStarter extends JApplet
   {
     String[][] info = {
       // Parameter Name     Kind of Value   Description
-        {"datasource",     "URL",          "a directory containing the config"}
+        {"datasource",     "URL",          "a directory containing the config"},
+        {"showsub",        "boolean",      "initially show sub areas"},
+        {"tooltipmode",    "String",       "initial tool tip mode"}
     };
     return info;
   }
@@ -73,21 +77,34 @@ public class MandToolStarter extends JApplet
     }
   }
 
+  private boolean getBooleanParameter(String name, boolean def)
+  {
+    String arg=getParameter(name);
+    if (!Utils.isEmpty(arg)) return arg.toLowerCase().equals("true");
+    return def;
+  }
+
   private void createGUI()
   {
     try {
       String data=getParameter("datasource");
+      String tooltipmode=getParameter("tooltipmode");
       URL base=getDocumentBase();
-
+      boolean showsub=getBooleanParameter("showsub",false);
+      boolean showtooltip=getBooleanParameter("showtooltip",false);
+      
       System.out.println("document base is "+base);
       System.out.println("data source is   "+data);
+      System.out.println("show sub is      "+showsub);
+      System.out.println("show tooltip     "+showtooltip);
+      System.out.println("tooltipmode is   "+tooltipmode);
       if (data==null) data=".";
       URL dataURL=new URL(base, data);
       ToolEnvironment env=new ToolEnvironment(null, dataURL);
       MandelAreaImage img=env.getMandelImage(env.getInitialName());
       MandToolStarter.this.showStatus("setup done");
       System.out.println("setup done");
-      setup(env,img);
+      setup(env,img,showsub,showtooltip,tooltipmode);
     }
     catch (MalformedURLException ex) {
       System.out.println("url failed: "+ex);
@@ -118,14 +135,27 @@ public class MandToolStarter extends JApplet
   // there we are
   ////////////////////////////////////////////////////////////////////
 
-   MandelImagePanel panel;
+  MandelImagePanel panel;
 
-  public void setup(ToolEnvironment env, MandelAreaImage img) throws IOException
+  public void setup(ToolEnvironment env, MandelAreaImage img,
+                    boolean showsub,
+                    boolean showtooltip,
+                    String tooltipmode) throws IOException
   {
+    BufferedComponent bc;
     panel=new MandelImagePanel(env, img, getWidth());
     add(panel);
-    panel.getImagePane().setScaleMode(false);
-    panel.getImagePane().setLimitWindowSize(false);
+    bc=panel.getImagePane();
+    bc.setScaleMode(false);
+    bc.setLimitWindowSize(false);
+    if (showtooltip) panel.getPixelToolTipModel().setState(showtooltip);
+    if (tooltipmode!=null) {
+      if (!panel.getToolTipSelectionModel().setSelectedItemId(tooltipmode)) {
+        showStatus("unknown tooltip mode "+tooltipmode);
+        System.out.println("unknown tooltip mode "+tooltipmode);
+      }
+    }
+    if (showsub) panel.showSubRects();
   }
 
   public ColormapModel getColormapModel()

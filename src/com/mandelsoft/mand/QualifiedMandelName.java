@@ -294,8 +294,11 @@ public class QualifiedMandelName implements ElementName<QualifiedMandelName> {
     }
 
   }
-  public static void main(String[] args)
+
+  public static int test()
   {
+    System.out.println("starting QualifiedMandelName tests...");
+    failed=0;
     check("0","0",null,null);
     check("ab","ab",null,null);
 
@@ -308,5 +311,11 @@ public class QualifiedMandelName implements ElementName<QualifiedMandelName> {
     check("ab@other-qual@label","ab@other","qual","label");
 
     System.out.println("failed: "+failed);
+    return failed;
+  }
+
+  public static void main(String[] args)
+  {
+    test();
   }
 }

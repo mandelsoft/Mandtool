@@ -41,10 +41,12 @@ public class Journey extends AbstractSlideShow {
   Journey()
   {
     super("Journey",5000);
-    addAction(new JourneyAction());
-    addAction(new ZoomInAction());
-    addAction(new ZoomOutAction());
-    addAction(new TripAction());
+    addAction(new JourneyAction()); // journey from one area up to the common
+                                    // base area down to another area
+    addAction(new ZoomInAction());  // journey from the root to an area
+    addAction(new ZoomOutAction()); // journey from an area to the root
+    addAction(new TripAction());    // journey from the the first area
+                                    // of a list to all the others
   }
 
   @Override
@@ -180,65 +182,50 @@ public class Journey extends AbstractSlideShow {
   /////////////////////////////////////////////////////////////////////////
 
   private class TripAction extends SlideShowActionBase {
-
     public TripAction()
     {
-      super("Trip");
-    }
-
-    public int getMode()
-    {
-      return LIST;
+      super("Trip", LIST);
     }
 
     public void actionPerformed(ActionEvent e)
     {
       if (isEnabled()) {
-        MandelList start=getSelectedMandelList(e);
+        MandelList start=getMandelList(e);
         if (start!=null) {
           startShow(start);
         }
       }
     }
+
+    protected MandelList getMandelList(ActionEvent e)
+    {
+      MandelList l=null;
+      SlideShowSource.ListMode m=model.getSource(e).getListMode(model);
+      return m==null?null:m.getMandelList(model);
+    }
   }
 
   private class JourneyAction extends SlideShowActionBase {
-
-    protected JourneyAction(String name)
+    protected JourneyAction(String name, int mode)
     {
-      super(name);
+      super(name, mode);
     }
 
     public JourneyAction()
     {
-      super("Journey");
-    }
-
-    public int getMode()
-    {
-      return TWO;
-    }
-
-    @Override
-    protected QualifiedMandelName getSelectedItem(ActionEvent e)
-    {
-      QualifiedMandelName n=super.getSelectedItem(e);
-      if (n!=null) {
-        return n;
-      }
-      else {
-        return model.getCurrentQualifiedMandelName();
-      }
+      this("Journey",TWO);
     }
 
     protected QualifiedMandelName getStartName(ActionEvent e)
     {
-      return model.getCurrentQualifiedMandelName();
+      SlideShowSource.TwoMode m=model.getSource(e).getTwoMode(model);
+      return m==null?null:m.getFirstName(model);
     }
 
     protected QualifiedMandelName getEndName(ActionEvent e)
     {
-      return getSelectedItem(e);
+      SlideShowSource.TwoMode m=model.getSource(e).getTwoMode(model);
+      return m==null?null:m.getSecondName(model);
     }
 
     public void actionPerformed(ActionEvent e)
@@ -256,23 +243,21 @@ public class Journey extends AbstractSlideShow {
   /////////////////////////////////////////////////////////////////////////
 
   private abstract class ZoomAction extends JourneyAction {
-
     public ZoomAction(String name)
     {
-      super(name);
+      super(name,ONE);
     }
 
-    @Override
-    public int getMode()
+    protected QualifiedMandelName getSingleName(ActionEvent e)
     {
-      return ONE;
+      SlideShowSource.OneMode m=model.getSource(e).getOneMode(model);
+      return m==null?null:m.getSingleName(model);
     }
   }
 
   /////////////////////////////////////////////////////////////////////////
 
   private class ZoomInAction extends ZoomAction {
-
     public ZoomInAction()
     {
       super("Zoom In");
@@ -283,12 +268,17 @@ public class Journey extends AbstractSlideShow {
     {
       return QualifiedMandelName.ROOT;
     }
+
+    @Override
+    protected QualifiedMandelName getEndName(ActionEvent e)
+    {
+      return getSingleName(e);
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////
 
   private class ZoomOutAction extends ZoomAction {
-
     public ZoomOutAction()
     {
       super("Zoom Out");
@@ -297,7 +287,7 @@ public class Journey extends AbstractSlideShow {
     @Override
     protected QualifiedMandelName getStartName(ActionEvent e)
     {
-      return getSelectedItem(e);
+       return getSingleName(e);
     }
 
     @Override

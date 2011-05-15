@@ -93,6 +93,10 @@ public class MandelImageRecalcDialog extends MandelImageAreaDialog {
         
         try {
           md.write(f);
+          if (name.getQualifiedName().equals(qname)) {
+            System.out.println("add to refinement list");
+            getEnvironment().getUnseenRefinements().addRefinement(qname);
+          }
           System.out.println("close refinement");
           getDialog().setVisible(false);
         }

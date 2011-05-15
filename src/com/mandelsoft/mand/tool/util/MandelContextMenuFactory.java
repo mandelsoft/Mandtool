@@ -16,6 +16,7 @@
  */
 package com.mandelsoft.mand.tool.util;
 
+import com.mandelsoft.util.upd.UpdateSource;
 import java.awt.Component;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
@@ -24,6 +25,10 @@ import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.tool.MandelListSelector;
 import com.mandelsoft.mand.tool.MandelNameSelector;
 import com.mandelsoft.mand.util.MandelList;
+import com.mandelsoft.swing.UpdatableJMenu;
+import com.mandelsoft.swing.UpdatableJPopupMenu;
+import com.mandelsoft.util.upd.UpdatableObject;
+import com.mandelsoft.util.upd.UpdateContext;
 import javax.swing.JMenuItem;
 
 /**
@@ -39,6 +44,11 @@ public abstract class MandelContextMenuFactory {
     this.name=name;
   }
 
+  public String getName()
+  {
+    return name;
+  }
+
   public void updateMenu(JComponent menu, Component comp)
   {
     Component[] comps;
@@ -51,67 +61,73 @@ public abstract class MandelContextMenuFactory {
 
   protected void updateItem(JMenuItem item, Component comp)
   {
-
   }
 
   public JPopupMenu createPopupMenu(Component comp, boolean generic)
   {
-    JPopupMenu menu=new JPopupMenu(this.name);
-    addItems(menu, comp, generic);
+    JPopupMenu menu=new PopupMenuBase(comp);
+    _addItems(menu, comp, generic);
     return menu;
   }
 
   public JMenu createMenu(Component comp, boolean generic)
   {
-    JMenu menu=new JMenu(this.name);
-    addItems(menu, comp, generic);
+    JMenu menu=new MenuBase(comp);
+    _addItems(menu, comp, generic);
     return menu;
   }
 
   public JPopupMenu createPopupMenu(Component comp, QualifiedMandelName name)
   {
-    JPopupMenu menu=new MandelPopupMenu(this.name,name);
-    addItems(menu, comp, false);
+    JPopupMenu menu=new MandelPopupMenu(comp,name);
+    _addItems(menu, comp, false);
     return menu;
   }
 
   public JMenu createMenu(Component comp, QualifiedMandelName name)
   {
-    JMenu menu=new MandelMenu(this.name,name);
-    addItems(menu, comp, false);
+    JMenu menu=new MandelMenu(comp,name);
+    _addItems(menu, comp, false);
     return menu;
   }
 
   public JPopupMenu createPopupMenu(Component comp, MandelNameSelector sel)
   {
-    JPopupMenu menu=new MandelSelPopupMenu(this.name,sel);
-    addItems(menu, comp, true);
+    JPopupMenu menu=new MandelSelPopupMenu(comp,sel);
+    _addItems(menu, comp, true);
     return menu;
   }
 
   public JMenu createMenu(Component comp, MandelNameSelector sel)
   {
-    JMenu menu=new MandelSelMenu(this.name,sel);
-    addItems(menu, comp, true);
+    JMenu menu=new MandelSelMenu(comp,sel);
+    _addItems(menu, comp, true);
     return menu;
   }
 
 
   public JPopupMenu createPopupMenu(Component comp, MandelListSelector sel)
   {
-    JPopupMenu menu=new MandelListSelPopupMenu(this.name,sel);
-    addItems(menu, comp, true);
+    JPopupMenu menu=new MandelListSelPopupMenu(comp,sel);
+    _addItems(menu, comp, true);
     return menu;
   }
 
   public JMenu createMenu(Component comp, MandelListSelector sel)
   {
-    JMenu menu=new MandelListSelMenu(this.name,sel);
-    addItems(menu, comp, true);
+    JMenu menu=new MandelListSelMenu(comp,sel);
+    _addItems(menu, comp, true);
     return menu;
   }
 
-
+  protected void _addItems(JComponent menu, // common parent for JMenu and JPopupMenu
+                           Component comp, boolean generic)
+  {
+    addItems(menu,comp,generic);
+    if (menu instanceof UpdatableObject) {
+      ((UpdatableObject)menu).updateObject(null/*unused*/);
+    }
+  }
 
   protected abstract void addItems(JComponent menu, Component comp,
                                    boolean generic);
@@ -121,16 +137,50 @@ public abstract class MandelContextMenuFactory {
   // item menu
   ////////////////////////////////////////////////////////////////////////////
 
-  private static class MandelPopupMenu extends JPopupMenu
-                                       implements MandelNameSelector {
-    private QualifiedMandelName selected;
+  protected class PopupMenuBase extends UpdatableJPopupMenu {
+    private Component comp;
 
-    public MandelPopupMenu(String label, QualifiedMandelName name)
+    public PopupMenuBase(Component comp)
     {
-      super(label);
-      selected=name;
+      super(MandelContextMenuFactory.this.getName());
+      this.comp=comp;
     }
 
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+      MandelContextMenuFactory.this.updateMenu(this, comp);
+    }
+  }
+
+  protected class MenuBase extends UpdatableJMenu {
+    private Component comp;
+
+    public MenuBase(Component comp)
+    {
+      super(MandelContextMenuFactory.this.getName());
+      this.comp=comp;
+    }
+
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+      MandelContextMenuFactory.this.updateMenu(this, comp);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // direct name flavors
+
+  private class MandelPopupMenu extends PopupMenuBase
+                                implements MandelNameSelector {
+    private QualifiedMandelName selected;
+
+    public MandelPopupMenu(Component comp, QualifiedMandelName name)
+    {
+      super(comp);
+      this.selected=name;
+    }
 
     public QualifiedMandelName getSelectedMandelName()
     {
@@ -138,13 +188,13 @@ public abstract class MandelContextMenuFactory {
     }
   }
 
-  private static class MandelMenu extends JMenu
-                                  implements MandelNameSelector {
+  private class MandelMenu extends MenuBase
+                           implements MandelNameSelector {
     private QualifiedMandelName selected;
 
-    public MandelMenu(String label, QualifiedMandelName name)
+    public MandelMenu(Component comp, QualifiedMandelName name)
     {
-      super(label);
+      super(comp);
       selected=name;
     }
 
@@ -154,17 +204,18 @@ public abstract class MandelContextMenuFactory {
     }
   }
 
-  ///////////////////////////////////////////////////////////////////////////
-  private static class MandelSelPopupMenu extends JPopupMenu
-                                       implements MandelNameSelector {
+  ////////////////////////////////////////////////////////////////////////////
+  // name selector flavors
+
+  private class MandelSelPopupMenu extends PopupMenuBase
+                                   implements MandelNameSelector {
     private MandelNameSelector selector;
 
-    public MandelSelPopupMenu(String label, MandelNameSelector sel)
+    public MandelSelPopupMenu(Component comp, MandelNameSelector sel)
     {
-      super(label);
+      super(comp);
       selector=sel;
     }
-
 
     public QualifiedMandelName getSelectedMandelName()
     {
@@ -172,16 +223,15 @@ public abstract class MandelContextMenuFactory {
     }
   }
 
-  private static class MandelSelMenu extends JMenu
-                                       implements MandelNameSelector {
+  private class MandelSelMenu extends MenuBase
+                              implements MandelNameSelector {
     private MandelNameSelector selector;
 
-    public MandelSelMenu(String label, MandelNameSelector sel)
+    public MandelSelMenu(Component comp, MandelNameSelector sel)
     {
-      super(label);
+      super(comp);
       selector=sel;
     }
-
 
     public QualifiedMandelName getSelectedMandelName()
     {
@@ -190,16 +240,15 @@ public abstract class MandelContextMenuFactory {
   }
 
   ///////////////////////////////////////////////////////////////////////////
-  private static class MandelListSelPopupMenu extends JPopupMenu
+  private class MandelListSelPopupMenu extends PopupMenuBase
                                        implements MandelListSelector {
     private MandelListSelector selector;
 
-    public MandelListSelPopupMenu(String label, MandelListSelector sel)
+    public MandelListSelPopupMenu(Component comp, MandelListSelector sel)
     {
-      super(label);
+      super(comp);
       selector=sel;
     }
-
 
     public MandelList getSelectedMandelList()
     {
@@ -207,13 +256,13 @@ public abstract class MandelContextMenuFactory {
     }
   }
 
-  private static class MandelListSelMenu extends JMenu
+  private class MandelListSelMenu extends MenuBase
                                        implements MandelListSelector {
     private MandelListSelector selector;
 
-    public MandelListSelMenu(String label, MandelListSelector sel)
+    public MandelListSelMenu(Component comp, MandelListSelector sel)
     {
-      super(label);
+      super(comp);
       selector=sel;
     }
 

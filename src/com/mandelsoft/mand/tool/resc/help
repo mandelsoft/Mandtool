@@ -341,7 +341,9 @@ The following menu entries can be found:
       area. The marked area is always highlighted on the main display and
       it can be used for quick navigation, establishing links between
       two areas and to initiate a journey from the currently displayed
-      area to the marked one.
+      area to the marked one. Additionally it allows to navigate down
+      to the next area or key area from the currently displayed area towards
+      the marked area.
   - Sub area hightlight sub menu.
       On the main window hightlighted sub areas
       are show with thick lines. This menu can be used to select the
@@ -374,6 +376,8 @@ The following menu entries can be found:
       Navigate to the parent image
   - Key Area.
       Navigate back to the last key area up the area tree.
+      To navigate down to the next key area towards the marked area
+      choose the approprate entry from the Mark sub menu.
 
   - Last Fork.
       Navigate back to the last area with more than one sub areas.
@@ -445,6 +449,9 @@ Here comes the list of features for a marked area:
   So, If a mark is set the slideshow submenu on the main window's context menu
   allows for the Journey option, to start a journey from the actual area to
   the marked one.
+- If the currently shown area is above the marked area, it is possible
+  to navigate down to the next key area towards the marked area using
+  the Mark submenu.
 
 2.1.6 Slide Shows
 
@@ -455,6 +462,58 @@ Here comes the list of features for a marked area:
 2.4 Image Control
 
 2.5 Area Lists Window
+
+The area lists window provides access to some often used area lists using tabs.
+Alternatively most of them are also accessible in the list folder tree
+shown by the list browser window (see 2.6).
+
+2.5.1 Unseen
+
+The unseen list shows areas not listed in the seen list in the root folder
+of the image base. Whenever an area is displayed in a main window (no galery)
+the seen list is updated. Freshly calculated rasters not yet displayed will
+popup in this list. This feature is only available for local image bases.
+The applet version does not show this tab.
+
+2.5.2 Variants
+
+The list of this tab shows all available area variants available in the image
+base. A variant is an area with a qualified name with a qualifier.
+
+2.5.3 Favorites
+
+The favorites tab shows the list of the root folder of the favorites tree.
+This list is also manipulated via the list shortcut for the favorites menu.
+The list browser provides access to potential sub folders in the favorites
+tree.
+
+2.5.4 Todos
+
+The todos tab shows the list of the root folder of the todos tree.
+This list is also manipulated via the list shortcut for the todos menu.
+The list browser provides access to potential sub folders in the todos
+tree.
+
+2.5.5 History
+
+Whenever an image is loaded into the main window it is also added to the
+history list of that window (see 1.5.6). The history list is an index area list.
+It is shown in the lists window displayed via the context menu of a main
+window.
+
+2.5.6 Key Areas
+
+This tab shows all areas marked as key areas (see 1.5.3).
+
+2.5.7 Refinements
+
+The list on this tab shows the list of calculated refinements not yet loaded.
+
+2.5.8 Refinement Requests
+
+This tab shows a list of pending refinement requests for already calculated
+areas. After the refinement has been calculated the area is listed on the
+refinements tab.
 
 2.6 List Browser
 

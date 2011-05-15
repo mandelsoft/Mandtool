@@ -904,6 +904,7 @@ public class ImageControl extends ControlDialog {
     private JComboBox selection;
     private JComboBox proportion;
 
+    private JCheckBox autoshow_info;
     private JCheckBox automark_keyarea;
     private JCheckBox automark_fork;
     private JCheckBox automark_parent;
@@ -916,6 +917,8 @@ public class ImageControl extends ControlDialog {
       decoration=createCheckbox(row++,mp.getDecorationModel());
       ////////////
       fullareanames=createCheckbox(row++,mp.getFullAreaNamesModel());
+      ////////////
+      autoshow_info=createCheckbox(row++,mp.getAutoShowInfoModel());
       ////////////
       automark_keyarea=createCheckbox(row++,mp.getAutoMarkKeyAreaModel());
       ////////////

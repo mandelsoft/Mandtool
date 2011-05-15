@@ -49,7 +49,7 @@ public abstract class MandelContextAction
     return null;
   }
 
-   protected MandelList getSelectedMandelList(ActionEvent e)
+  protected MandelList getSelectedMandelList(ActionEvent e)
   {
     MandelListSelector s=getMandelListSelector(e);
     if (s!=null) {

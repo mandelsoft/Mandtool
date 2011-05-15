@@ -16,6 +16,7 @@
 
 package com.mandelsoft.mand.util;
 
+import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.util.MandelList.IO;
 import java.io.IOException;
@@ -48,6 +49,11 @@ public class ProxyMandelList implements MandelList {
   public void read(InputStream is, String src) throws IOException
   {
     IO.read(this, is, src);
+  }
+
+  public QualifiedMandelName get(MandelName n)
+  {
+    return list.get(n);
   }
 
   ///////////////////////////////////////////////////////////////////////////

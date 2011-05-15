@@ -27,12 +27,10 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
-import com.mandelsoft.mand.tool.MandelImagePanel;
-import com.mandelsoft.mand.tool.MandelListSelector;
-import com.mandelsoft.mand.tool.MandelNameSelector;
-import com.mandelsoft.mand.tool.MandelWindowAccess;
+import com.mandelsoft.mand.tool.util.MandelContextAction;
 import com.mandelsoft.mand.tool.util.MandelContextMenuFactory;
-import com.mandelsoft.util.Utils;
+import javax.swing.JMenu;
+import javax.swing.JPopupMenu;
 
 /**
  *
@@ -93,61 +91,120 @@ public class SlideShowModel extends MandelContextMenuFactory {
     for (SlideShow s:slideshows) s.cancel();
   }
 
-  private boolean checkTwo(MandelImagePanel mp, MandelNameSelector mn)
+  ////////////////////////////////////////////////////////////////////////////
+
+  public JMenu createMenu(Component comp, SlideShowSource src)
   {
-    if (mn==null || mp==null) return false;
-    QualifiedMandelName n=mn.getSelectedMandelName();
-    if (n==null) return false;
-    return !Utils.equals(mp.getQualifiedMandelName().getMandelName(), n.getMandelName());
+    JMenu menu=new MandelSourceMenu(comp,src);
+    _addItems(menu, comp, true);
+    return menu;
+  }
+
+
+  public JPopupMenu createPopupMenu(Component comp, SlideShowSource src)
+  {
+    JPopupMenu menu=new MandelSourcePopupMenu(comp,src);
+    _addItems(menu, comp, true);
+    return menu;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // direct name flavors
+
+  private class MandelSourcePopupMenu extends PopupMenuBase
+                                implements SlideShowSource {
+    private SlideShowSource src;
+
+    public MandelSourcePopupMenu(Component comp, SlideShowSource src)
+    {
+      super(comp);
+      this.src=src;
+    }
+
+    public int getSourceMode(SlideShowModel model, boolean generic)
+    {
+      return src.getSourceMode(model,generic);
+    }
+
+    public TwoMode getTwoMode(SlideShowModel model)
+    {
+      return src.getTwoMode(model);
+    }
+
+    public OneMode getOneMode(SlideShowModel model)
+    {
+      return src.getOneMode(model);
+    }
+
+    public ListMode getListMode(SlideShowModel model)
+    {
+      return src.getListMode(model);
+    }
+  }
+
+  private class MandelSourceMenu extends MenuBase
+                           implements SlideShowSource {
+    private SlideShowSource src;
+
+    public MandelSourceMenu(Component comp, SlideShowSource src)
+    {
+      super(comp);
+      this.src=src;
+    }
+
+    public int getSourceMode(SlideShowModel model, boolean generic)
+    {
+      return src.getSourceMode(model,generic);
+    }
+
+     public TwoMode getTwoMode(SlideShowModel model)
+    {
+      return src.getTwoMode(model);
+    }
+
+    public OneMode getOneMode(SlideShowModel model)
+    {
+      return src.getOneMode(model);
+    }
+
+    public ListMode getListMode(SlideShowModel model)
+    {
+      return src.getListMode(model);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // update
+
+  private static SlideShowSource getSource(JComponent menu, Component comp)
+  {
+    SlideShowSource s=MandelContextAction.getEnvironmentObject(menu,
+                                                       SlideShowSource.class);
+    if (s==null) {
+      s=MandelContextAction.getEnvironmentObject(comp, SlideShowSource.class);
+    }
+    if (s!=null) return s;
+
+    return new DefaultSlideShowSource(menu,comp);
   }
 
   private int getMode(JComponent menu, Component comp, boolean generic)
   {
-    int mode=0;
-    MandelWindowAccess acc=MandelWindowAccess.Access.getMandelWindowAccess(comp);
-    MandelListSelector ml;
-    MandelNameSelector mn;
-    MandelImagePanel mp=null;
-
-    if (acc!=null) mp=acc.getMandelImagePane();
-    ml=SlideShowActionBase.getEnvironmentObject(menu, MandelListSelector.class);
-    if (ml==null) {
-      ml=SlideShowActionBase.getEnvironmentObject(comp, MandelListSelector.class);
-    }
-    if (ml!=null && (generic || ml.getSelectedMandelList()!=null)) {
-      mode|=SlideShowAction.LIST;
-    }
-
-    mn=SlideShowActionBase.getEnvironmentObject(menu, MandelNameSelector.class);
-    if (mn==null) {
-      mn=SlideShowActionBase.getEnvironmentObject(comp, MandelNameSelector.class);
-    }
-
-    if (mn!=null && (generic || mn.getSelectedMandelName()!=null)) {
-      mode|=SlideShowAction.ONE;
-      if (mp!=null) {
-        if (generic || checkTwo(mp,mn)) {
-          mode|=SlideShowAction.TWO;
-        }
-      }
-    }
-    if (mp!=null && mp==comp) {
-      mode|=SlideShowAction.ONE;
-    }
-    return mode;
+    return getSource(menu,comp).getSourceMode(this,generic);
   }
 
   @Override
   protected void updateItem(JMenuItem item, Component comp)
   {
     if (item.getAction() instanceof SlideShowAction) {
-      int mode=getMode(item,comp,false);
       SlideShowAction a=(SlideShowAction)item.getAction();
+      SlideShowActionMenuItem mi=(SlideShowActionMenuItem)item;
+      int mode=getMode(item, comp, false);
       if ((a.getMode()&mode)!=0) {
-        item.setEnabled(true);
+        mi.setPossible(true);
       }
       else {
-        item.setEnabled(false);
+        mi.setPossible(false);
       }
     }
   }
@@ -159,12 +216,20 @@ public class SlideShowModel extends MandelContextMenuFactory {
 
     for (SlideShowAction a:actions) {
       if ((a.getMode()&mode)!=0) {
-        it=new JMenuItem(a);
+        it=new SlideShowActionMenuItem(a);
         menu.add(it);
       }
     }
     it=new JMenuItem(stop);
     menu.add(it);
+  }
+
+  public SlideShowSource getSource(ActionEvent e)
+  {
+    SlideShowSource s=MandelContextAction.getEnvironmentObject(e, SlideShowSource.class);
+    if (s!=null) return s;
+
+    return new DefaultSlideShowSource(null,(Component)e.getSource());
   }
 
   public boolean show(QualifiedMandelName name)
@@ -214,5 +279,51 @@ public class SlideShowModel extends MandelContextMenuFactory {
     }
   }
 
-  
+  //////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Keep state info whether the action is possible in the actual
+   * mandel context.
+   * This state is independent of the action state. The action state
+   * described whether the action is basically possible for the
+   * current slide show state. If a slide show is running the
+   * actions are disabled.
+   * If the slide show stops the action will be enabled again,
+   * this must reset the item state to the possible state. This
+   * propgataion from the action state to the item state is done
+   * in the actionPropertyChanged event handler overridden from
+   * the JMenuItem class.
+   */
+  private static class SlideShowActionMenuItem extends JMenuItem {
+    private boolean possible;
+
+    public SlideShowActionMenuItem(Action a)
+    {
+      super(a);
+      possible=a.isEnabled();
+    }
+
+    public boolean isPossible()
+    {
+      return possible;
+    }
+
+    public void setPossible(boolean possible)
+    {
+      this.possible=possible;
+      setEnabled(possible&getAction().isEnabled());
+    }
+
+    @Override
+    protected void actionPropertyChanged(Action action, String propertyName)
+    {
+      if (propertyName!=null && propertyName.equals("enabled")) {
+        if (action.isEnabled()) {
+          setEnabled(isPossible());
+          return;
+        }
+      }
+      super.actionPropertyChanged(action, propertyName);
+    }
+  }
 }

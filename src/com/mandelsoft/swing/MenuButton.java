@@ -15,6 +15,7 @@
  */
 package com.mandelsoft.swing;
 
+import com.mandelsoft.util.upd.UpdatableObject;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -85,6 +86,9 @@ public class MenuButton extends JButton {
 
   protected JPopupMenu getPopupMenu(Component c)
   {
+    if (menu instanceof UpdatableObject) {
+      ((UpdatableObject)menu).updateObject(null);
+    }
     return menu;
   }
 

@@ -62,23 +62,21 @@ public class ImageShow extends AbstractSlideShow  {
 
     protected ShowAction(String name)
     {
-      super(name);
+      super(name, LIST);
     }
 
     public ShowAction()
     {
-      super("Image Show");
-    }
-
-    public int getMode()
-    {
-      return LIST;
+      this("Image Show");
     }
 
     public void actionPerformed(ActionEvent e)
     {
-      MandelList l=getSelectedMandelList(e);
-      if (l!=null) startShow(l);
+      SlideShowSource.ListMode m=model.getSource(e).getListMode(model);
+      if (m!=null) {
+        MandelList l=m.getMandelList(model);
+        if (l!=null) startShow(l);
+      }
     }
   }
 }

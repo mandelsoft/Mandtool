@@ -325,6 +325,11 @@ public class Environment1 implements MandelConstants  {
     return database.getSeenRasters();
   }
 
+  public MandelList getRefinements()
+  {
+    return database.getRefinements();
+  }
+
   public File getRasterImageFolder(AbstractFile d)
   {
     return database.getRasterImageFolder(d);
@@ -548,7 +553,8 @@ public class Environment1 implements MandelConstants  {
   private MandelList variants;
   private MandelList leafs;
   private MandelList pending;
-  private MandelList refinements;
+  private UnseenRefinementList unseenrefinements;
+  private MandelList refinerequests;
 
   public MandelList getNewRasters()
   { return newrasters;
@@ -566,8 +572,12 @@ public class Environment1 implements MandelConstants  {
   { return pending;
   }
 
-  public MandelList getRefinements()
-  { return refinements;
+  public UnseenRefinementList getUnseenRefinements()
+  { return unseenrefinements;
+  }
+
+  public MandelList getRefinementRequests()
+  { return refinerequests;
   }
 
   private void setupDerivedLists()
@@ -584,17 +594,67 @@ public class Environment1 implements MandelConstants  {
     //System.out.println("pending");
     pending=new PendingImageList();
     //System.out.println("areas");
-    if (!isReadonly())
-      refinements=new RefinementList();
+    if (!isReadonly()) {
+      refinerequests=new RefinementRequestList();
+      unseenrefinements=new UnseenRefinementList();
+    }
   }
 
   ///////////////////////////////////////////////////////////////////////////
 
-  private class RefinementList extends UniqueArrayMandelList {
+  public class UnseenRefinementList extends UniqueArrayMandelList {
 
-    RefinementList()
+    UnseenRefinementList()
     {
       _refresh();
+    }
+
+    private boolean addExplicit(QualifiedMandelName e)
+    {
+      MandelList l=database.getRefinements();
+      if (l!=null && l.contains(e)) return false;
+      return l.add(e);
+    }
+
+    private boolean removeExplicit(Object e)
+    {
+      MandelList l=database.getRefinements();
+      if (l==null) return false;
+      return l.remove(e);
+    }
+
+    public boolean addRefinement(QualifiedMandelName n)
+    {
+      return addExplicit(n);
+    }
+
+    @Override
+    public boolean add(QualifiedMandelName e)
+    {
+      if (!addExplicit(e)) return false;
+      return super.add(e);
+    }
+
+    @Override
+    public void add(int index, QualifiedMandelName element)
+    {
+      if (!addExplicit(element)) return;
+      super.add(index, element);
+    }
+
+    @Override
+    public boolean remove(Object o)
+    {
+      removeExplicit(o);
+      return super.remove(o);
+    }
+
+    @Override
+    public QualifiedMandelName remove(int index)
+    {
+      QualifiedMandelName n=get(index);
+      if (n!=null) removeExplicit(n);
+      return super.remove(index);
     }
 
     @Override
@@ -644,7 +704,23 @@ public class Environment1 implements MandelConstants  {
 //        }
 //      }
 
-      // find completed refinement requests
+      boolean mod=false;
+
+      // first update explicit refinement list from refinement requests
+      for (QualifiedMandelName n: refinerequests) {
+        mod|=addExplicit(n);
+      }
+
+      // filter compeleted unseen refinement requests from explicit list
+      //refinerequests.refresh(false);
+      for (QualifiedMandelName n: database.getRefinements()) {
+        if (!refinerequests.contains(n)) {
+          // remembered refinement not pending anymore should be completed
+          // here refinement requests in filesystem cannot be recognized!
+          super.add(n);
+        }
+      }
+      // find completed refinement requests in database
       for (QualifiedMandelName n:refset) {
         MandelData best=null;
         Set<MandelHandle> set=ref.getMandelHandles(n);
@@ -664,7 +740,79 @@ public class Environment1 implements MandelConstants  {
             System.out.println("cannot read "+i.getFile()+": "+ex);
           }
         }
-        if (best!=null) add(n);
+        if (best!=null) mod|=add(n);
+      }
+      if (mod) try {
+        save();
+      }
+      catch (IOException ex) {
+        System.err.println("*** cannot write refinements: "+ex);
+      }
+    }
+
+    @Override
+    public void save() throws IOException
+    {
+      MandelList l=database.getRefinements();
+      if (l!=null) l.save();
+      super.save();
+    }
+
+  }
+
+  ///////////////////////////////////////////////////////////////////////////
+
+  private class RefinementRequestList extends UniqueArrayMandelList {
+
+    RefinementRequestList()
+    {
+      _refresh();
+    }
+
+    @Override
+    public void refresh(boolean soft)
+    {
+      this.clear();
+      if (!soft) getAllScanner().rescan(false);
+      _refresh();
+    }
+
+    private void _refresh()
+    {
+      MandelScanner ref=getImageDataScanner();
+
+      // find refinement requests
+      for (MandelHandle h:getInfoScanner().getMandelHandles()) {
+        QualifiedMandelName n=h.getName();
+        Set<MandelHandle> set=ref.getMandelHandles(n);
+        if (!set.isEmpty()) {
+          boolean found=false;
+          try {
+            MandelData info=h.getInfo();
+            for (MandelHandle i:set) {
+              try {
+                MandelData data=i.getInfo();
+                if (data.getInfo().isSameSpec(info.getInfo())) {
+                  found=true;
+                }
+              }
+              catch (IOException ex) {
+                System.out.println("cannot read "+i.getFile()+": "+ex);
+              }
+            }
+          }
+          catch (IOException ex) {
+            System.out.println("cannot read "+h.getFile()+": "+ex);
+          }
+          if (found) {
+            System.out.println("obsolete request for "+h.getFile());
+            backupInfoFile(h.getFile());
+          }
+          else {
+            //System.out.println"refinement request for "+h.getFile());
+            add(n);
+          }
+        }
       }
     }
   }
@@ -939,6 +1087,26 @@ public class Environment1 implements MandelConstants  {
 
   ///////////////////////////////////////////////////////////////////////////
 
+  protected void handleRefinementSeen(QualifiedMandelName n)
+  {
+    unseenrefinements.remove(n); // removes both explicit and effective list
+    try {
+      unseenrefinements.save();
+    }
+    catch (IOException ex) {
+      System.err.println("cannot write unseen refinements: "+ex);
+    }
+    unseenRefinementsModified();
+  }
+
+  protected void unseenRefinementsModified()
+  {
+  }
+
+  protected void seenModified()
+  {
+  }
+
   public boolean handleRasterSeen(AbstractFile f)
   { String n=getProperty(Settings.RASTER_SAVE_PATH);
     String s=getProperty(Settings.RASTER_SEEN_PATH);
@@ -999,6 +1167,13 @@ public class Environment1 implements MandelConstants  {
         }
       }
     }
+
+    // remove from unseen unseenrefinements
+    if (unseenrefinements.contains(mn)) {
+      // explicit remove (in explicit list) only if contained in effective list
+      handleRefinementSeen(mn);
+    }
+
     //System.out.println("seen path: "+s);
     if (Utils.isEmpty(s)) return false;
     if (Utils.isEmpty(n)) return false;
@@ -1142,9 +1317,6 @@ public class Environment1 implements MandelConstants  {
   { return MandUtils.mapFile(f,IMAGE_SUFFIX,getImageFolder(f));
   }
 
-  protected void seenModified()
-  {
-  }
 
   ///////////////////////////////////////////////////////////////////////////
   // Auto
@@ -1214,21 +1386,5 @@ public class Environment1 implements MandelConstants  {
 
     ////////////////////////////////////////////////////////////////////////
 
-  }
-
-  ///////////////////////////////////////////////////////////////////////////
-  // main
-  ///////////////////////////////////////////////////////////////////////////
-
-  public static void main(String[] args)
-  {
-    try {
-      Environment1 env=new Environment1((String[])null);
-      //    System.out.println(s.getColormapNames());
-      //    System.out.println(s.getColormapNames());
-    }
-    catch (IllegalConfigurationException ex) {
-      System.out.println(""+ex);
-    }
   }
 }

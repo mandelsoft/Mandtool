@@ -503,6 +503,13 @@ public class MandelImageDBContext {
 
   public static void main(String[] args)
   {
+    test();
+  }
+  
+  public static int test()
+  {
+    System.out.println("starting MandelImageDBContext test...");
+    failed=0;
     MandelImageDBContext root=new MandelImageDBContext(new File("root)"));
     MandelImageDBContext lvl1=new MandelImageDBContext(new File("lvl1)"));
     MandelImageDBContext lvl2=new MandelImageDBContext(new File("lvl2)"));
@@ -582,5 +589,6 @@ public class MandelImageDBContext {
 
     //////////////////////////////////////////////////////////////////////
     System.out.println("failed: "+failed);
+    return failed;
   }
 }

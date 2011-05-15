@@ -34,6 +34,7 @@ import java.io.PrintWriter;
 public interface MandelList extends BaseList<QualifiedMandelName> {
   void write(OutputStream os, String dst) throws IOException;
   void read(InputStream is, String src) throws IOException ;
+  QualifiedMandelName get(MandelName n);
 
   public static class IO {
 

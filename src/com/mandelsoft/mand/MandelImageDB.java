@@ -72,6 +72,7 @@ public class MandelImageDB implements MandelConstants  {
   private MandelList todos;
   private MandelList areas;
   private MandelList seenrasters;
+  private MandelList refinements;
  
   private List<MandelListFolderTree> userlists;
 
@@ -176,6 +177,7 @@ public class MandelImageDB implements MandelConstants  {
     }
    
     areas=createMandelList(Settings.AREAS);
+    refinements=createMandelList(Settings.REFINEMENTS);
 
     colors=createColorList(Settings.COLORS);
     tags=createTagList(Settings.TAGS);
@@ -346,6 +348,10 @@ public class MandelImageDB implements MandelConstants  {
 
   public MandelList getSeenRasters()
   { return seenrasters;
+  }
+
+  public MandelList getRefinements()
+  { return refinements;
   }
 
   public List<MandelListFolderTree> getUserLists()

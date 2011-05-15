@@ -84,6 +84,7 @@ public class Settings {
   static public final String FAVORITES="favorites";
   static public final String AREAS="areas";
   static public final String TODO="todo";
+  static public final String REFINEMENTS="refinements";
   static public final String SEEN="seen";
   static public final String LINKS="links";
   static public final String COLORS="colors";
@@ -278,6 +279,7 @@ public class Settings {
     raw.setProperty(COLORS, "${dir}/colors");
     raw.setProperty(TAGS, "${dir}/tags");
     raw.setProperty(AREAS, "${dir}/areas");
+    raw.setProperty(REFINEMENTS, "${dir}/refine");
 
     if (local) {
       raw.setProperty(TODO, "${dir}/todo");

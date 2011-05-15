@@ -16,6 +16,7 @@
  */
 package com.mandelsoft.mand.util;
 
+import com.mandelsoft.mand.MandelName;
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -158,6 +159,14 @@ public class DeltaMandelList extends AbstractList<QualifiedMandelName>
   public void read(InputStream is, String src) throws IOException
   {
     IO.read(this,is,src);
+  }
+
+  public QualifiedMandelName get(MandelName n)
+  {
+    for (QualifiedMandelName q:this) {
+      if (q.getMandelName().equals(n)) return q;
+    }
+    return null;
   }
 
 }

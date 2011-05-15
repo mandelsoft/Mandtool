@@ -49,7 +49,7 @@ public class MandelListsDialog extends ControlDialog {
   protected void setup()
   {
     if (getEnvironment().getUnseenRastersModel()!=null) {
-      addTab("Unseen Images", new UnseenRasterPanel(),
+      addTab("Unseen", new UnseenRasterPanel(),
                             "Images not seen according to local seen file");
     }
     addTab("Variants", new VariantsPanel(),
@@ -62,17 +62,21 @@ public class MandelListsDialog extends ControlDialog {
                             "Images according local todo file");
     addTab("History", new HistoryPanel(),
                             "Display history of images");
-    if (getEnvironment().getNewRastersModel()!=null) {
-      addTab("New Images", new NewRasterPanel(),
-                       "newly generated rasters not touched by anybody so far");
-    }
+//    if (getEnvironment().getNewRastersModel()!=null) {
+//      addTab("New Images", new NewRasterPanel(),
+//                       "newly generated rasters not touched by anybody so far");
+//    }
     if (getEnvironment().getAreasModel()!=null) {
       addTab("Key Areas", new AreasPanel(),
-                       "marked root areas for backward navigation");
+                       "Marked root areas for backward navigation");
     }
-    if (getEnvironment().getRefinementsModel()!=null) {
+    if (getEnvironment().getUnseenRefinementsModel()!=null) {
       addTab("Refinements", new RefinementsPanel(),
-                       "available refinements");
+                       "Available refinements");
+    }
+    if (getEnvironment().getRefinementRequestsModel()!=null) {
+      addTab("RefineReq", new RefinementRequestsPanel(),
+                       "Refinement requests");
     }
   }
 
@@ -305,7 +309,17 @@ public class MandelListsDialog extends ControlDialog {
   private class RefinementsPanel extends MandelListPanel {
     public RefinementsPanel()
     {
-      super(null,getEnvironment().getRefinementsModel(),null);
+      super(null,getEnvironment().getUnseenRefinementsModel(),null);
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // refinement reqzests tab
+  /////////////////////////////////////////////////////////////////////////
+  private class RefinementRequestsPanel extends MandelListPanel {
+    public RefinementRequestsPanel()
+    {
+      super(null,getEnvironment().getRefinementRequestsModel(),null);
     }
   }
 }

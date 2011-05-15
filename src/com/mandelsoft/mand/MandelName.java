@@ -623,9 +623,10 @@ public class MandelName extends DefaultElementName<MandelName> {
     }
   }
 
-  static public void main(String[] args)
+  static public int test()
   {
-    System.out.println("starting tests...");
+    System.out.println("starting MandelName tests...");
+    failed=0;
     check(compress,"0","0");
     check(compress,"a","a");
     check(compress,"ab","ab");
@@ -771,6 +772,11 @@ public class MandelName extends DefaultElementName<MandelName> {
     check(parent,"ab@laber~a@other","ab@laber");
 
     System.out.println("failed: "+failed);
-   
+    return failed;
+  }
+
+  static public void main(String[] args)
+  {
+    test();
   }
 }

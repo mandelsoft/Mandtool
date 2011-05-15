@@ -88,3 +88,16 @@ Version 1.0
    - fix new raster list
    - fix mark link option for readonly mode
 
+Version 1.1-beta
+   - remove new raster from tab (use unseen instead)
+   - refinement request list and unseen refinements
+   - area downwards to mark function
+   - auto show info popup option
+   - rework menu updates for main window
+   - introduce slide show source abstraction
+   - mandel name context menu entries for mark and links
+   - copy option for mandelDB archiver
+   - goto dialog
+   - applet options for show aub areas and pixel tooltip settings
+
+

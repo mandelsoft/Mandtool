@@ -447,12 +447,25 @@ public class Archiver extends Sync {
     boolean vflag=false;
     boolean wflag=false;
     boolean rflag=false;
+    boolean cflag=false;
     File src=new File("C:/work/AccuRev/test/Mandel");
     File dst=new File("C:/Tomcat/apache-tomcat-6.0.29/webapps/mandel/mandel");
     File arch=new File("mandel.zip");
     String sn=null;
     String dn=null;
 
+    if (args.length>0 && args[0].equals("help")) {
+      System.out.println("MandelDB Delta Archiver");
+      System.out.println("  <cmd> <options> <args>");
+      System.out.println("    -a <achivename>  set the name of the used archive");
+      System.out.println("    -v               show wht would be done");
+      System.out.println("  Archive Writer:  <cmd> -w <options> <src> <dst>");
+      System.out.println("    -w               write an archive");
+      System.out.println("  Archive Reader:  <cmd> -r <options> <dst>");
+      System.out.println("    -r               read an archive");
+      System.out.println("    -c               copy mandel list instead of add content");
+      return;
+    }
     while (args.length>c&&args[c].charAt(0)=='-') {
       //System.out.println("arg: "+args[arg]);
       arg=args[c++];
@@ -470,6 +483,9 @@ public class Archiver extends Sync {
           case 'r':
             if (wflag) Error("only read or write allowed");
             rflag=true;
+            break;
+          case 'c':
+            cflag=true;
             break;
           case 'a':
             if (args.length>c) {
@@ -526,6 +542,7 @@ public class Archiver extends Sync {
         if (!dst.isDirectory()) Error(dst+" is no directory");
         Environment env_dst=new Environment("mandtool", null, dst);
         a=new Archiver(null, env_dst, types);
+        a.setListCopyMode(cflag);
         if (vflag) {
           a.setExecutionHandler(a.new VerboseSyncHandler());
         }

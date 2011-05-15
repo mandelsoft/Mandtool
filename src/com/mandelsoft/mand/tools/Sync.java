@@ -65,6 +65,7 @@ public class Sync extends Copy<SyncHandler> {
     {
       System.out.println("syncing list "+msg+"...");
       if (dl!=null&&ml!=null) {
+        if (listCopyMode) dl.clear();
         dl.addAll(ml);
         try {
           dl.save();
@@ -104,7 +105,7 @@ public class Sync extends Copy<SyncHandler> {
       System.out.println(gap+"syncing folder "+s.getPath());
       List<QualifiedMandelName> list=new ArrayList<QualifiedMandelName>();
       MandelList l=s.getMandelList();
-      if (l!=null) for (QualifiedMandelName n:l) {
+      if (!listCopyMode && l!=null) for (QualifiedMandelName n:l) {
         list.add(n);
         if (!old.contains(n)) {
           set.add(n);
@@ -127,17 +128,15 @@ public class Sync extends Copy<SyncHandler> {
 
       // sync sub folders
       for (MandelListFolder f :s) {
-        MandelListFolder n=null;
-        Iterator<MandelListFolder> i=d.iterator();
-        while (i.hasNext()) {
-          n=i.next();
-          if (n.getName().equals(f.getName())) {
-            break;
-          }
-          else n=null;
-        }
+        MandelListFolder n=d.getSubFolder(f.getName());
         if (n==null) n=d.createSubFolder(f.getName());
         sync(ngap,f, n, set, old);
+      }
+      if (listCopyMode) {
+        for (MandelListFolder f: d) {
+           MandelListFolder n=s.getSubFolder(f.getName());
+           if (n==null) d.remove(f);
+        }
       }
     }
   }
@@ -190,6 +189,7 @@ public class Sync extends Copy<SyncHandler> {
   // Sync class
 
   protected int typecodes;
+  protected boolean listCopyMode=false;
 
   public Sync(Environment src, Environment dst)
   {
@@ -211,6 +211,11 @@ public class Sync extends Copy<SyncHandler> {
     if ((types&COLORMAPS)!=0) {
       this.types.add(new ColormapType());
     }
+  }
+
+  public void setListCopyMode(boolean listCopyMode)
+  {
+    this.listCopyMode=listCopyMode;
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -338,6 +343,7 @@ public class Sync extends Copy<SyncHandler> {
   { try {
       int c=0;
       boolean vflag=false;
+      boolean cflag=false;
       File src=new File("F://Mandel2");
       File dst=new File("F://Mandel");
       int types;
@@ -348,6 +354,9 @@ public class Sync extends Copy<SyncHandler> {
           switch (opt=args[c].charAt(i)) {
             case 'v':
               vflag=true;
+              break;
+            case 'c':
+              cflag=true;
               break;
             default:
               Error("illegal option '"+opt+"'");
@@ -364,6 +373,7 @@ public class Sync extends Copy<SyncHandler> {
       Environment env_src=new Environment("mandtool", null, src);
       Environment env_dst=new Environment("mandtool", null, dst);
       Sync a=new Sync(env_src, env_dst, types);
+      a.setListCopyMode(cflag);
       if (vflag) {
         a.setExecutionHandler(a.new VerboseSyncHandler());
       }
