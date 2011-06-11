@@ -15,7 +15,7 @@ Calling:
   - to call the calculation server: mand -c Mand -s
   - to call any mandel command use mand -c <cmd> <options>
 
-  As log as the database locazed in MANDEL_HOME is usedm the commands
+  As long as the database localized in MANDEL_HOME is used the commands
   can be called from any folder. If you want to use another database
   on your machine the the cammand should be started from the
   appropriate root folder. For the UI, the root folder can be passed

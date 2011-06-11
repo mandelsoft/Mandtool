@@ -67,7 +67,7 @@ public class News extends JDialog {
     JScrollPane scroll=new JScrollPane(text);
     scroll.setVerticalScrollBarPolicy(
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-    scroll.setPreferredSize(new Dimension(350,400));
+    scroll.setPreferredSize(new Dimension(400,400));
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
     setTitle("News");

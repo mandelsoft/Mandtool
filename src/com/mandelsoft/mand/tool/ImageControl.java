@@ -16,7 +16,11 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.scan.ColormapHandle;
+import com.mandelsoft.mand.scan.MandelHandle;
+import com.mandelsoft.mand.scan.MandelScanner;
 import java.awt.Component;
+import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import javax.swing.JList;
 import javax.swing.event.ChangeEvent;
@@ -48,16 +52,22 @@ import com.mandelsoft.mand.MandelConstants;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.io.AbstractFile;
 import com.mandelsoft.mand.ColormapName;
+import com.mandelsoft.mand.Environment;
+import com.mandelsoft.mand.MandelHeader;
 import com.mandelsoft.mand.MandelInfo;
+import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.Settings;
 import com.mandelsoft.mand.cm.Colormap;
 import com.mandelsoft.mand.cm.ColormapModel.ResizeMode;
 import com.mandelsoft.mand.image.MandelImage;
 import com.mandelsoft.mand.scan.MandelFolder;
+import com.mandelsoft.mand.scan.MandelScannerListener;
+import com.mandelsoft.mand.scan.MandelScannerListenerAdapter;
 import com.mandelsoft.mand.tool.cm.ColormapDialog;
 import com.mandelsoft.mand.tool.mapper.MapperControl;
 import com.mandelsoft.mand.tool.mapper.MapperPanel;
+import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.ActionPanel;
 import com.mandelsoft.swing.BooleanAttribute;
 import com.mandelsoft.swing.BufferedComponent.ProportionalRectangleSelector;
@@ -73,8 +83,11 @@ import com.mandelsoft.swing.ScaleEventListener;
 import com.mandelsoft.swing.TablePanel;
 import com.mandelsoft.util.Utils;
 import java.awt.Graphics;
+import java.awt.event.ComponentAdapter;
+import java.util.Set;
 import javax.swing.ButtonModel;
 import javax.swing.ComboBoxModel;
+import javax.swing.JPanel;
 
 /**
  *
@@ -120,6 +133,8 @@ public class ImageControl extends ControlDialog {
 
     // tab mapper
     addTab("Display", display=new DisplayPanel());
+
+    addTab("Imagebase", new ImagebasePanel());
   }
 
 
@@ -141,25 +156,47 @@ public class ImageControl extends ControlDialog {
     }
   }  
 
+  private interface Updatable {
+    void updateState();
+  }
+
+  private static class UpdateHandler extends MandelScannerListenerAdapter {
+    private Updatable upd;
+
+    public UpdateHandler(Updatable upd)
+    {
+      this.upd=upd;
+    }
+
+    @Override
+    public void scannerChanged(MandelScanner s)
+    {
+      upd.updateState();
+    }
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // image tab
   /////////////////////////////////////////////////////////////////////////
 
-  private class ImageControlPanel extends ActionPanel {
+  private class ImageControlPanel extends ActionPanel
+                                  implements Updatable {
 
     private MandelVariantModel vmodel;
-    private JComboBox variants;
-    private IntegerField colmapsize;
-    private IntegerField scale;
-    private MapperControl mapper;
-    private JTextField    mappingtype;
-    private boolean adjusting;
+    private JComboBox          variants;
+    private IntegerField       colmapsize;
+    private IntegerField       scale;
+    private MapperControl      mapper;
+    private JTextField         mappingtype;
+    private boolean            adjusting;
+    private UpdateHandler      listener;
 
     public ImageControlPanel()
     {
       ScaleListener sl;
       int row=0;
 
+      listener=new UpdateHandler(this);
       JLabel c=new JLabel("Variants");
       vmodel=new MandelVariantModel(getEnvironment().getImageDataScanner());
       addContent(c, GBC(0, row).setAnchor(GBC.WEST));
@@ -199,19 +236,36 @@ public class ImageControl extends ControlDialog {
       mapper.addChangeListener(new RemapListener());
     }
 
+    @Override
+    protected void panelBound()
+    {
+      super.panelBound();
+      getEnvironment().getImageDataScanner().addMandelScannerListener(listener);
+    }
+
+    @Override
+    protected void panelUnbound()
+    {
+      System.out.println("unregister scanner listener for variants");
+      getEnvironment().getImageDataScanner().removeMandelScannerListener(listener);
+      super.panelUnbound();
+    }
+
     public void updateState()
     {
       boolean editable=false;
+      MandelWindowAccess acc=getMandelWindowAccess();
       adjusting=true;
-      MandelImage image=getMandelWindowAccess().getMandelImage();
+      MandelImage image=acc.getMandelImage();
       if (image!=null) {
         editable=(image.getRasterData()!=null&&image.getMapper()!=null);
       }
-      int s=getMandelWindowAccess().getColormapModel().getSize();
-      if (debug) System.out.println("UPDATE image panel: size="+s);
+      int s=acc.getColormapModel().getSize();
+      if (debug)
+        System.out.println("UPDATE image panel: size="+s);
       colmapsize.setValue(s);
       colmapsize.setEditable(editable);
-      MandelImage img=getMandelWindowAccess().getMandelImage();
+      MandelImage img=acc.getMandelImage();
       if (img!=null) {
         //System.out.println("  mapper is "+img.getMapper());
         mapper.setMapper(img.getMapper());
@@ -226,13 +280,18 @@ public class ImageControl extends ControlDialog {
       else {
         mappingtype.setText("none");
       }
-      scale.setValue(Math.round(getMandelWindowAccess().
-                                 getMandelImagePane().
-                                   getImagePane().getScale()*100));
+      scale.setValue(Math.round(acc.getMandelImagePane().
+                                    getImagePane().getScale()*100));
       scale.setEditable(editable);
-      if (vmodel.getName()==null ||
-          !vmodel.getName().equals(getMandelWindowAccess().getMandelName())) {
-        vmodel.refresh(getMandelWindowAccess().getQualifiedName());
+      if (debug)
+      {
+        System.out.println("Old variants for "+vmodel.getName());
+        System.out.println("New variants for "+getMandelWindowAccess().getMandelName());
+      }
+//      if (vmodel.getName()==null ||
+//          !vmodel.getName().equals(getMandelWindowAccess().getMandelName()))
+      {
+        vmodel.refresh(acc.getQualifiedName(),acc.getMandelData().getOrigHeader());
       }
       adjusting=false;
     }
@@ -306,7 +365,8 @@ public class ImageControl extends ControlDialog {
         if (!adjusting) {
           if (debug) System.out.println("VARIANT");
           adjusting=true;
-          getMandelWindowAccess().getMandelImagePane().setImage(vmodel.getVariantName());
+          getMandelWindowAccess().getMandelImagePane().setImage(
+                                                    vmodel.getVariantHandle());
           adjusting=false;
         }
         else {
@@ -980,6 +1040,225 @@ public class ImageControl extends ControlDialog {
       c.setLabelFor(b);
       addContent(b, GBC(1, row).setFill(GBC.HORIZONTAL));
       return b;
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // image base tab
+  /////////////////////////////////////////////////////////////////////////
+
+  private class ImagebasePanel extends GBCPanel {
+    private IntegerField all;
+    private IntegerField available;
+    private IntegerField rasters;
+    private IntegerField modifiableImages;
+    private IntegerField requests;
+    private IntegerField variants;
+    private IntegerField others;
+    private IntegerField colormaps;
+
+    private IntegerField unseen;
+    private IntegerField unseenRefine;
+    private IntegerField refineRequests;
+
+    private boolean          shown;
+    private boolean          refreshPending=true;
+    private EnvUpdateHandler listener;
+
+    public ImagebasePanel()
+    { int row=0;
+      listener=new EnvUpdateHandler();
+      ToolEnvironment env=getEnvironment();
+
+      all=addField("Areas",row++);
+      available=addField("Available areas",row++);
+      rasters=addField("Raster images",row++);
+      modifiableImages=addField("Modifiable images",row++);
+      requests=addField("Pending requests",row++);
+      others=addField("Others",row++);
+      variants=addField("Variants",row++);
+      colormaps=addField("Colormaps",row++);
+
+      row=0;
+      if (!env.isReadonly()) {
+        if (env.getUnseenRasters()!=null)
+          unseen=addField("Unseen areas",1,row++);
+        if (env.getUnseenRefinements()!=null)
+          unseenRefine=addField("Unseen refinements",1,row++);
+        if (env.getRefinementRequests()!=null)
+          refineRequests=addField("Refinement requests",1,row++);
+      }
+    }
+
+     @Override
+    protected void panelBound()
+    {
+      super.panelBound();
+      ToolEnvironment env=getEnvironment();
+      addComponentListener(listener);
+      env.getAllScanner().addMandelScannerListener(listener);
+      add(env.getUnseenRefinementsModel());
+      add(env.getRefinementRequestsModel());
+      add(env.getUnseenRastersModel());
+    }
+
+    @Override
+    protected void panelUnbound()
+    {
+      System.out.println("unregister listener for image base");
+      ToolEnvironment env=getEnvironment();
+      removeComponentListener(listener);
+      env.getAllScanner().removeMandelScannerListener(listener);
+      remove(env.getUnseenRefinementsModel());
+      remove(env.getRefinementRequestsModel());
+      remove(env.getUnseenRastersModel());
+      super.panelUnbound();
+    }
+
+    private void add(MandelListModel m)
+    {
+      if (m!=null) m.addMandelListListener(listener);
+    }
+
+    private void remove(MandelListModel m)
+    {
+      if (m!=null) m.removeMandelListListener(listener);
+    }
+
+    private IntegerField addField(String label, int row)
+    {
+      return addField(label,0,row);
+    }
+
+    private IntegerField addField(String label, int col, int row)
+    {
+      JLabel c=new JLabel(label);
+      add(c, GBC(col*2+0, row).setAnchor(GBC.WEST).
+                               setRightInset(10).
+                               setLeftInset(10));
+
+      IntegerField b=new IntegerField();
+      b.setColumns(12);
+      b.setEditable(false);
+      c.setLabelFor(b);
+      add(b, GBC(col*2+1, row).setAnchor(GBC.EAST).setRightInset(10));
+      return b;
+    }
+
+    private void updateListSizes()
+    {
+      Environment env=getEnvironment();
+      set(unseen, env.getUnseenRasters());
+      set(unseenRefine, env.getUnseenRefinements());
+      set(refineRequests,env.getRefinementRequests());
+    }
+
+    private void set(IntegerField field, MandelList list)
+    {
+      if (field!=null && list!=null) field.setValue(list.size());
+    }
+
+    private void updateData()
+    { int c_all=0;
+      int c_mod=0;
+      int c_req=0;
+      int c_ras=0;
+      int c_var=0;
+      int c_oth=0;
+
+      System.out.println("update statistic");
+      ToolEnvironment env=getEnvironment();
+      MandelScanner scan=env.getAllScanner();
+      Set<MandelName> names=scan.getMandelNames();
+      c_all=names.size();
+      for (MandelName n:names) {
+        boolean b_mod=false;
+        boolean b_ras=false;
+        boolean b_req=false;
+        boolean b_oth=false;
+        Set<MandelHandle> handles=scan.getMandelHandles(n);
+        for (MandelHandle h:handles) {
+          MandelHeader header=h.getHeader();
+          if (h.getQualifier()!=null) c_var++;
+          if (header.isModifiableImage()) b_mod=true;
+          else {
+            if (header.isRaster()) b_ras=true;
+            else {
+              if (header.isInfo()) b_req=true;
+              else {
+                b_oth=true;
+                System.out.println(""+h.getName()+": "+header.getType());
+              }
+            }
+          }
+        }
+        if (b_mod) c_mod++;
+        else if (b_ras) c_ras++;
+        else if (b_req) c_req++;
+        else if (b_oth) c_oth++;
+      }
+
+      this.colormaps.setValue(env.getColormapScanner().getColormapNames().size());
+      this.all.setValue(c_all);
+      this.available.setValue(c_all-c_req);
+      this.modifiableImages.setValue(c_mod);
+      this.rasters.setValue(c_ras);
+      this.requests.setValue(c_req);
+      this.variants.setValue(c_var);
+      this.others.setValue(c_oth);
+
+      updateListSizes();
+      refreshPending=false;
+      System.out.println("done");
+    }
+
+    private class EnvUpdateHandler extends ComponentAdapter
+                                   implements MandelScannerListener,
+                                              MandelListListener {
+
+      @Override
+      public void componentShown(ComponentEvent e)
+      {
+        shown=true;
+        if (refreshPending) {
+          updateData();
+        }
+      }
+
+      @Override
+      public void componentHidden(ComponentEvent e)
+      {
+        shown=false;
+      }
+
+      public void addMandelFile(MandelScanner s, MandelHandle h)
+      {
+        scannerChanged(s);
+      }
+
+      public void removeMandelFile(MandelScanner s, MandelHandle h)
+      {
+        scannerChanged(s);
+      }
+
+      public void addColormap(MandelScanner s, ColormapHandle h)
+      {
+      }
+
+      public void removeColormap(MandelScanner s, ColormapHandle h)
+      {
+      }
+
+      public void scannerChanged(MandelScanner s)
+      {
+        if (shown) updateData();
+        else refreshPending=true;
+      }
+
+      public void listChanged(com.mandelsoft.util.ChangeEvent evt)
+      {
+        updateListSizes();
+      }
     }
   }
 }

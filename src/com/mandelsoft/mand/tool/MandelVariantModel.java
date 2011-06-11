@@ -15,6 +15,7 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.MandelHeader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -45,7 +46,6 @@ public class MandelVariantModel extends AbstractListModel
   public MandelVariantModel(MandelScanner scanner)
   {
     this.scanner=scanner;
-    this.name=MandelName.ROOT;
     this.list=new ArrayList<MandelHandle>();
   }
 
@@ -54,12 +54,20 @@ public class MandelVariantModel extends AbstractListModel
     return name;
   }
 
-  public void refresh(QualifiedMandelName name)
-  { if (name==null) return;
-    this.name=name.getMandelName();
-    refresh(name.getQualifier());
+  public void refresh(MandelHandle h)
+  { if (h==null) return;
+    this.name=h.getName().getMandelName();
+    refresh(getLabel(h));
   }
-  
+
+  public void refresh(QualifiedMandelName n, MandelHeader h)
+  {
+    System.out.println("refresh variants for "+n+"/"+h);
+    if (h==null || n==null) return;
+    this.name=n.getMandelName();
+    refresh(getLabel(n,h));
+  }
+
   private int compare(String s1, String s2)
   {
     if (s1==null && s2==null) return 0;
@@ -68,25 +76,35 @@ public class MandelVariantModel extends AbstractListModel
     return s1.compareTo(s2);
   }
 
-  protected String getLabel(String q)
-  { if (Utils.isEmpty(q)) return "<default>";
-    return q;
+//  protected String getLabel(String q)
+//  { if (Utils.isEmpty(q)) return "<default>";
+//    return q;
+//  }
+
+  protected String getLabel(MandelHandle h)
+  {
+    return getLabel(h.getName(),h.getHeader());
   }
 
-  public void refresh(String sel)
+  protected String getLabel(QualifiedMandelName n, MandelHeader h)
+  { String q=n.getQualifier();
+    if (Utils.isEmpty(q)) q="<default>";
+    return q+" ("+h.getTypeDesc()+")";
+  }
+
+  private void refresh(String sel)
   { int old=list.size();
     list.clear();
-    sel=getLabel(sel);
     Set<MandelHandle> n=scanner.getMandelHandles(name);
-    System.out.println("*** update variants: "+n);
+    System.out.println("*** update variants: "+n+" ("+sel+")");
     selected=null;
     if (n!=null) {
       for (MandelHandle h:n) {
-        String v=h.getQualifier();
+        String v=getLabel(h);
         System.out.println("found "+v+": "+h.getFile());
-        if (getLabel(v).equals(sel)) selected=sel;
+        if (v.equals(sel)) selected=sel;
         for (int i=0; h!=null && i<list.size(); i++) {
-          if (compare(list.get(i).getQualifier(),v)>=0) {
+          if (compare(list.get(i).getQualifier(),h.getQualifier())>=0) {
             list.add(i,h);
             h=null;
           }
@@ -94,14 +112,15 @@ public class MandelVariantModel extends AbstractListModel
         if (h!=null) list.add(h);
       }
     }
+    System.out.println("Selected: "+selected);
     this.fireContentsChanged(this, 0, Math.max(old, list.size())-1);
   }
 
-  public String getName(int index)
-  {
-    MandelHandle h= list.get(index);
-    return h==null?null:h.getName().toString();
-  }
+//  public String getName(int index)
+//  {
+//    MandelHandle h= list.get(index);
+//    return h==null?null:h.getName().toString();
+//  }
 
   public Object getElementAt(int index)
   {
@@ -109,24 +128,32 @@ public class MandelVariantModel extends AbstractListModel
     if (index>=list.size()) return "<none>";
     h=list.get(index);
     if (h==null) {
-      return "";
+      return "<unknown>";
     }
     else {
-      return getLabel(h.getQualifier());
+      return getLabel(h);
     }
   }
 
-  public QualifiedMandelName getElement(Object item)
+  public MandelHandle getElement(Object item)
   {
     for (MandelHandle h:list) {
-      if (getLabel(h.getQualifier()).equals(item)) {
-        return h.getName();
+      if (getLabel(h).equals(item)) {
+        return h;
       }
     }
     return null;
   }
 
   public QualifiedMandelName getVariantName()
+  {
+    if (selected==null) return null;
+    MandelHandle h=getElement(selected);
+    if (h==null) return null;
+    return h.getName();
+  }
+
+  public MandelHandle getVariantHandle()
   {
     if (selected==null) return null;
     return getElement(selected);

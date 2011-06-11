@@ -56,6 +56,8 @@ public class Settings {
   static public final String SAVE_PATH="path.save";
 
   static public final String BITMAP_SAVE_PATH="path.bitmap.save";
+  static public final String INCOMPLETE_SAVE_PATH="path.incomplete.save";
+  static public final String INCOMPLETE_BACKUP_PATH="path.incomplete.backup";
 
   static public final String INFO_PRIO_PATH="path.info.prio";
   static public final String INFO_SAVE_PATH="path.info.save";
@@ -287,10 +289,12 @@ public class Settings {
 
       raw.setProperty(SEEN, "${dir}/seen");
       raw.setProperty(BITMAP_SAVE_PATH, "${dir}/bitmaps");
+      raw.setProperty(INCOMPLETE_SAVE_PATH, "${dir}/incomplete");
 
       raw.setProperty(RASTERIMAGE_BACKUP_PATH, "${"+BACKUP_PATH+"}");
       raw.setProperty(RASTER_BACKUP_PATH, "${"+BACKUP_PATH+"}");
       raw.setProperty(INFO_BACKUP_PATH, "${"+BACKUP_PATH+"}");
+      raw.setProperty(INCOMPLETE_BACKUP_PATH, "${"+BACKUP_PATH+"}");
     }
     
     raw.setProperty(IMAGE_SAVE_PATH, "${"+SAVE_PATH+"}");

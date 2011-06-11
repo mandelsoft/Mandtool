@@ -56,6 +56,7 @@ public class MandelData extends Command implements MandelConstants {
   private MandelRaster   raster;
   private BufferedImage  image;
 
+  private boolean        incomplete; // incomplete raster
   private boolean        modified;
   private boolean        partial;
   private boolean        temporary;
@@ -195,6 +196,16 @@ public class MandelData extends Command implements MandelConstants {
     this.temporary=temporary;
   }
 
+  public boolean isIncomplete()
+  {
+    return incomplete;
+  }
+
+  public void setIncomplete(boolean incomplete)
+  {
+    this.incomplete=incomplete;
+  }
+
   public MandelData getOriginalData()
   {
     return origdata;
@@ -222,7 +233,9 @@ public class MandelData extends Command implements MandelConstants {
            (colormap!=null?C_COLMAP:0)|
            (mapping!=null?C_MAPPING:0)|
            (mapper!=null?C_MAPPER:0)|
-           (image!=null?C_IMAGE:0);
+           (image!=null?C_IMAGE:0)|
+
+           (incomplete?C_INCOMPLETE:0);
   }
   
   public MandelHeader getHeader()
@@ -232,11 +245,14 @@ public class MandelData extends Command implements MandelConstants {
 
   public MandelHeader getOrigHeader()
   {
-    if (!isPartial()) {
-      if (origdata!=null) return origdata.getOrigHeader();
-      return getHeader();
-    }
-    return new MandelHeader(origtype);
+    if (origdata!=null) return origdata.getOrigHeader();
+    if (isPartial()) return new MandelHeader(origtype);
+    return getHeader();
+  }
+
+  public MandelData getOrigData()
+  {
+    return origdata;
   }
 
   public String getTypeDesc()
@@ -572,7 +588,8 @@ public class MandelData extends Command implements MandelConstants {
     if (magic!=MAGIC) throw new IOException("illegal format "+magic+"!="+MAGIC);
     int flags=origtype=dis.readInt();
     //if (verbose) System.out.println("  found "+flags);
-    partial=(flags&~requested)!=0;
+    partial=((flags&~M_META)&~requested)!=0;
+    incomplete=(flags&C_INCOMPLETE)!=0;
     if (requested!=0 && (flags&C_INFO)!=0) {
       info=new MandelInfo();
       info.read(dis,verbose);

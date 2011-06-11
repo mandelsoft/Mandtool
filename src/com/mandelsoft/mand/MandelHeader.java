@@ -43,13 +43,17 @@ public class MandelHeader implements MandelConstants {
 
   public String getTypeDesc()
   {
+    String incomplete="";
+    if (has(C_INCOMPLETE)) {
+      incomplete="Incomplete ";
+    }
     if (has(C_RASTERIMAGE)) {
       if (!has(C_INFO))
         return "Mandel Image without Info";
-      return "Modifiable Mandel Image";
+      return incomplete+"Modifiable Mandel Image";
     }
     if (has(C_RASTER)) {
-      return "Mandel Raster";
+      return incomplete+"Mandel Raster";
     }
     if (has(C_IMAGE)) {
       return "Mandel Image";
@@ -100,7 +104,7 @@ public class MandelHeader implements MandelConstants {
 
   public boolean isModifiableImage()
   {
-    return is(C_RASTERIMAGE|C_INFO);
+    return is(C_RASTERIMAGE|C_INFO) || is(C_RASTERIMAGE|C_MAPPER|C_INFO);
   }
 
   public boolean hasModifiableImage()
@@ -156,6 +160,11 @@ public class MandelHeader implements MandelConstants {
   public boolean hasImageData()
   {
     return (flags&C_IMAGEDATA)!=0;
+  }
+
+  public boolean isIncomplete()
+  {
+    return has(C_INCOMPLETE);
   }
 
   @Override

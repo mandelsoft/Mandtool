@@ -340,6 +340,11 @@ public class Environment1 implements MandelConstants  {
     return database.getRasterFolder(d);
   }
 
+  public File getIncompleteFolder(AbstractFile d)
+  {
+    return database.getIncompleteFolder(d);
+  }
+
   public Proxy getProxy()
   {
     return database.getProxy();
@@ -414,6 +419,7 @@ public class Environment1 implements MandelConstants  {
 
   private MandelScanner all;
   private MandelScanner imagedata;
+  private MandelScanner incomplete;
   private MandelScanner raster;
   private MandelScanner info;
   private MandelScanner prioinfo;
@@ -498,6 +504,13 @@ public class Environment1 implements MandelConstants  {
          return db.getImageDataScanner();
        }
      });
+
+     incomplete=createScanner(new DistributedMandelScanner.ScannerAccess() {
+       public MandelScanner getScanner(MandelImageDB db)
+       {
+         return db.getIncompleteScanner();
+       }
+     });
   }
 
   public MandelScanner getAllScanner()
@@ -543,6 +556,11 @@ public class Environment1 implements MandelConstants  {
   public MandelScanner getImageDataScanner()
   {
     return imagedata;
+  }
+
+  public MandelScanner getIncompleteScanner()
+  {
+    return incomplete;
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1254,6 +1272,10 @@ public class Environment1 implements MandelConstants  {
     return backup;
   }
 
+  public File getIncompleteBackup()
+  { return _getBackup(Settings.INCOMPLETE_BACKUP_PATH);
+  }
+
   public File getInfoBackup()
   { return _getBackup(Settings.INFO_BACKUP_PATH);
   }
@@ -1285,6 +1307,10 @@ public class Environment1 implements MandelConstants  {
     return false;
   }
 
+  public boolean backupIncompleteFile(AbstractFile f)
+  { return backupFile(f,getIncompleteBackup());
+  }
+
   public boolean backupInfoFile(AbstractFile f)
   { return backupFile(f,getInfoBackup());
   }
@@ -1297,9 +1323,13 @@ public class Environment1 implements MandelConstants  {
   { return backupFile(f,getRasterImageBackup());
   }
 
-
   
   ///////////
+
+  public File mapToIncompleteFile(AbstractFile f)
+  {
+    return MandUtils.mapFile(f,INCOMPLETE_SUFFIX,getIncompleteFolder(f));
+  }
 
   public File mapToRasterFile(AbstractFile f)
   { return MandUtils.mapFile(f,RASTER_SUFFIX,getRasterFolder(f));

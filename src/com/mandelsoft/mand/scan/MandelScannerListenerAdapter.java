@@ -24,10 +24,12 @@ public class MandelScannerListenerAdapter implements MandelScannerListener  {
 
   public void addMandelFile(MandelScanner s, MandelHandle h)
   {
+    scannerChanged(s);
   }
 
   public void removeMandelFile(MandelScanner s, MandelHandle h)
   {
+    scannerChanged(s);
   }
 
   public void addColormap(MandelScanner s, ColormapHandle h)

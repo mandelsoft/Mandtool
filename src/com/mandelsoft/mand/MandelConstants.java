@@ -27,17 +27,18 @@ public interface MandelConstants {
 
   public static final int MAGIC=0x55555555;
 
-  public static final int C_ALL    =0x3F;
+  public static final int C_ALL         =0x3F;
 
-  public static final int C_INFO   =0x01;
-  public static final int C_RASTER =0x02;
-  public static final int C_COLMAP =0x04;
-  public static final int C_MAPPING=0x08;
-  public static final int C_MAPPER =0x10;
-  public static final int C_IMAGE  =0x20;
+  public static final int C_INFO        =0x01;
+  public static final int C_RASTER      =0x02;
+  public static final int C_COLMAP      =0x04;
+  public static final int C_MAPPING     =0x08;
+  public static final int C_MAPPER      =0x10;
+  public static final int C_IMAGE       =0x20;
 
-  public static final int M_META=0x100;
+  public static final int M_META=0x300;
   public static final int M_INFOOMITTED=0x100;  // for mandel cache
+  public static final int C_INCOMPLETE =0x200;  // incomplete raster
   
   public static final int C_IMAGEDATA  =C_RASTER|C_IMAGE;
   public static final int C_RASTERIMAGE=C_RASTER|C_MAPPING|C_COLMAP;
@@ -47,4 +48,5 @@ public interface MandelConstants {
   public static final String RASTER_SUFFIX=".mr";
   public static final String RASTERIMAGE_SUFFIX=".mi";
   public static final String IMAGE_SUFFIX=".mpng";
+  public static final String INCOMPLETE_SUFFIX=".ms";
 }

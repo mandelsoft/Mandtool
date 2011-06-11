@@ -639,7 +639,5 @@ public class MandelInfo extends MandelSpec
     hash=89*hash+(this.keywords!=null?this.keywords.hashCode():0);
     return hash;
   }
-
-
 }
 

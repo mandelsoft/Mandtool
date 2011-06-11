@@ -88,7 +88,7 @@ Version 1.0
    - fix new raster list
    - fix mark link option for readonly mode
 
-Version 1.1-beta
+Version 1.1
    - remove new raster from tab (use unseen instead)
    - refinement request list and unseen refinements
    - area downwards to mark function
@@ -99,5 +99,8 @@ Version 1.1-beta
    - copy option for mandelDB archiver
    - goto dialog
    - applet options for show aub areas and pixel tooltip settings
+   - grace shutdown for calculation with resume possibility
+   - image base statistic view
+   - fix variant selection for different falvors of the same qualified name
 
 

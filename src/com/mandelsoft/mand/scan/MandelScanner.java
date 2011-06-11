@@ -87,6 +87,12 @@ public interface MandelScanner extends MandelConstants {
     }
   };
 
+  static public final Filter INCOMPLETERASTER=new Filter() {
+    public boolean filter(MandelHeader h)
+    { return h.has(C_RASTER&C_INCOMPLETE);
+    }
+  };
+
   static public final Filter IMAGE=new Filter() {
     public boolean filter(MandelHeader h)
     { return h.isImage();

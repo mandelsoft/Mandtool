@@ -46,8 +46,13 @@ import java.util.Set;
  */
 public class Mand extends Command {
 
+  public static class ShutdownException extends RuntimeException {
+
+  }
+
   static public final double BOUND=10;
   private File file;
+  private File save;
   private QualifiedMandelName name;
   private MandelData md;
   private MandelInfo mi;
@@ -69,6 +74,7 @@ public class Mand extends Command {
   {
     this(md,n);
     this.file=env.mapToRasterFile(md.getFile());
+    this.save=env.mapToIncompleteFile(md.getFile());
   }
 
   public Mand(File f, Environment env) throws IOException
@@ -79,7 +85,7 @@ public class Mand extends Command {
   public Mand(MandelData md, MandelData old, QualifiedMandelName n,
               Environment env) throws IOException
   {
-    this(md, n);
+    this(md, n, env);
     if (old!=null && old.getFile().isFile()) {
       md.setRaster(old.getRaster());
       md.setMapper(ResizeMode.RESIZE_LOCK_COLORS, old.getMapper());
@@ -87,10 +93,10 @@ public class Mand extends Command {
       md.getInfo().setCreator(old.getInfo().getCreator());
       md.getInfo().setLocation(old.getInfo().getLocation());
       md.getInfo().setName(old.getInfo().getName());
-      this.file=old.getFile().getFile();
-    }
-    else {
-      this.file=env.mapToRasterFile(md.getFile());
+      md.getInfo().setTime(old.getInfo().getTime());
+      if (!old.isIncomplete()) { // keep old file name
+        this.file=old.getFile().getFile();
+      }
     }
   }
 
@@ -102,6 +108,11 @@ public class Mand extends Command {
   public File getFile()
   {
     return file;
+  }
+
+  public boolean isAborted()
+  {
+    return aborted;
   }
 
   public void check() throws IOException
@@ -153,11 +164,18 @@ public class Mand extends Command {
 
     raster=md.createRaster().getRaster();
     long start=System.currentTimeMillis();
-    calc2();
-    long end=System.currentTimeMillis();
-    mi.setTime(mi.getTime()+(int)((end-start)/1000));
-    mi.setRasterCreationTime(end);
-    saveContext();
+    try {
+      calc2();
+    }
+    catch (ShutdownException ex) {
+      aborted=true;
+    }
+    finally {
+      long end=System.currentTimeMillis();
+      mi.setTime(mi.getTime()+(int)((end-start)/1000));
+      mi.setRasterCreationTime(end);
+      saveContext();
+    }
     return true;
   } 
   
@@ -213,6 +231,11 @@ public class Mand extends Command {
     }
   }
 
+  private boolean aborted;
+  private long lastcheck=0;
+  static private final long TIMEOUT = 1000 * 60 * 10; // 10 min
+  static private final File shutdown = new File("shutdown");
+  
   int handle(int x, int y)
   { int it=raster[y][x];
 
@@ -232,6 +255,11 @@ public class Mand extends Command {
       cnt+=i;
     }
     else cnt+=it;
+    long cur=System.currentTimeMillis();
+    if (cur>lastcheck+TIMEOUT) {
+      lastcheck=cur;
+      if (shutdown.exists()) throw new ShutdownException();
+    }
     return it;
   }
 
@@ -365,7 +393,14 @@ public class Mand extends Command {
   public void write(boolean verbose) throws IOException
   {
     if (file==null) throw new IOException("no file specified");
-    write(file,verbose);
+    if (aborted) {
+      md.setIncomplete(aborted);
+      write(save,verbose);
+    }
+    else {
+      write(file, verbose);
+      save.delete();
+    }
   }
 
   public void write(File f) throws IOException
@@ -485,6 +520,9 @@ public class Mand extends Command {
     Environment env;
     Set<AbstractFile> ignored;
     MandelScanner imagescan;
+    MandelScanner incompletescan;
+    MandelScanner infoscan;
+    MandelScanner prioscan;
     boolean dflag;
     Filter filter;
 
@@ -495,6 +533,9 @@ public class Mand extends Command {
       env=new Environment(null);
       ignored=new HashSet<AbstractFile>();
       imagescan=env.getImageDataScanner();
+      incompletescan=env.getIncompleteScanner();
+      infoscan=env.getInfoScanner();
+      prioscan=env.getPrioInfoScanner();
     }
 
     public Environment getEnvironment()
@@ -502,11 +543,8 @@ public class Mand extends Command {
     }
 
     public void service()
-    { MandelScanner imagescan=env.getImageDataScanner();
-      MandelScanner scan=env.getInfoScanner();
-      MandelScanner prioscan=env.getPrioInfoScanner();
-
-      Iterator<MandelHandle> fallback=scan.getMandelHandles().iterator();
+    { 
+      Iterator<MandelHandle> fallback=infoscan.getMandelHandles().iterator();
 
       while (true) {
         int found=0;
@@ -516,8 +554,8 @@ public class Mand extends Command {
         if (found==0) {
           if (!fallback.hasNext()) {
             System.out.println("rescan standard scanner");
-            scan.rescan(false);
-            fallback=scan.getMandelHandles().iterator();
+            infoscan.rescan(false);
+            fallback=infoscan.getMandelHandles().iterator();
           }
           while (found==0 && fallback.hasNext()) {
             found+=handle(fallback.next(),true);
@@ -538,6 +576,38 @@ public class Mand extends Command {
         //System.out.println("rescan prio scanner");
         prioscan.rescan(false);
       }
+    }
+
+    MandelData checkOld(MandelScanner scan,
+                        QualifiedMandelName name, MandelInfo reqd,
+                        String msg)
+    {
+      MandelData old=null;
+
+      Set<MandelHandle> set=scan.getMandelHandles(name);
+      if (!set.isEmpty()) {
+        for (MandelHandle h:set) {
+          if (h.getHeader().hasRaster()) {
+            try {
+              MandelData md=h.getData();
+              MandelInfo mi=md.getInfo();
+              if (reqd.getDX().equals(mi.getDX())
+                &&reqd.getDY().equals(mi.getDY())
+                &&reqd.getXM().equals(mi.getXM())
+                &&reqd.getYM().equals(mi.getYM())
+                &&reqd.getRX()==mi.getRX()
+                &&reqd.getRY()==mi.getRY()) {
+                System.out.println(msg+" "+h.getFile()+": "+mi.getLimitIt());
+                old=md;
+                break;
+              }
+            }
+            catch (IOException io) {
+            }
+          }
+        }
+      }
+      return old;
     }
 
     int handle(MandelHandle mh, boolean fallback)
@@ -578,47 +648,31 @@ public class Mand extends Command {
         }
         MandelInfo reqd=req.getInfo();
 
-        Set<MandelHandle> set=imagescan.getMandelHandles(name);
-        if (!set.isEmpty()) {
-          for (MandelHandle h:set) {
-            if (h.getHeader().hasRaster()) {
-              try {
-                MandelData md=h.getData();
-                MandelInfo mi=md.getInfo();
-                System.out.println("requested "+reqd.getLimitIt()+
-                        " found "+h.getFile()+": "+mi.getLimitIt());
-                if (reqd.getDX().equals(mi.getDX())&&
-                        reqd.getDY().equals(mi.getDY())&&
-                        reqd.getXM().equals(mi.getXM())&&
-                        reqd.getYM().equals(mi.getYM())&&
-                        reqd.getRX()==mi.getRX()&&
-                        reqd.getRY()==mi.getRY()) {
-                  old=md;
-                  break;
-                }
-              }
-              catch (IOException io) {
-              }
+        old=checkOld(imagescan,name,reqd,
+                     "requested "+reqd.getLimitIt()+" found");
+        // TODO: what happen if name is reused for other coordinates???
+        if (old!=null&&old.getInfo().getLimitIt()>=reqd.getLimitIt()) {
+          System.out.println(f+" skipped");
+          lock.lock();
+          try {
+            f.releaseLock();
+            if (dflag) {
+              cleanupInfo(env, f);
+            }
+            else {
+              ignored.add(f);
             }
           }
-          if (old==null||old.getInfo().getLimitIt()>=reqd.getLimitIt()) {
-            System.out.println(f+" skipped");
-            lock.lock();
-            try {
-              f.releaseLock();
-              if (dflag) {
-                cleanupInfo(env, f);
-              }
-              else {
-                ignored.add(f);
-              }
-            }
-            finally {
-              lock.releaseLock();
-            }
-            return found;
+          finally {
+            lock.releaseLock();
           }
+          return found;
         }
+        
+        //////////////
+        old=checkOld(incompletescan,name,reqd,"resuming");
+
+        ///////////////
         Mand m=new Mand(req, old, name, env);
         m.setFilter(filter);
         if (!m.calculate()) {
@@ -634,9 +688,12 @@ public class Mand extends Command {
         try {
           f.releaseLock();
           System.out.println("release lock for "+f);
-          if (!f.getName().equals(m.getFile().getName())) {
-            cleanupInfo(env, f);
+          if (!m.isAborted()) {
+            if (!f.getName().equals(m.getFile().getName())) {
+              cleanupInfo(env, f);
+            }
           }
+          else throw new ShutdownException();
         }
         finally {
           lock.releaseLock();
@@ -663,6 +720,9 @@ public class Mand extends Command {
     }
     catch (IllegalConfigurationException ex) {
       Command.Error("illegal config: "+ex);
+    }
+    catch (ShutdownException sd) {
+      Command.Warning("calculation service aborted!");
     }
   }
 }

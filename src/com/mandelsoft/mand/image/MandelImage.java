@@ -147,17 +147,26 @@ public interface MandelImage {
       if (h.hasRaster()) {
         try {
           // first setup default image settings, if not present
+          MandelData d=new MandelData(data);
           if (!h.hasColormap()) {
-            data.setColormap(mode,getDefaultColormap(data, defcolmap));
+            d.setColormap(mode,getDefaultColormap(d, defcolmap));
+            data=d;
           }
           if (!h.hasMapping()) {
             if (!h.hasMapper()) {
-              if (defmapper==null)
-                data.setMapper(mode,getDefaultMapper(data));
-              else
-                data.setMapper(mode,defmapper);
+              if (defmapper==null) {
+                d.setMapper(mode,getDefaultMapper(d));
+                data=d;
+              }
+              else {
+                d.setMapper(mode,defmapper);
+                data=d;
+              }
             }
-            else data.createMapping(mode);
+            else {
+              d.createMapping(mode);
+              data=d;
+            }
           }
           return new RasterImage(data);
         }

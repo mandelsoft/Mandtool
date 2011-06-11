@@ -62,6 +62,7 @@ public class MandelImageDB implements MandelConstants  {
   private MandelScanner rasterimage;
   private MandelScanner colormaps;
   private MandelScanner newraster;
+  private MandelScanner incomplete;
 
   private ColorList  colors;
   private TagList    tags;
@@ -131,11 +132,13 @@ public class MandelImageDB implements MandelConstants  {
     String path=null;
     String cpath=null;
     String npath=null;
+    String ipath=null;
     String p;
 
     path=settings.getProperty(Settings.PATH);
     cpath=settings.getProperty(Settings.COLORMAP_PATH);
     npath=settings.getProperty(Settings.RASTER_SAVE_PATH);
+    ipath=settings.getProperty(Settings.INCOMPLETE_SAVE_PATH);
 
     if (tool!=null) {
       p=settings.getProperty(tool+"."+Settings.PATH);
@@ -144,6 +147,8 @@ public class MandelImageDB implements MandelConstants  {
       if (p!=null) cpath+=";"+p;
       p=settings.getProperty(tool+"."+Settings.RASTER_SAVE_PATH);
       if (p!=null) npath=p;
+      p=settings.getProperty(tool+"."+Settings.INCOMPLETE_SAVE_PATH);
+      if (p!=null) ipath=p;
     }
 
     scannercache=new MandelScannerCache(proxy);
@@ -165,6 +170,8 @@ public class MandelImageDB implements MandelConstants  {
 
     if (!this.readonly) {
       newraster=new PathMandelScanner(npath, MandelScanner.RASTER,
+                                      settings.isLocal(), scannercache);
+      incomplete=new PathMandelScanner(ipath, MandelScanner.INCOMPLETERASTER,
                                       settings.isLocal(), scannercache);
     }
 
@@ -289,6 +296,7 @@ public class MandelImageDB implements MandelConstants  {
   { 
     System.out.println("RESCAN FileSystem");
     all.rescan(verbose);
+    if (incomplete!=null) incomplete.rescan(verbose);
   }
 
   public String getCopyright(MandelInfo info)
@@ -321,6 +329,8 @@ public class MandelImageDB implements MandelConstants  {
   {
     return tags;
   }
+
+  //////////////////////////////////////////////////////////////////////////
 
   public MandelListFolderTree getFavorites()
   { return tfavorites;
@@ -358,6 +368,8 @@ public class MandelImageDB implements MandelConstants  {
   {
     return Collections.unmodifiableList(userlists);
   }
+
+  //////////////////////////////////////////////////////////////////////////
 
   public MandelScanner getAllScanner()
   {
@@ -403,6 +415,13 @@ public class MandelImageDB implements MandelConstants  {
   {
     return raster;
   }
+
+  public MandelScanner getIncompleteScanner()
+  {
+    return incomplete;
+  }
+
+  //////////////////////////////////////////////////////////////////////////
 
   public Settings getSettings()
   {
@@ -450,6 +469,11 @@ public class MandelImageDB implements MandelConstants  {
     return getFolder(d,Settings.RASTER_SAVE_PATH);
   }
 
+  public File getIncompleteFolder(AbstractFile d)
+  {
+    return getFolder(d,Settings.INCOMPLETE_SAVE_PATH);
+  }
+
   public File getRasterImageFolder(AbstractFile d)
   {
     QualifiedMandelName mn=QualifiedMandelName.create(d);
@@ -466,7 +490,11 @@ public class MandelImageDB implements MandelConstants  {
   }
 
   
-  ///////////
+  //////////////////////////////////////////////////////////////////////////
+
+  public File mapToIncompleteFile(AbstractFile f)
+  { return MandUtils.mapFile(f,INCOMPLETE_SUFFIX,getIncompleteFolder(f));
+  }
 
   public File mapToRasterFile(AbstractFile f)
   { return MandUtils.mapFile(f,RASTER_SUFFIX,getRasterFolder(f));
@@ -486,7 +514,5 @@ public class MandelImageDB implements MandelConstants  {
 
   protected void seenModified()
   {
-  }
-
-  
+  }  
 }
