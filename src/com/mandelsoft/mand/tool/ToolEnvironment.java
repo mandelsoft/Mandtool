@@ -83,6 +83,7 @@ public class ToolEnvironment extends Environment {
 
   private MandelListsMenuFactory listactions;
 
+  private ImageBaseModel imagebase_model;
   ///////////////////////////////////////////////////////////////////////
   // Tool control
   ///////////////////////////////////////////////////////////////////////
@@ -125,6 +126,8 @@ public class ToolEnvironment extends Environment {
   {
     ComposedMandelListFolderTreeModel userlists;
     List<MandelListFolderTree> tmp;
+
+    imagebase_model=new ImageBaseModel(this);
 
     refresh_pending=new ArrayList<MandelListTableModel>();
     toolControl = new ToolControlAction();
@@ -193,6 +196,11 @@ public class ToolEnvironment extends Environment {
     }
 
     colormaps=new ExtendedColormapListModel(getColormaps());
+  }
+
+  public ImageBaseModel getImagebaseModel()
+  {
+    return imagebase_model;
   }
 
   //////////////////////////////////////////////////////////////////////////
