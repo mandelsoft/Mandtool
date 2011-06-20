@@ -30,7 +30,8 @@ import java.util.Set;
  * @author Uwe Krueger
  */
 public class ImageBaseModel extends StateChangeSupport {
-
+  private static boolean debug=true;
+  
   private ToolEnvironment env;
   private int all;
   private int available;
@@ -43,7 +44,9 @@ public class ImageBaseModel extends StateChangeSupport {
   private int unseen;
   private int unseenRefine;
   private int refineRequests;
+
   private boolean changed=false;
+  private boolean updatePending=false;
   private EnvUpdateHandler listener;
 
   public ImageBaseModel(ToolEnvironment env)
@@ -133,27 +136,47 @@ public class ImageBaseModel extends StateChangeSupport {
     if (m!=null) m.removeMandelListListener(listener);
   }
 
-  private void updateListSizes()
+  synchronized
+  public void handleUpdate()
   {
-    unseen=set(unseen, env.getUnseenRasters());
-    unseenRefine=set(unseenRefine, env.getUnseenRefinements());
-    refineRequests=set(refineRequests, env.getRefinementRequests());
+    if (updatePending) {
+      startUpdate();
+      updateData();
+      updatePending=false;
+      finishUpdate();
+    }
+    else {
+      if (debug) System.out.println("no update pending for image base statistic");
+    }
   }
 
-  private int set(int value, MandelList list)
+  private void updateListSizes()
+  {
+    if (debug) System.out.println("  update list statistic");
+    unseen=set("unseen",unseen, env.getUnseenRastersModel());
+    unseenRefine=set("unseen refinemnts",unseenRefine, env.getUnseenRefinementsModel());
+    refineRequests=set("refinements",refineRequests, env.getRefinementRequestsModel());
+  }
+
+  private int set(String key, int value, MandelListTableModel list)
   {
     if (list!=null) {
-      value=set(value, list.size());
+      //list.refresh(true);
+      value=set(key, value, list.getRowCount());
     }
     return value;
   }
 
-  private int set(int value, int n)
+  private int set(String key, int value, int n)
   {
+    String attr="";
+
     if (n!=value) {
       changed=true;
+      attr=" (changed)";
       value=n;
     }
+    if (debug) System.out.println("  "+key+"="+value+attr);
     return value;
   }
 
@@ -166,7 +189,7 @@ public class ImageBaseModel extends StateChangeSupport {
     int c_var=0;
     int c_oth=0;
 
-    System.out.println("update statistic");
+    if (debug) System.out.println("update statistic");
     MandelScanner scan=env.getAllScanner();
     Set<MandelName> names=scan.getMandelNames();
     c_all=names.size();
@@ -197,17 +220,17 @@ public class ImageBaseModel extends StateChangeSupport {
       else if (b_oth) c_oth++;
     }
 
-    colormaps=set(colormaps, env.getColormapScanner().getColormapNames().size());
-    all=set(all, c_all);
-    available=set(available, c_all-c_req);
-    modifiableImages=set(modifiableImages, c_mod);
-    rasters=set(rasters, c_ras);
-    requests=set(requests, c_req);
-    variants=set(variants, c_var);
-    others=set(others, c_oth);
+    colormaps=set("colormaps",colormaps, env.getColormapScanner().getColormapNames().size());
+    all=set("areas",all, c_all);
+    available=set("available",available, c_all-c_req);
+    modifiableImages=set("images",modifiableImages, c_mod);
+    rasters=set("rasters",rasters, c_ras);
+    requests=set("requests",requests, c_req);
+    variants=set("variants",variants, c_var);
+    others=set("others",others, c_oth);
 
     updateListSizes();
-    System.out.println("done");
+    if (debug) System.out.println("done");
   }
 
   private void startUpdate()
@@ -217,7 +240,10 @@ public class ImageBaseModel extends StateChangeSupport {
 
   private void finishUpdate()
   {
-    if (changed) this.fireChangeEvent();
+    if (changed) {
+      if (debug) System.out.println("notify changes statistic");
+      this.fireChangeEvent();
+    }
     changed=false;
   }
 
@@ -242,18 +268,30 @@ public class ImageBaseModel extends StateChangeSupport {
     {
     }
 
+    private void cacheUpdate(String reason)
+    {
+      if (debug) System.out.println("statistic update pending ("+reason+")");
+      updatePending=true;
+    }
+
     public void scannerChanged(MandelScanner s)
     {
-      startUpdate();
-      updateData();
-      finishUpdate();
+      if (env.isInUpdate()) cacheUpdate("scanner");
+      else {
+        startUpdate();
+        updateData();
+        finishUpdate();
+      }
     }
 
     public void listChanged(com.mandelsoft.util.ChangeEvent evt)
     {
-      startUpdate();
-      updateListSizes();
-      finishUpdate();
+      if (env.isInUpdate()) cacheUpdate("list "+evt.getSource());
+      else {
+        startUpdate();
+        updateListSizes();
+        finishUpdate();
+      }
     }
   }
 }

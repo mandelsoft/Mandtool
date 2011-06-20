@@ -1186,8 +1186,14 @@ public class ImageControl extends ControlDialog {
 
       public void stateChanged(com.mandelsoft.util.ChangeEvent e)
       {
-        if (shown) update();
-        else refreshPending=true;
+        if (shown) {
+          System.out.println("image base view updated");
+          update();
+        }
+        else {
+          System.out.println("cache image base view update");
+          refreshPending=true;
+        }
       }
     }
   }

@@ -49,6 +49,8 @@ import com.mandelsoft.mand.util.MandelListFolderTree;
 import com.mandelsoft.swing.WindowControlAction;
 import java.awt.SplashScreen;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -127,9 +129,8 @@ public class ToolEnvironment extends Environment {
     ComposedMandelListFolderTreeModel userlists;
     List<MandelListFolderTree> tmp;
 
-    imagebase_model=new ImageBaseModel(this);
-
-    refresh_pending=new ArrayList<MandelListTableModel>();
+    refresh_pending=new HashMap<MandelListTableModel,Boolean>();
+    refresh_order=new ArrayList<MandelListTableModel>();
     toolControl = new ToolControlAction();
     listactions=new MandelListsMenuFactory(isReadonly());
 
@@ -196,6 +197,8 @@ public class ToolEnvironment extends Environment {
     }
 
     colormaps=new ExtendedColormapListModel(getColormaps());
+
+    imagebase_model=new ImageBaseModel(this);
   }
 
   public ImageBaseModel getImagebaseModel()
@@ -399,7 +402,10 @@ public class ToolEnvironment extends Environment {
   protected void unseenRefinementsModified()
   {
     super.unseenRefinementsModified();
-    if (unseenrefinements!=null) unseenrefinements.fireTableDataChanged();
+    if (unseenrefinements!=null) {
+      if (debug) System.out.println("unseen refinements modified");
+      unseenrefinements.fireTableDataChanged();
+    }
   }
 
   private void setupFrame(JFrame frame)
@@ -439,7 +445,7 @@ public class ToolEnvironment extends Environment {
   { File f=new File(n);
     QualifiedMandelName name;
 
-    System.out.println(f.getName()+": "+f);
+    //System.out.println(f.getName()+": "+f);
     if (f.getName().equals(n)) {
       try {
         name=QualifiedMandelName.create(f);
@@ -622,7 +628,7 @@ public class ToolEnvironment extends Environment {
 
     String[] comps=path.split("/");
     for (String comp :comps) {
-      System.out.println("lookup "+comp);
+      if (debug) System.out.println("lookup "+comp);
       if (!comp.isEmpty()) {
         f=f.getSubFolder(comp);
         if (f==null) break;
@@ -637,37 +643,37 @@ public class ToolEnvironment extends Environment {
   // mandel list model wrapper
   /////////////////////////////////////////////////////////////////////////
 
-  private List<MandelListTableModel> refresh_pending;
-  private int updcnt;
+  private Map<MandelListTableModel,Boolean> refresh_pending;
+  private List<MandelListTableModel>        refresh_order;
 
-  public void startUpdate()
+  public void refresh(MandelListTableModel m, boolean soft)
   {
-    updcnt++;
-  }
-
-  public void refresh(MandelListTableModel m)
-  {
-    if (updcnt==0) m.refresh(true);
-    else if(!refresh_pending.contains(m)) refresh_pending.add(m);
-  }
-  
-  public void finishUpdate()
-  {
-    if (updcnt>0) {
-      if (updcnt==1) {
-        if (debug) System.out.println("complete update");
-        while (!refresh_pending.isEmpty()) {
-          if (debug) System.out.println("   loop");
-          List<MandelListTableModel> tmp=new ArrayList<MandelListTableModel>(refresh_pending);
-          refresh_pending.clear();
-          for (MandelListTableModel m:tmp) {
-            m.refresh(true);
-          }
-        }
-        if (debug) System.out.println("completed");
+    if (!isInUpdate()) m.refresh(soft);
+    else {
+      Boolean v=refresh_pending.get(m);
+      if (v==null) {
+        refresh_pending.put(m,soft);
+        refresh_order.add(m);
       }
-      updcnt--;
+      else {
+        if (v.booleanValue() && !soft) {
+          refresh_pending.put(m,soft);  // force hard reset
+        }
+      }
     }
+  }
+
+  @Override
+  protected void handleUpdate()
+  {
+    super.handleUpdate();
+    while (!refresh_order.isEmpty()) {
+      MandelListTableModel m=refresh_order.get(0);
+      m.refresh(refresh_pending.get(m));
+      refresh_order.remove(0);
+      refresh_pending.remove(m);
+    }
+    imagebase_model.handleUpdate();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -731,7 +737,7 @@ public class ToolEnvironment extends Environment {
           }
           //new Throwable().printStackTrace(System.out);
 
-          ToolEnvironment.this.refresh(AutoRefreshMandelListTableModel.this);
+          ToolEnvironment.this.refresh(AutoRefreshMandelListTableModel.this,true);
         }
       }
     }

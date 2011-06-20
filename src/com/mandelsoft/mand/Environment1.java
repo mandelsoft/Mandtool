@@ -177,7 +177,7 @@ public class Environment1 implements MandelConstants  {
 
     colormaplist=new ScannerColormapList(getColormapScanner());
     String cmname=database.getProperty(Settings.DEFCOLORMAP);
-    System.out.println("default colormap property: "+cmname);
+    if (debug) System.out.println("default colormap property: "+cmname);
     if (cmname!=null && colormaplist!=null) {
       try {
         defcolormap=colormaplist.get(new ColormapName(cmname));
@@ -190,7 +190,7 @@ public class Environment1 implements MandelConstants  {
       }
     }
     else {
-      System.out.println("no default colormap");
+      if (debug) System.out.println("no default colormap");
     }
   }
   
@@ -741,6 +741,7 @@ public class Environment1 implements MandelConstants  {
       // find completed refinement requests in database
       for (QualifiedMandelName n:refset) {
         MandelData best=null;
+        boolean found=false;
         Set<MandelHandle> set=ref.getMandelHandles(n);
         if (set.size()>1) for (MandelHandle i:set) {
           try {
@@ -749,8 +750,11 @@ public class Environment1 implements MandelConstants  {
 //                               data.getInfo().getLimitIt()+": "+i.getFile());
             if (best==null) best=data;
             else {
-              if (data.getInfo().getLimitIt()>best.getInfo().getLimitIt()) {          
-                best=data;
+              if (data.getInfo().getLimitIt()!=best.getInfo().getLimitIt()) {
+                found=true; // found second valid entry with higher limit
+                if (data.getInfo().getLimitIt()>best.getInfo().getLimitIt()) {
+                  best=data;
+                }
               }
             }
           }
@@ -758,7 +762,7 @@ public class Environment1 implements MandelConstants  {
             System.out.println("cannot read "+i.getFile()+": "+ex);
           }
         }
-        if (best!=null) mod|=add(n);
+        if (found) mod|=add(n);
       }
       if (mod) try {
         save();
@@ -1133,132 +1137,174 @@ public class Environment1 implements MandelConstants  {
     if (f==null || isReadonly()) return false;
     if (!f.isFile()) return false;
 
-    QualifiedMandelName mn=QualifiedMandelName.create(f);
-    if (unseenrasters!=null && unseenrasters.contains(mn)) {
-      if (debug) System.out.println(mn+" set to seen: "+f);
-      unseenrasters.remove(mn);
-      try {
-        unseenrasters.save();
-      }
-      catch (IOException ex) {
-        System.err.println("cannot write seen: "+ex);
-      }
-      seenModified();
-    }
-    if (!Utils.isEmpty(mn.getQualifier()) && !Utils.isEmpty(v)) s=v;
-
-    //
-    // remove old refinement versions
-    Set<MandelHandle> set=getImageDataScanner().getMandelHandles(mn);
-    if (set.size()>1) {
-      MandelData best=null;
-      for (MandelHandle i:set) {
+    startUpdate();
+    try {
+      QualifiedMandelName mn=QualifiedMandelName.create(f);
+      if (unseenrasters!=null&&unseenrasters.contains(mn)) {
+        if (debug) System.out.println(mn+" set to seen: "+f);
+        unseenrasters.remove(mn);
         try {
-          MandelData data=i.getInfo();
-          if (best==null) best=data;
-          else {
-            if (data.getInfo().getLimitIt()>best.getInfo().getLimitIt()) {
-              best=data;
-            }
-          }
+          unseenrasters.save();
         }
         catch (IOException ex) {
-          System.out.println("cannot read "+i.getFile()+": "+ex);
+          System.err.println("cannot write seen: "+ex);
         }
+        seenModified();
       }
-      if (best!=null && best.getFile().equals(f)) {
-        System.out.println("found refined replacement "+f);
+      if (!Utils.isEmpty(mn.getQualifier())&&!Utils.isEmpty(v)) s=v;
+
+      //
+      // remove old refinement versions
+      Set<MandelHandle> set=getImageDataScanner().getMandelHandles(mn);
+      if (set.size()>1) {
+        MandelData best=null;
         for (MandelHandle i:set) {
-          AbstractFile d=i.getFile();
-          if (d.isFile()) {
-            if (!d.equals(f)) {
-              try {
-                MandelFolder folder=MandelFolder.getMandelFolder(d.getFile().
-                                                   getParentFile());
-                System.out.println("  removing "+d);
-                folder.remove(d.getFile());
+          try {
+            MandelData data=i.getInfo();
+            if (best==null) best=data;
+            else {
+              if (data.getInfo().getLimitIt()>best.getInfo().getLimitIt()) {
+                best=data;
               }
-              catch (IOException ex) {
+            }
+          }
+          catch (IOException ex) {
+            System.out.println("cannot read "+i.getFile()+": "+ex);
+          }
+        }
+        if (best!=null&&best.getFile().equals(f)) {
+          System.out.println("found refined replacement "+f);
+          for (MandelHandle i:set) {
+            AbstractFile d=i.getFile();
+            if (d.isFile()) {
+              if (!d.equals(f)) {
+                try {
+                  MandelFolder folder=MandelFolder.getMandelFolder(d.getFile().
+                    getParentFile());
+                  System.out.println("  removing "+d);
+                  folder.remove(d.getFile());
+                }
+                catch (IOException ex) {
+                }
               }
             }
           }
         }
       }
-    }
 
-    // remove from unseen unseenrefinements
-    if (unseenrefinements.contains(mn)) {
-      // explicit remove (in explicit list) only if contained in effective list
-      handleRefinementSeen(mn);
-    }
-
-    //System.out.println("seen path: "+s);
-    if (Utils.isEmpty(s)) return false;
-    if (Utils.isEmpty(n)) return false;
-
-    File root=null;
-    if (f.isFile()) {
-      try {
-        root=f.getFile().getParentFile().getCanonicalFile();
-      }
-      catch (IOException ex) {
-        System.err.println("cannot eval "+f);
-        return false;
+      // remove from unseen unseenrefinements
+      if (unseenrefinements.contains(mn)) {
+        // explicit remove (in explicit list) only if contained in effective list
+        handleRefinementSeen(mn);
       }
 
-      StringTokenizer t=new StringTokenizer(n, ";:");
-      boolean found=false;
-      while (t.hasMoreTokens()) {
+      //System.out.println("seen path: "+s);
+      if (Utils.isEmpty(s)) return false;
+      if (Utils.isEmpty(n)) return false;
+
+      File root=null;
+      if (f.isFile()) {
         try {
-          File save=new File(t.nextToken()).getCanonicalFile();
-          if (save.equals(root)) {
-            found=true;
-            break;
-          }
+          root=f.getFile().getParentFile().getCanonicalFile();
         }
         catch (IOException ex) {
-         // ignore illegal path
+          System.err.println("cannot eval "+f);
+          return false;
         }
-      }
-      if (!found) {
-        System.err.println("not in save path");
-        return false;
-      }
-      if (debug) System.out.println("relocation candidate");
 
-      File store;
-      try {
-        store=new File(s).getCanonicalFile();
-      }
-      catch (IOException ex) {
-        return false;
-      }
-      if (!store.equals(root)&&f.isFile()) {
-        File nf=new File(store, f.getName());
-        File of=f.getFile();
-        try {
-          System.out.println("relocate file "+of+" to "+store);
-          MandelFolder mf=MandelFolder.getMandelFolder(store);
-          if (mf.renameTo(of, nf)) {
-            if (of.exists()&&nf.exists()) {
-              System.out.println("*** delete "+of);
-              of.delete();
+        StringTokenizer t=new StringTokenizer(n, ";:");
+        boolean found=false;
+        while (t.hasMoreTokens()) {
+          try {
+            File save=new File(t.nextToken()).getCanonicalFile();
+            if (save.equals(root)) {
+              found=true;
+              break;
             }
-            return true;
+          }
+          catch (IOException ex) {
+            // ignore illegal path
           }
         }
-        catch (IOException ex) {
+        if (!found) {
+          System.err.println("not in save path");
+          return false;
         }
-        //if (isAutoRescan()) newraster.rescan(false);
-        //else addLogicalFile(nf);
+        if (debug) System.out.println("relocation candidate");
+
+        File store;
+        try {
+          store=new File(s).getCanonicalFile();
+        }
+        catch (IOException ex) {
+          return false;
+        }
+        if (!store.equals(root)&&f.isFile()) {
+          File nf=new File(store, f.getName());
+          File of=f.getFile();
+          try {
+            if (debug) System.out.println("relocate file "+of+" to "+store);
+            MandelFolder mf=MandelFolder.getMandelFolder(store);
+            if (mf.renameTo(of, nf)) {
+              if (of.exists()&&nf.exists()) {
+                if (debug) System.out.println("*** delete "+of);
+                of.delete();
+              }
+              return true;
+            }
+          }
+          catch (IOException ex) {
+          }
+          //if (isAutoRescan()) newraster.rescan(false);
+          //else addLogicalFile(nf);
+        }
       }
+      return false;
     }
-    return false;
+    finally {
+      finishUpdate();
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // update handling / delayed event dispatching
+  ////////////////////////////////////////////////////////////////////////////
+
+  private int updcnt;
+
+  public boolean isInUpdate()
+  {
+    return updcnt>0;
+  }
+  
+  public void startUpdate()
+  {
+    if (debug) System.out.println("start env update "+updcnt);
+    updcnt++;
+  }
+
+  public void finishUpdate()
+  {
+    if (debug) System.out.println("finish env update "+updcnt);
+    if (updcnt>0) {
+      if (updcnt==1) {
+        if (debug) System.out.println("complete update");
+        handleUpdate();
+        if (debug) System.out.println("completed");
+      }
+      updcnt--;
+    }
+  }
+
+  protected void handleUpdate()
+  {
+    if (debug) System.out.println("handle env update");
   }
 
   ////////////////////////////////////////////////////////////////////////////
   // backup
   ////////////////////////////////////////////////////////////////////////////
+
   protected File _getBackup(String prop)
   {
     File backup=null;
