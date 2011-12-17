@@ -161,7 +161,10 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
       ToolEnvironment env=getMandelFrame().getEnvironment();
       System.out.println("env="+env);
       MandelName parent=getMandelFrame().getMandelName();
-      MandelName sub=MandUtils.getNextSubName(parent, env.getAutoMetaScanner());
+      MandelInfo info=(MandelInfo)getInfo();
+      MandelName root=MandUtils.lookupRoot(env.getMetaScanner(), parent, info.getSpec());
+      if (root==null) root=parent;
+      MandelName sub=MandUtils.getNextSubName(root, env.getAutoMetaScanner());
       if (sub==null) {
         Error("Sub Area Creation Problem", "No further names available.");
       }

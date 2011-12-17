@@ -16,6 +16,7 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.swing.IJDialog;
 import java.io.File;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
@@ -25,7 +26,7 @@ import javax.swing.JOptionPane;
  * @author Uwe Krüger
  */
 
-public class MandelDialog extends JDialog implements MandelWindowAccessSource {
+public class MandelDialog extends IJDialog implements MandelWindowAccessSource {
   private MandelWindowAccess owner;
 
   public MandelDialog(MandelWindowAccess owner, String title)
@@ -63,24 +64,24 @@ public class MandelDialog extends JDialog implements MandelWindowAccessSource {
   public boolean overwriteFileDialog(File f)
   {
     Object[] options={"Replace", "Cancel"};
-    Object o=JOptionPane.showOptionDialog(getOwner(),
+    int o=JOptionPane.showOptionDialog(getOwner(),
             f.getName()+" already exists.\n"+
             "Do you want to replace it?",
             "Warning",
             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
             null, options, options[1]);
-    return (o.equals(0));
+    return o==0;
   }
 
   public boolean deleteFileDialog(File f)
   {
     Object[] options={"Delete", "Cancel"};
-    Object o=JOptionPane.showOptionDialog(getOwner(),
+    int o=JOptionPane.showOptionDialog(getOwner(),
             "Do you really want to delete "+f.getPath()+"?",
             "Warning",
             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
             null, options, options[1]);
-    return (o.equals(0));
+    return o==0;
   }
 
   public void mandelInfo(String msg)

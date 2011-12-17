@@ -16,7 +16,7 @@
 package com.mandelsoft.mand.tools;
 
 import com.mandelsoft.mand.IllegalConfigurationException;
-import com.mandelsoft.mand.tool.MandelImagePanel;
+import com.mandelsoft.mand.tool.Decoration;
 import java.net.MalformedURLException;
 import java.net.URL;
 import com.mandelsoft.mand.tool.ToolEnvironment;
@@ -43,7 +43,7 @@ public class MandTool extends Command{
         ResourceBundle bundle=ResourceBundle.getBundle("com.mandelsoft.mand.tool.resc.MandTool");
         Graphics2D g=sp.createGraphics();
         Font ofont=g.getFont();
-        Font font=MandelImagePanel.getAnnotationFont(g);
+        Font font=Decoration.getAnnotationFont(g);
         Font tfont=font.deriveFont(font.getSize2D()*1.7F);
         g.setFont(tfont);
         g.setColor(new Color(200,200,0));

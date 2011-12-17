@@ -143,16 +143,9 @@ public class Mand extends Command {
 
   public boolean calculate()
   {
+    setupContext();
     if (filter!=null) {
-      if (filter.prefix!=null
-              &&!filter.prefix.isAbove(name.getMandelName()))
-        return false;
-      if (filter.variants&&name.getQualifier()==null) return false;
-      setupContext();
-      if (filter.fast&&!pi.isFast()) return false;
-    }
-    else {
-      setupContext();
+      if (!filter.filter(name, pi)) return false;
     }
 
     System.out.println((md.getRaster()==null?"":"re")+
@@ -415,9 +408,34 @@ public class Mand extends Command {
   }
 
   private static class Filter {
-    MandelName prefix;
+    Set<MandelName> prefix;
     boolean fast;
     boolean variants;
+
+    public void addPrefix(MandelName name)
+    {
+      if (prefix==null) prefix=new HashSet<MandelName>();
+      prefix.add(name);
+    }
+
+    private boolean filterPrefix(MandelName name)
+    {
+      if (prefix==null) return true;
+      for (MandelName p:prefix) {
+         if (p.isAbove(name)) {
+           return true;
+         }
+       }
+      return false;
+    }
+
+    public boolean filter(QualifiedMandelName name, PixelIterator pi)
+    {
+      if (!filterPrefix(name.getMandelName())) return false;
+      if (variants&&name.getQualifier()==null) return false;
+      if (fast&&!pi.isFast()) return false;
+     return true;
+    }
   }
 
   static public void main(String[] args)
@@ -452,8 +470,9 @@ public class Mand extends Command {
             break;
           case 'p':
             if (args.length>c) {
-              filter.prefix=MandelName.create(args[c++]);
-              if (filter.prefix==null) Error("illegal mandel name '"+args[c-1]+"'");
+              MandelName mn=MandelName.create(args[c++]);
+              if (mn==null) Error("illegal mandel name '"+args[c-1]+"'");
+              filter.addPrefix(mn);
             }
             else Error("name prefix missing");
             break;
@@ -461,7 +480,6 @@ public class Mand extends Command {
             Error("illegal option '"+opt+"'");
         }
       }
-      c++;
     }
 
     while (args.length>c) {

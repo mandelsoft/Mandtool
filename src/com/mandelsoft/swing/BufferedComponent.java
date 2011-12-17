@@ -472,30 +472,6 @@ public class BufferedComponent extends JComponent
   public BufferedImage getImage()
   { return image;
   }
-  /*
-  @Override
-  public Dimension getPreferredSize()
-  { Insets o=getInsets();
-    return new Dimension(image.getWidth()+o.left+o.right,
-                         image.getHeight()+o.top+o.bottom);
-  }
-
-  @Override
-  public Dimension getMaximumSize()
-  { return getPreferredSize();
-  }
-
-  @Override
-  public boolean isMaximumSizeSet()
-  { return true;
-  }
-
-  @Override
-  public boolean isPreferredSizeSet()
-  { return true;
-  }
-
-  */
   
   //////////////////////////////////////////////////////////////////////
   // Assigned Rects
@@ -700,10 +676,10 @@ public class BufferedComponent extends JComponent
     static public final Side TOP=Side.TOP;
     static public final Side BOTTOM=Side.BOTTOM;
           
-    static public final Corner TOP_LEFT=CornerEvent.TOP_LEFT;
-    static public final Corner TOP_RIGHT=CornerEvent.TOP_RIGHT;
-    static public final Corner BOTTOM_LEFT=CornerEvent.BOTTOM_LEFT;
-    static public final Corner BOTTOM_RIGHT=CornerEvent.BOTTOM_RIGHT;
+    static public final Corner TOP_LEFT=RectPointEvent.TOP_LEFT;
+    static public final Corner TOP_RIGHT=RectPointEvent.TOP_RIGHT;
+    static public final Corner BOTTOM_LEFT=RectPointEvent.BOTTOM_LEFT;
+    static public final Corner BOTTOM_RIGHT=RectPointEvent.BOTTOM_RIGHT;
     
     private VisibleRect rect;
     private Side side;
@@ -1122,13 +1098,13 @@ public class BufferedComponent extends JComponent
         Dimension d=new Dimension(adv, hgt);
 
         // try to find a useful position
-        // first below bottom right corner
+        // first below bottom right rectPoint
         if (!_draw(g, label, d, 1, 1, 1, 1)) {
-          // second below bottom left corner
+          // second below bottom left rectPoint
           if (!_draw(g, label, d, 0, 1, 0, 1)) {
-            // third above top right corner
+            // third above top right rectPoint
             if (!_draw(g, label, d, 1, 0, 1, -1)) {
-              // fourth above top left corner
+              // fourth above top left rectPoint
               if (!_draw(g, label, d, 0, 0, 0, -1)) {
                 // dont't draw at all
               }
@@ -1417,89 +1393,131 @@ public class BufferedComponent extends JComponent
   
   //////////////////////////////////////////////////////////////////////////
 
-  public static class CornerEvent extends ClickEvent {
+  public static class RectPointEvent extends ClickEvent {
     static final public Corner TOP_LEFT=    Corner.TOP_LEFT;
     static final public Corner TOP_RIGHT=   Corner.TOP_RIGHT;
     static final public Corner BOTTOM_LEFT= Corner.BOTTOM_LEFT;
     static final public Corner BOTTOM_RIGHT=Corner.BOTTOM_RIGHT;
+
+    static final public RectanglePoint MIDDLE_LEFT=  RectanglePoint.MIDDLE_LEFT;
+    static final public RectanglePoint MIDDLE_RIGHT= RectanglePoint.MIDDLE_RIGHT;
+    static final public RectanglePoint MIDDLE_TOP=   RectanglePoint.MIDDLE_TOP;
+    static final public RectanglePoint MIDDLE_BOTTOM=RectanglePoint.MIDDLE_BOTTOM;
     
-    private Corner corner;
+    private RectanglePoint rectPoint;
     
-    public CornerEvent(MouseEvent evt, Corner loc)
+    public RectPointEvent(MouseEvent evt, RectanglePoint loc)
     { super(evt.getSource(),evt);
-      this.corner=loc;
+      this.rectPoint=loc;
     }
 
     public Corner getCorner()
-    { return corner;
+    { return isCornerEvent()?(Corner)rectPoint:null;
     }
 
-    public String getCornerName()
-    { if (corner==null) return "None";
-      return corner.getName();
+    public boolean isCornerEvent()
+    {
+      return (rectPoint instanceof Corner);
+    }
+
+    public RectanglePoint getRectanglePoint()
+    {
+      return rectPoint;
+    }
+
+    public String getPointName()
+    { if (rectPoint==null) return "None";
+      return rectPoint.getName();
     }
 
     @Override
     public String getDescription()
-    { return getCornerName()+" with "+super.getDescription();
+    { return getPointName()+" with "+super.getDescription();
     }
   }
 
-  public interface CornerEventListener {
-    void cornerClicked(CornerEvent e);
+  public interface RectPointEventListener {
+    void rectanglePointClicked(RectPointEvent e);
   }
 
   //////////////////////////////////////////////////////////////////////////
   
-  private List<CornerEventListener> clisteners=new ArrayList<CornerEventListener>();
+  private List<RectPointEventListener> clisteners=new ArrayList<RectPointEventListener>();
   
-  public void addCornerEventListener(CornerEventListener l)
+  public void addRectPointEventListener(RectPointEventListener l)
   { clisteners.add(l);
   }
   
-  public void removeCornerEventListener(CornerEventListener l)
+  public void removeRectPointEventListener(RectPointEventListener l)
   { clisteners.remove(l);
   }
   
-  protected void fireCornerEvent(MouseEvent evt, Corner corner)
+  protected void fireRectangleEvent(MouseEvent evt, RectanglePoint loc)
   {
-    fireCornerEvent(new CornerEvent(evt,corner));
+    fireRectangleEvent(new RectPointEvent(evt,loc));
   }
   
-  protected void fireCornerEvent(CornerEvent e)
-  { for (CornerEventListener l:clisteners) {
-      l.cornerClicked(e);
+  protected void fireRectangleEvent(RectPointEvent e)
+  { for (RectPointEventListener l:clisteners) {
+      l.rectanglePointClicked(e);
     }
-    fireCornerEvent(e.getCorner());
+    fireRectangleEvent(e.getRectanglePoint(),e);
   }
 
   //////////////////////////////////////////////////////////////////////////
 
-  private Map<Corner,List<ActionListener>> corners=
-          new HashMap<Corner,List<ActionListener>>();
+  private Map<RectanglePoint,List<ActionListener>> points=
+          new HashMap<RectanglePoint,List<ActionListener>>();
 
-  public void addActionListener(ActionListener l, Corner c)
+  public void addActionListener(ActionListener l, RectanglePoint c)
   {
-    List<ActionListener> list=corners.get(c);
+    List<ActionListener> list=points.get(c);
     if (list==null) {
       list=new ArrayList<ActionListener>();
-      corners.put(c,list);
+      points.put(c,list);
     }
     list.add(l);
   }
 
-  public void removeActionListener(ActionListener l, Corner c)
+  public void removeActionListener(ActionListener l, RectanglePoint c)
   {
-    List<ActionListener> list=corners.get(c);
+    List<ActionListener> list=points.get(c);
     if (list!=null) {
       list.remove(l);
     }
   }
 
-  protected void fireCornerEvent(Corner c)
-  { ActionEvent e=new ActionEvent(this,ActionEvent.ACTION_PERFORMED,c.getName(),
-                                  System.currentTimeMillis(),0);
-    List<ActionListener> list=corners.get(c);
+  public static class RectangleActionEvent extends ActionEvent {
+    private RectPointEvent p;
+
+    public RectangleActionEvent(Object source, int id, String command, long when,
+                                int modifiers, RectPointEvent p)
+    { super(source,id,command,when,modifiers);
+      this.p=p;
+    }
+
+    public RectangleActionEvent(Object source, int id, String command,
+                                int modifiers, RectPointEvent p)
+    { super(source,id,command,modifiers);
+      this.p=p;
+    }
+
+    public RectangleActionEvent(Object source, int id, String command,
+                                RectPointEvent p)
+    { super(source,id,command);
+      this.p=p;
+    }
+
+    public RectPointEvent getRectanglePointEvent()
+    {
+      return p;
+    }
+  }
+
+  protected void fireRectangleEvent(RectanglePoint c, RectPointEvent p)
+  { ActionEvent e=new RectangleActionEvent(this,ActionEvent.ACTION_PERFORMED,c.getName(),
+                                  System.currentTimeMillis(),0,p);
+    List<ActionListener> list=points.get(c);
     if (list!=null) {
       List<ActionListener> selected=new ArrayList<ActionListener>();
       for (ActionListener l:list) {
@@ -1788,27 +1806,79 @@ public class BufferedComponent extends JComponent
 
   private class MouseHandler extends MouseAdapter
                              implements MouseListener, MouseMotionListener {
-    private Corner checkCorners(Rectangle r, Point p)
+    final Cursor point_cursor=Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+    final Cursor def_cursor=Cursor.getDefaultCursor();
+
+    private RectanglePoint checkRectPoints(Rectangle r, Point p)
     {
       if (p.getX()<r.getX()+CORNER_RECT&&
           p.getY()<r.getY()+CORNER_RECT) {
-        return CornerEvent.TOP_LEFT;
+        return RectPointEvent.TOP_LEFT;
       }
       else if (p.getX()<r.getX()+CORNER_RECT&&
                p.getY()>r.getY()+r.getHeight()-CORNER_RECT) {
-        return CornerEvent.BOTTOM_LEFT;
+        return RectPointEvent.BOTTOM_LEFT;
       }
       else if (p.getX()>=r.getX()+r.getWidth()-CORNER_RECT&&
                p.getY()<r.getY()+CORNER_RECT) {
-        return CornerEvent.TOP_RIGHT;
+        return RectPointEvent.TOP_RIGHT;
       }
       else if (p.getX()>=r.getX()+r.getWidth()-CORNER_RECT&&
                p.getY()>=r.getY()+r.getHeight()-CORNER_RECT) {
-        return CornerEvent.BOTTOM_RIGHT;
+        return RectPointEvent.BOTTOM_RIGHT;
       }
+
+      else if (p.getX()<r.getX()+CORNER_RECT&&
+               p.getY()>=r.getY()+(r.getHeight()-CORNER_RECT)/2 &&
+               p.getY()<=r.getY()+(r.getHeight()+CORNER_RECT)/2) {
+        return RectPointEvent.MIDDLE_LEFT;
+      }
+      else if (p.getX()>=r.getX()+r.getWidth()-CORNER_RECT&&
+               p.getY()>=r.getY()+(r.getHeight()-CORNER_RECT)/2 &&
+               p.getY()<=r.getY()+(r.getHeight()+CORNER_RECT)/2) {
+        return RectPointEvent.MIDDLE_RIGHT;
+      }
+      else if (p.getY()<r.getY()+CORNER_RECT&&
+               p.getX()>=r.getX()+(r.getWidth()-CORNER_RECT)/2 &&
+               p.getX()<=r.getX()+(r.getWidth()+CORNER_RECT)/2) {
+        return RectPointEvent.MIDDLE_TOP;
+      }
+      else if (p.getY()>=r.getY()+r.getHeight()-CORNER_RECT&&
+               p.getX()>=r.getX()+(r.getWidth()-CORNER_RECT)/2 &&
+               p.getX()<=r.getX()+(r.getWidth()+CORNER_RECT)/2) {
+        return RectPointEvent.MIDDLE_BOTTOM;
+      }
+
       return null;
     }
-    
+
+    public RectanglePoint getRectanglePoint(MouseEvent e)
+    {
+      Point p=e.getPoint();
+      RectanglePoint rect_point;
+      // check points
+      //System.out.println("rectPoint check for "+p.getX()+","+p.getY());
+      //System.out.println("  full "+fullviewrect);
+      rect_point=checkRectPoints(fullviewrect, p);
+
+
+      // check visible rect
+      if (rect_point==null) {
+        //System.out.println(" visible "+content.getVisibleRect());
+        rect_point=checkRectPoints(content.getVisibleRect(), p);
+      }
+
+      // check possible view port points
+      if (rect_point==null) {
+        JViewport vp=getViewPort();
+        if (vp!=null) {
+          //System.out.println(" vieport "+vp.getViewRect());
+          rect_point=checkRectPoints(vp.getViewRect(), p);
+        }
+      }
+      return rect_point;
+    }
+
     @Override
     public void mouseClicked(MouseEvent e)
     { MouseEvent t=translate(e);
@@ -1823,30 +1893,8 @@ public class BufferedComponent extends JComponent
       }
       
       if (e.getButton()==MouseEvent.BUTTON1) {
-        Point p=e.getPoint();
-        Corner corner;
-        // check corners
-        //System.out.println("corner check for "+p.getX()+","+p.getY());
-        //System.out.println("  full "+fullviewrect);
-        corner=checkCorners(fullviewrect,p);
-
-        
-        // check visible rect
-        if (corner==null) {
-          //System.out.println(" visible "+content.getVisibleRect());
-          corner=checkCorners(content.getVisibleRect(),p);
-        }
-
-        // check possible view port corners
-        if (corner==null) {
-          JViewport vp=getViewPort();
-          if (vp!=null) {
-            //System.out.println(" vieport "+vp.getViewRect());
-            corner=checkCorners(vp.getViewRect(),p);
-          }
-        }
-
-        if (corner!=null) fireCornerEvent(t,corner);
+        RectanglePoint rect_point=getRectanglePoint(e);
+        if (rect_point!=null) fireRectangleEvent(t,rect_point);
       }   
     }
 
@@ -1891,9 +1939,15 @@ public class BufferedComponent extends JComponent
     public void mouseMoved(MouseEvent e)
     {
       MouseEvent t;
+      setCursor(def_cursor);
       if (selector!=null) {
         t=translate(e);
         selector.mouseMoved(t);
+      }
+      RectanglePoint rect_point=getRectanglePoint(e);
+      if (rect_point!=null &&
+          points.get(rect_point)!=null && !points.get(rect_point).isEmpty()) {
+        setCursor(point_cursor);
       }
     }
 
@@ -2101,8 +2155,6 @@ public class BufferedComponent extends JComponent
           return;
         }
       }
-     //System.out.println("default");
-      comp.setCursor(def_cursor);
     }
 
     public void mouseDragged(MouseEvent e)
@@ -2430,7 +2482,7 @@ public class BufferedComponent extends JComponent
 
     TestComponent tc;
 
-    class MyListener implements CornerEventListener,
+    class MyListener implements RectPointEventListener,
                                 RectEventListener {
 
       RectangleSelector[] sel=new RectangleSelector[]{
@@ -2441,22 +2493,22 @@ public class BufferedComponent extends JComponent
       };
       int current=-1;
 
-      public void cornerClicked(CornerEvent e)
+      public void rectanglePointClicked(RectPointEvent e)
       {
         System.out.println(e.getDescription());
 
         if (e.getClickCount()==2&&e.getButton()==MouseEvent.BUTTON1) {
-          if (e.getCorner()==CornerEvent.BOTTOM_LEFT) {
+          if (e.getCorner()==RectPointEvent.BOTTOM_LEFT) {
             System.out.println("  hide all");
             e.getComponent().hideAllRects();
           }
-          if (e.getCorner()==CornerEvent.BOTTOM_RIGHT) {
+          if (e.getCorner()==RectPointEvent.BOTTOM_RIGHT) {
             System.out.println("  show all");
             e.getComponent().showAllRects();
           }
         }
         if (e.getClickCount()==1&&e.getButton()==MouseEvent.BUTTON1) {
-          if (e.getCorner()==CornerEvent.TOP_LEFT) {
+          if (e.getCorner()==RectPointEvent.TOP_LEFT) {
             current++;
             if (current>=sel.length) current=0;
             System.out.println("  select mode "+current);
@@ -2487,7 +2539,7 @@ public class BufferedComponent extends JComponent
       System.out.println("SP: "+sp.getInsets());
       MyListener l=new MyListener();
       tc.addRectEventListener(l);
-      tc.addCornerEventListener(l);
+      tc.addRectPointEventListener(l);
     }
   }
 }

@@ -81,21 +81,23 @@ public class DefaultMandelListListModel extends AbstractMandelListListModel {
   public void add(int index, QualifiedMandelName name)
   {
     if (index>=list.size()) add(name);
-    checkModifiable();
-    if (duplicates || !list.contains(name)) {
-      int max=list.size();
-      list.add(index,name);
-      if (list.size()!=max) {
-        try {
-          list.save();
+    else {
+      checkModifiable();
+      if (duplicates||!list.contains(name)) {
+        int max=list.size();
+        list.add(index, name);
+        if (list.size()!=max) {
+          try {
+            list.save();
+          }
+          catch (IOException ex) {
+            JOptionPane.showMessageDialog(null,
+                                          "Cannot save list: "+ex,
+                                          "Error",
+                                          JOptionPane.ERROR_MESSAGE);
+          }
+          fireIntervalAdded(this, index, index);
         }
-        catch (IOException ex) {
-          JOptionPane.showMessageDialog(null,
-                                        "Cannot save list: "+ex,
-                                        "Error",
-                                        JOptionPane.ERROR_MESSAGE);
-        }
-        fireIntervalAdded(this, index, index);
       }
     }
   }
@@ -157,12 +159,15 @@ public class DefaultMandelListListModel extends AbstractMandelListListModel {
   }
 
   public void remove(QualifiedMandelName name)
-  { int index;
+  {
+    remove(list.indexOf(name));
+  }
 
+  public void remove(int index)
+  {
     checkModifiable();
-    index=list.indexOf(name);
     if (index>=0) {
-      list.remove(index);
+      QualifiedMandelName name=list.remove(index);
       if (!list.contains(name))
         factory.remove(name);
       try {

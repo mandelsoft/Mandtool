@@ -18,6 +18,8 @@ package com.mandelsoft.mand.tool;
 import java.util.ListIterator;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.util.ChangeEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -60,17 +62,17 @@ public class MandelListModelMenu extends MandelListMenu {
 
   private void update()
   {
+    List<Entry> entries=new ArrayList<Entry>();
+
     for (QualifiedMandelName n:mlmodel.getList()) {
-      Entry e=lookup(n);
-      if (e==null) add(n);
+      Entry e=lookup(n,entries);
+      if (e==null) e=createEntry(n);
+      entries.add(e);
     }
 
-    ListIterator<Entry> i=entries();
-    while (i.hasNext()) {
-      Entry e=i.next();
-      if (!mlmodel.getList().contains(e.name)) {
-        remove(e,i);
-      }
+    clear();
+    for (Entry e:entries) {
+      add(e);
     }
   }
 

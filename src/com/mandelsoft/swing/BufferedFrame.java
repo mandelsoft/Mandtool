@@ -30,7 +30,7 @@ import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
-import com.mandelsoft.swing.BufferedComponent.CornerEventListener;
+import com.mandelsoft.swing.BufferedComponent.RectPointEventListener;
 import com.mandelsoft.swing.BufferedComponent.RectEventListener;
 import com.mandelsoft.swing.BufferedComponent.RectModifiedEventListener;
 import com.mandelsoft.swing.BufferedComponent.RectangleSelector;
@@ -161,9 +161,9 @@ public class BufferedFrame extends JFrame {
     buffer.removeRectEventListener(l);
   }
 
-  public void removeCornerEventListener(CornerEventListener l)
+  public void removeCornerEventListener(RectPointEventListener l)
   {
-    buffer.removeCornerEventListener(l);
+    buffer.removeRectPointEventListener(l);
   }
 
   public void removeActionListener(ActionListener l, Corner c)
@@ -186,9 +186,9 @@ public class BufferedFrame extends JFrame {
     buffer.addRectEventListener(l);
   }
 
-  public void addCornerEventListener(CornerEventListener l)
+  public void addCornerEventListener(RectPointEventListener l)
   {
-    buffer.addCornerEventListener(l);
+    buffer.addRectPointEventListener(l);
   }
 
   public void addActionListener(ActionListener l, Corner c)

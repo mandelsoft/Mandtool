@@ -280,8 +280,20 @@ public class Copy<E extends ExecutionHandler> extends Command {
 
     protected boolean use(ElementHandle<?> h)
     {
-      MandelHandle mh=((MandelHandle)h);
-      return dst.getImageDataScanner().getMandelHandles(mh.getName()).isEmpty();
+      return use((MandelHandle)h,dst.getImageDataScanner());
+//      MandelHandle mh=((MandelHandle)h);
+//      return dst.getImageDataScanner().getMandelHandles(mh.getName()).isEmpty();
+    }
+
+    protected boolean use(MandelHandle mh, MandelScanner ds)
+    {
+      Set<MandelHandle> set=ds.getMandelHandles(mh.getName());
+      if (set.isEmpty()) return true;
+      long lm=mh.getFile().getLastModified();
+      for (MandelHandle dh:set) {
+        if (dh.getFile().getLastModified()>=lm) return false;
+      }
+      return true;
     }
   }
 
@@ -334,9 +346,10 @@ public class Copy<E extends ExecutionHandler> extends Command {
     @Override
     protected boolean use(ElementHandle h)
     {
-      MandelHandle mh=((MandelHandle)h);
-      return dst.getRasterImageScanner().
-                 getMandelHandles(mh.getName()).isEmpty();
+      return use((MandelHandle)h,dst.getRasterImageScanner());
+//      MandelHandle mh=((MandelHandle)h);
+//      return dst.getRasterImageScanner().
+//                 getMandelHandles(mh.getName()).isEmpty();
     }
     
     @Override

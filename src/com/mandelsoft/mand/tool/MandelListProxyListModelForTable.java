@@ -16,6 +16,7 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.swing.ProxyModel;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Action;

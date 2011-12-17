@@ -22,6 +22,7 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JWindow;
@@ -42,6 +43,11 @@ public abstract class MandelContextMenuHandler<E,S,M>
   public JWindow getWindow()
   {
     return _lookupInterface(contextComponent, JWindow.class);
+  }
+
+  public JDialog getDialog()
+  {
+    return _lookupInterface(contextComponent, JDialog.class);
   }
 
   public MandelWindowAccess getMandelWindowAccess()

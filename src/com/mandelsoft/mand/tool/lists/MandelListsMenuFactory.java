@@ -40,6 +40,7 @@ public class MandelListsMenuFactory extends MandelContextMenuFactory {
   protected void setup()
   {
     add(new FavoritesListAction());
+    add(new TodoListAction());
     add(new SubAreaListAction());
     add(new LeafImagesListAction());
     add(new DeadEndListAction());

@@ -25,7 +25,7 @@ import java.awt.geom.Rectangle2D;
  * @author Uwe Krüger
  */
 
-public class Corner {
+public class Corner extends RectanglePoint {
 
   public static final Corner TOP_LEFT=new Corner("TopLeft", 0, 0,
                                                  Cursor.NW_RESIZE_CURSOR);
@@ -52,21 +52,14 @@ public class Corner {
                       Side.LEFT);
   }
 
-  private String name;
   private Corner opposite;
-  private int factorX;
-  private int factorY;
   private Side leftSide;
   private Side rightSide;
   private int cursor;
 
   private Corner(String name, int x, int y, int cursor)
   {
-    super();
-    this.name=name;
-    this.factorX=x;
-    this.factorY=y;
-    this.cursor=cursor;
+    super(name,x,y, cursor);
   }
 
   private void setup(Corner c, Side l,
@@ -75,21 +68,6 @@ public class Corner {
     this.opposite=c;
     this.leftSide=l;
     this.rightSide=r;
-  }
-
-  public String getName()
-  {
-    return name;
-  }
-
-  public int getFactorX()
-  {
-    return factorX;
-  }
-
-  public int getFactorY()
-  {
-    return factorY;
   }
 
   public Corner getOppositeCorner()
@@ -107,20 +85,9 @@ public class Corner {
     return rightSide;
   }
 
-  public Point getPoint(Rectangle2D rect)
-  {
-    return new Point((int)(rect.getX()+getFactorX()*(rect.getWidth()-1)),
-                     (int)(rect.getY()+getFactorY()*(rect.getHeight()-1)));
-  }
-
-  public Cursor getCursor()
-  {
-    return Cursor.getPredefinedCursor(cursor);
-  }
-
   @Override
   public String toString()
   {
-    return "Corner "+name;
+    return "Corner "+getName();
   }
 }

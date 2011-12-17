@@ -25,6 +25,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import com.mandelsoft.mand.QualifiedMandelName;
+import java.util.Collection;
 
 /**
  *
@@ -32,10 +33,17 @@ import com.mandelsoft.mand.QualifiedMandelName;
  */
 
 public class MandelListMenu extends JMenu {
+
+  public interface SelectAction {
+    public void selectArea(MandelWindowAccess access, QualifiedMandelName name);
+  }
+
+  ////////////////////////////////////////////////////////////
   private MandelWindowAccess access;
   private List<Entry> list;
   private boolean shortnames;
   private boolean sorted;
+  private List<SelectAction> actions;
 
   public MandelListMenu(MandelWindowAccess access)
   {
@@ -47,9 +55,20 @@ public class MandelListMenu extends JMenu {
     super(name);
     this.access=access;
     list=new ArrayList<Entry>();
+    actions=new ArrayList<SelectAction>();
     setEnabled(false);
   }
 
+  public void addSelectAction(SelectAction a)
+  {
+    if (!actions.contains(a)) actions.add(a);
+  }
+
+  public boolean removeSelectAction(SelectAction a)
+  {
+    return actions.remove(a);
+  }
+  
   public void setUseShortnames(boolean shortnames)
   {
     this.shortnames=shortnames;
@@ -68,6 +87,14 @@ public class MandelListMenu extends JMenu {
     return null;
   }
 
+  protected Entry lookup(QualifiedMandelName n, Collection<Entry> skip)
+  {
+    for (Entry e:list) {
+      if (e.name.equals(n) && (skip==null || !skip.contains(e))) return e;
+    }
+    return null;
+  }
+
   protected Entry createEntry(QualifiedMandelName n)
   {
     return new Entry(n);
@@ -79,35 +106,41 @@ public class MandelListMenu extends JMenu {
     while (i.hasNext()) {
       remove(i.next(),i);
     }
+    this.setEnabled(false);
   }
-  
+
+  protected void add(Entry e)
+  {
+    int idx=0;
+    if (sorted) {
+      ListIterator<Entry> i=entries();
+      while (i.hasNext()) {
+        Entry s=i.next();
+
+        if (s.name.compareTo(e.name)>=0) {
+          // System.out.println("add "+n+" at "+idx);
+          list.add(idx, e);
+          super.add(e, idx);
+          idx=-1;
+          break;
+        }
+        idx++;
+      }
+    }
+    if (idx>=0) {
+      // System.out.println("append "+n);
+      list.add(e);
+      super.add(e);
+    }
+    this.setEnabled(true);
+  }
+
   public void add(QualifiedMandelName n)
   {
     Entry e=lookup(n);
-    int idx=0;
     if (e==null) {
       e=createEntry(n);
-      if (sorted) {
-        ListIterator<Entry> i=entries();
-        while (i.hasNext()) {
-          Entry s=i.next();
-
-          if (s.name.compareTo(e.name)>=0) {
-            // System.out.println("add "+n+" at "+idx);
-            list.add(idx, e);
-            super.add(e,idx);
-            idx=-1;
-            break;
-          }
-          idx++;
-        }
-      }
-      if (idx>=0) {
-        // System.out.println("append "+n);
-        list.add(e);
-        super.add(e);
-      }
-      this.setEnabled(true);
+      add(e);
     }
   }
 
@@ -160,6 +193,9 @@ public class MandelListMenu extends JMenu {
       QualifiedMandelName sel=name;
 
       if (sel==null) return;
+      for (SelectAction a:actions) {
+        a.selectArea(access, sel);
+      }
       access.getMandelImagePane().setBusy(true);
       if (access.getMandelImagePane().setImage(sel)) {
         handleLoaded(sel);

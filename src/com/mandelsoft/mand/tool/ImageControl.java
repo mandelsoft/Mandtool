@@ -371,60 +371,21 @@ public class ImageControl extends ControlDialog {
   /////////////////////////////////////////////////////////////////////////
   // image save tab
   /////////////////////////////////////////////////////////////////////////
-  private class PicturePanel extends ActionPanel {
-
-    private JComboBox formats;
-    private JCheckBox decoration;
-    private IntegerField width;
-    private FilePanel imagefile;
-    private FilePanel datafile;
-
+  private class PicturePanel extends PictureSavePanel {
+    
     public PicturePanel()
     {
-      JComponent c=new JLabel("Image Format");
-      addContent(c, GBC(0, 0).setRightInset(10).setAnchor(GBC.EAST).setWeight(
-              100, 100));
-      String[] fmts=ImageIO.getReaderFileSuffixes();
-      formats=new JComboBox(fmts);
-      addContent(formats, GBC(1, 0).setAnchor(GBC.WEST).setWeight(
-              100, 100));
-
-      c=new JLabel("Modified Width");
-      addContent(c, GBC(0, 1).setRightInset(10).setAnchor(GBC.EAST).setWeight(
-              100, 100));
-      width=new IntegerField(0);
-      width.setColumns(10);
-      addContent(width, GBC(1, 1).setAnchor(GBC.WEST).setWeight(
-              100, 100));
-
-      c=new JLabel("Show Creator");
-      addContent(c, GBC(0, 2).setRightInset(10).setAnchor(GBC.EAST).setWeight(
-              100, 100));
-      decoration=new JCheckBox();
-      decoration.setSelected(getEnvironment().getCopyright()!=null);
-      decoration.setEnabled(!decoration.isSelected());
-      addContent(decoration, GBC(1, 2).setAnchor(GBC.WEST).setWeight(
-              100, 100));
-
-      imagefile=new FilePanel("Image file", "", (JFrame)getOwner());
-      addContent(imagefile, GBC(0, 3, 2, 1).setLayout(GBC.BOTH, GBC.NORTH).setWeight(
-              100, 100).
-              setInsets(10, 10, 10, 10));
-
       addButton("Save", new SaveImageAction(),"Save picture file");
       addButton("Clear", new ClearAction(),"Clear file name");
       addButton("Path", new PathAction(),"Generate picture path name");
       addButton("Name", new NameAction(),"Generate picture file name");
     }
 
-    void updateState()
+    public MandelWindowAccess getMandelWindowAccess()
     {
-      AbstractFile file=getMandelWindowAccess().getMandelData().getFile();
-      if (file!=null) {
-        if (!file.isFile()) decoration.setSelected(true);
-        decoration.setEnabled(file.isFile());
-      }
+      return ImageControl.this.getMandelWindowAccess();
     }
+
     /////////////////////////////////////////////////////////////////////////
     private class SaveImageAction implements ActionListener {
 
@@ -489,14 +450,6 @@ public class ImageControl extends ControlDialog {
             }
           }
         }
-      }
-    }
-
-    /////////////////////////////////////////////////////////////////////////
-    private class ClearAction implements ActionListener {
-      public void actionPerformed(ActionEvent e)
-      {
-        imagefile.setFilename("");
       }
     }
 

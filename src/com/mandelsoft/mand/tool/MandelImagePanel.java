@@ -16,13 +16,11 @@
 
 package com.mandelsoft.mand.tool;
 
-import com.mandelsoft.mand.IllegalConfigurationException;
 import com.mandelsoft.util.upd.UpdatableObject;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -46,7 +44,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
@@ -56,7 +53,6 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
@@ -69,6 +65,7 @@ import com.mandelsoft.io.FileAbstractFile;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.io.AbstractFile;
 import com.mandelsoft.mand.Environment;
+import com.mandelsoft.mand.IllegalConfigurationException;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
@@ -105,11 +102,14 @@ import com.mandelsoft.mand.tool.slideshow.DefaultSlideShowModel;
 import com.mandelsoft.mand.tool.slideshow.SlideShowDestination;
 import com.mandelsoft.mand.tool.slideshow.SlideShowModel;
 import com.mandelsoft.mand.tool.slideshow.SlideShowSourceAdapter;
+import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MemoryMandelListFolderTree;
 import com.mandelsoft.swing.AbstractListDataListener;
 import com.mandelsoft.swing.BooleanAttribute;
 import com.mandelsoft.swing.BufferedComponent.ProportionalRectangleSelector;
+import com.mandelsoft.swing.BufferedComponent.RectPointEvent;
+import com.mandelsoft.swing.BufferedComponent.RectangleActionEvent;
 import com.mandelsoft.swing.BufferedComponent.VisibleRectFilter;
 import com.mandelsoft.swing.BufferedFrame;
 import com.mandelsoft.swing.ChangeListenerSupport;
@@ -118,6 +118,7 @@ import com.mandelsoft.swing.Dimensions;
 import com.mandelsoft.swing.GBC;
 import com.mandelsoft.swing.GBCPanel;
 import com.mandelsoft.swing.OptionalAction;
+import com.mandelsoft.swing.RectanglePoint;
 import com.mandelsoft.swing.RenderedComponent;
 import com.mandelsoft.swing.RenewStateListener;
 import com.mandelsoft.swing.ScaleAdapter;
@@ -133,13 +134,15 @@ import com.mandelsoft.util.upd.BooleanUpdateCondition;
 import com.mandelsoft.util.upd.UpdateContext;
 import com.mandelsoft.util.upd.UpdateReason;
 import java.awt.Component;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.util.HashSet;
+import java.util.ListIterator;
+import java.util.Set;
 import java.util.StringTokenizer;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
@@ -153,40 +156,13 @@ public class MandelImagePanel  extends GBCPanel
                                implements MandelWindowAccess,
                                           UpdateSource {
   static public boolean debug=false;
+  static public boolean debugHL=false;
   static public boolean iterPathActive=false;
   
   static private BasicStroke dashed=new BasicStroke(1, BasicStroke.CAP_ROUND,
                              BasicStroke.JOIN_ROUND, 10, new float[]{4, 4}, 0);
   static private BasicStroke favorite=new BasicStroke(2, BasicStroke.CAP_ROUND,
                              BasicStroke.JOIN_ROUND);
-
-
-  static private String[] fontnames=new String[] {
-    "Brush Script MT-18",
-    "Forte-16",
-    //"Mistral",
-    "Rage Italic-16",
-    //"Viner Hand ITC",
-    "Chiller-18",
-    "Script MT Bold-18",
-     "Times New Roman-ITALIC-16"
-  };
-
-  static public Font getAnnotationFont(Graphics g)
-  {
-    Font font=null;
-    for (String name:fontnames) {
-      font=Font.decode(name);
-      if (font!=null) {
-        System.out.println("found font "+name);
-        break;
-      }
-    }
-    if (font==null) {
-      font=g.getFont().deriveFont(Font.ITALIC, 16);
-    }
-    return font;
-  }
 
   /////////////////////////////////////////////////////////////////////////
   // Area Selection Model
@@ -661,6 +637,34 @@ public class MandelImagePanel  extends GBCPanel
     }
   }
 
+  ///////////////////////////////////////////
+  public class Mark extends ExplicitHighlight {
+    private DefaultMandelListListModel previous;
+
+    public Mark(Environment env)
+    {
+      super("marked",true);
+      previous=new DefaultMandelListListModel(new ArrayMandelList(),
+                                              env.getAllScanner());
+      previous.setModifiable(true);
+      previous.setDuplicates(true);
+    }
+
+    @Override
+    public void setQualifiedName(QualifiedMandelName name)
+    {
+      QualifiedMandelName mn=name.getBaseName();
+      int size=previous.getSize();
+      super.setQualifiedName(name);
+      if (size==0 || !previous.getElementAt(0).equals(mn)) {
+        previous.add(0, mn);
+        if (size>=20) {
+          previous.remove(20);
+        }
+      }
+    }
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // MandelImagePanel
   /////////////////////////////////////////////////////////////////////////
@@ -673,12 +677,19 @@ public class MandelImagePanel  extends GBCPanel
   
   private ChangeListenerSupport listeners=new ChangeListenerSupport();
 
-  private QualifiedMandelName lastname;
+  private ExplicitHighlight   lastname;
+  private Mark                marked;
+  private ExplicitHighlights  explicitHighlights;
+  
   private QualifiedMandelName name;
   private MandelListMenu      subareas;
 
   private MandelListModelMenu links;
+  private JMenu               linkhist;
   private LinkListener        linkListener;
+
+  private MandelListModel     keyareas;
+  private MandelListModelMenu keyareasmenu;
 
   private MandelImage         image;
   private MapperModel         mappermodel;
@@ -712,6 +723,8 @@ public class MandelImagePanel  extends GBCPanel
   private Action showListsControlAction;
   private Action showJuliaAction;
   private Action showIterationPathAction;
+
+  private Action areaDownAction;
  
   private int highlight_mode=H_FAVORITES;
 
@@ -733,9 +746,7 @@ public class MandelImagePanel  extends GBCPanel
   private BooleanAttribute automark_fork;
   private BooleanAttribute autoshow_info;
 
-  private QualifiedMandelName marked;
-
-  private QualifiedMandelName highlight_name;
+  private ExplicitHighlight   highlighted;
   private Timer               highlight_timer;
   private boolean             highlight_active;
 
@@ -757,9 +768,21 @@ public class MandelImagePanel  extends GBCPanel
     this.subareas.setUseShortnames(true);
 
     this.links=new MandelListModelMenu("Links",this,null);
+    this.linkhist=new JMenu("Parent Links");
     this.links.setSorted(true);
     this.linkListener=new EnvListener();
-   
+
+    this.keyareas=new DefaultMandelListListModel(new ArrayMandelList(),
+                                                 env.getAllScanner());
+    this.keyareas.setModifiable(true);
+    this.highlighted=new ExplicitHighlight("highlighted", true);
+    this.lastname=new ExplicitHighlight("lastshown");
+    this.marked=new Mark(env);
+    this.explicitHighlights=new ExplicitHighlights();
+    this.explicitHighlights.add(highlighted);
+    this.explicitHighlights.add(marked);
+    this.explicitHighlights.add(lastname);
+
     this.slideshowmodel=new DefaultSlideShowModel(new SlideShowDestination() {
 
       public QualifiedMandelName getCurrentQualifiedMandelName()
@@ -852,69 +875,40 @@ public class MandelImagePanel  extends GBCPanel
   }
 
   private class Buffer extends BufferedComponent {
-    private int INSET = 10;
-    private String decoration="by Uwe Krüger";
-    private int dw,dh;
-    private Font font;
-    private boolean showDecoration;
+    private Decoration decoration;
 
     public Buffer(BufferedImage image)
     {
       super(image);
+      decoration=new Decoration();
     }
 
     public void setDecoration(String s)
     {
-      decoration=s;
-      dw=dh=0;
+      decoration.setDecoration(s);
     }
 
+    public Decoration getDecoration()
+    {
+      return decoration;
+    }
+    
     @Override
     public void setShowDecoration(boolean showDecoration)
     {
-      this.showDecoration=showDecoration;
-    }
-
-    public void paintDecoration(Graphics g, int w, int h)
-    {
-      if (decoration!=null) {
-        if (dw==0) {
-          if (font==null) {
-            font=getAnnotationFont(g);
-          }
-//          String[] f=GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-//          if (f!=null) for (String s:f) {
-//            System.out.println("  "+s);
-//          }
-          g.setFont(font);
-          FontMetrics metrics=g.getFontMetrics();
-          // get the height of a line of text in this font and render context
-          dh=metrics.getHeight();
-          // get the advance of my text in this font and render context
-          dw=metrics.stringWidth(decoration);
-        }
-        else g.setFont(font);
-        int dx=w-INSET-dw;
-        int dy=h-INSET;
-
-        //System.out.println("decoration: "+dx+","+dy+" "+decoration);
-        g.setColor(Color.WHITE);
-        g.drawString(decoration, dx, dy);
-        
-//        System.out.println("decoration bounds "+g.getClipBounds().getWidth()
-//                                           +","+g.getClipBounds().getHeight());
-      }
+      decoration.setShowDecoration(showDecoration);
     }
 
     @Override
     protected void paintChildren(Graphics g)
     {
       super.paintChildren(g);
-      if (showDecoration) paintDecoration(g,getWidth(),getHeight());
+      if (decoration.showDecoration())
+        decoration.paintDecoration(g,getWidth(),getHeight());
     }
-
   }
 
+  
   //////////////////////////////////////////////////////////////////////
 
   @Override
@@ -1002,12 +996,17 @@ public class MandelImagePanel  extends GBCPanel
     showJuliaAction=new ShowJuliaAction();
     showIterationPathAction=new ShowIterationPathAction();
 
-    // pane.addCornerEventListener(new CornerListener());
+    areaDownAction=new AreaDownAction();
+
+    // pane.addRectPointEventListener(new CornerListener());
     buffer.addActionListener(parentAction, Corner.BOTTOM_LEFT);
     buffer.addActionListener(showSubAction, Corner.BOTTOM_RIGHT);
     buffer.addActionListener(hideSubAction, Corner.BOTTOM_RIGHT);
     buffer.addActionListener(showColormapAction, Corner.TOP_RIGHT);
     buffer.addActionListener(showMetaAction, Corner.TOP_LEFT);
+    buffer.addActionListener(areaDownAction, RectanglePoint.MIDDLE_BOTTOM);
+    buffer.addActionListener(new LinksAction(), RectanglePoint.MIDDLE_LEFT);
+    buffer.addActionListener(new KeyAreasAction(), RectanglePoint.MIDDLE_RIGHT);
     buffer.getContentPane().addMouseMotionListener(new PixelListener());
     buffer.setInheritsPopupMenu(true);
     scrollpane.setInheritsPopupMenu(true);
@@ -1026,7 +1025,7 @@ public class MandelImagePanel  extends GBCPanel
 
     buffer.setScaleMode(true);
     // finally set the image
-    setImageData(img);
+    setImageData(img, false);
 
     msl=new MandelScannerListenerAdapter() {
       @Override
@@ -1218,9 +1217,14 @@ public class MandelImagePanel  extends GBCPanel
 
   public void paintDecoration(Graphics g, int w, int h)
   {
-    buffer.paintDecoration(g, w, h);
+    getDecoration().paintDecoration(g, w, h);
   }
-  
+
+  public Decoration getDecoration()
+  {
+    return buffer.getDecoration();
+  }
+
   public Window getMandelWindow()
   {
     return getWindow();
@@ -1381,10 +1385,12 @@ public class MandelImagePanel  extends GBCPanel
     ///////////////////////////////////////////////////
     JMenu mark=new UpdatableJMenu("Mark");
     
-    mark.add(new JMenuItem(new SetMarkAction()));
     addMarkAction(mark,new GotoMarkAction());
-    addMarkAction(mark,new AreaDownAction());
+    mark.add(new JMenuItem(new SetMarkAction()));
+    addMarkAction(mark,new CommonAncestorAction());
+    addMarkAction(mark,areaDownAction);
     addMarkAction(mark,new KeyAreaDownAction());
+    addMarkAction(mark,new ForkAreaDownAction());
     addMarkAction(mark,new MemorizeMarkAction());
     if (!isReadonly()) {
       addMarkAction(mark,new LinkFromMarkAction());
@@ -1392,6 +1398,7 @@ public class MandelImagePanel  extends GBCPanel
     }
     addMarkAction(mark,new SwapMarkAction());
     addMarkAction(mark,new ClearMarkAction());
+    mark.add(new MandelListModelMenu("Previous",this,marked.previous));
 
     ///////////////////////////////////////////////////
     JMenu highlight=new JMenu("Sub area highlight");
@@ -1438,7 +1445,6 @@ public class MandelImagePanel  extends GBCPanel
 
     menu.add(highlight);
     menu.add(subarea);
-    menu.add(links);
     
     menu.addSeparator();
     it=new JMenuItem(showColormapAction);
@@ -1451,16 +1457,24 @@ public class MandelImagePanel  extends GBCPanel
     menu.addSeparator();
     it=new JMenuItem(showMetaAction);
     menu.add(it);
+    menu.add(links);
+    menu.add(linkhist);
+    menu.add(keyareasmenu=new MandelListModelMenu("Key Areas",this,keyareas));
+    keyareasmenu.addSelectAction(new MandelListMenu.SelectAction() {
+      public void selectArea(MandelWindowAccess access, QualifiedMandelName name)
+      {
+        if (automark_keyarea.isSet()) {
+          setAutoMark();
+        }
+      }
+    });
 
-    it=new UpdatableJMenuItem(parentAction);
-    menu.add(it);
     it=new UpdatableJMenuItem(areaUpAction);
     menu.add(it);
     it=new UpdatableJMenuItem(forkAction);
     menu.add(it);
-    menu.add(gotoAction);
-    
-
+    it=new UpdatableJMenuItem(parentAction);
+    menu.add(it);
     if (!isReadonly()) {
       it=new JMenuItem(variationAction);
       menu.add(it);
@@ -1472,10 +1486,9 @@ public class MandelImagePanel  extends GBCPanel
     }
 
     menu.add(getEnvironment().getListActions().createMenu(this,
-            new MandelNameSelector() {
+                                                   new MandelNameSelector() {
       public QualifiedMandelName getSelectedMandelName()
-      { return getQualifiedMandelName();
-      }
+      { return getQualifiedMandelName(); }
     }));
 
     menu.addSeparator();
@@ -1483,8 +1496,9 @@ public class MandelImagePanel  extends GBCPanel
     menu.add(it);
     it=new JMenuItem(new ShowBrowserAction());
     menu.add(it);
-
-    menu.add(new JPopupMenu.Separator());
+    menu.add(gotoAction);
+    
+    menu.addSeparator();
     menu.add(showJuliaAction);
     if (iterPathActive) menu.add(showIterationPathAction);
 
@@ -1635,7 +1649,7 @@ public class MandelImagePanel  extends GBCPanel
 
   private void setHighLight(QualifiedMandelName name)
   {
-    this.highlight_name=name;
+    this.highlighted.setQualifiedName(name);
     if (name!=null) showSubRect(name, true);
   }
 
@@ -1648,6 +1662,20 @@ public class MandelImagePanel  extends GBCPanel
     if (debug) System.out.println("image buffer set");
   }
 
+  private void updateKeyAreas()
+  {
+    MandelList list=getEnvironment().getAreas();
+    keyareas.clear();
+    if (!name.isRoot()) {
+      MandelName loop=name.getMandelName().getParentName();
+      while (!loop.isRoot()) {
+        QualifiedMandelName n=new QualifiedMandelName(loop);
+        if (list.contains(n)) keyareas.add(n);
+        loop=loop.getParentName();
+      }
+    }
+  }
+
   private void updateLinks()
   {
     MandelListModel m=getEnvironment().getLinkModel(name.getMandelName());
@@ -1656,9 +1684,23 @@ public class MandelImagePanel  extends GBCPanel
 //                                        getEnvironment().getAllScanner());
     }
     links.setMandelListModel(m);
+
+    MandelListModelMenu menu;
+    MandelName loop=name.getMandelName();
+    linkhist.removeAll();
+    linkhist.setEnabled(false);
+    while (!loop.isRoot()) {
+      m=getEnvironment().getLinkModel(loop);
+      if (m!=null) {
+        menu=new MandelListModelMenu(loop.getName(),this,m);
+        linkhist.add(menu);
+        linkhist.setEnabled(true);
+      }
+      loop=loop.getParentName();
+    }
   }
   
-  private void setImageData(MandelAreaImage img)
+  private void setImageData(MandelAreaImage img, boolean showlast)
   {
     QualifiedMandelName name=img.getName();
     System.out.println("setup image for file ="+img.getMandelData().getFile());
@@ -1667,8 +1709,9 @@ public class MandelImagePanel  extends GBCPanel
       img.removeImageListener(imageListener);
       this.buffer.setToolTipHandler(null);
     }
-    this.lastname=this.name==null?null:this.name;
-    if (highlight_mode==H_LAST) highlight_name=lastname;
+    this.lastname.setEnabled(showlast);
+    this.lastname.setQualifiedName(this.name);
+    if (highlight_mode==H_LAST) highlighted.setName(lastname);
     this.name=name;
     this.image=img;
 
@@ -1687,6 +1730,7 @@ public class MandelImagePanel  extends GBCPanel
     if (!isPartial()) setInitialSize();
     history.add(name);
     updateLinks();
+    updateKeyAreas();
     infoPopup.setData(img.getInfo(), name);
     updateSubRects();
     updateObjects("area",name);
@@ -1815,7 +1859,7 @@ public class MandelImagePanel  extends GBCPanel
   //////////////////////////////////////////////////////////////////////////
   // Image setter
   //////////////////////////////////////////////////////////////////////////
-  private boolean setImage(ImageFactory fac)
+  private boolean setImage(ImageFactory fac, boolean showlast)
   {
     try {
       setBusy(true);
@@ -1829,7 +1873,7 @@ public class MandelImagePanel  extends GBCPanel
       if (img!=null) {
         if (debug) System.out.println("got image for "+fac);
         setImage(img.getImage());
-        setImageData(img);
+        setImageData(img, showlast);
         if (fileinfo.getColormap()==null) {
           if (debug) {
             System.out.println("-> finally preserving default colormap "+
@@ -1856,17 +1900,32 @@ public class MandelImagePanel  extends GBCPanel
 
   public boolean setImage(MandelName name)
   { 
-    return setImage(new MandelNameImageFactory(name));
+    return setImage(name,false);
+  }
+
+  public boolean setImage(MandelName name, boolean showlast)
+  {
+    return setImage(new MandelNameImageFactory(name),showlast);
   }
 
   public boolean setImage(QualifiedMandelName name)
   {
-    return setImage(new QualifiedMandelNameImageFactory(name));
+    return setImage(name,false);
+  }
+
+  public boolean setImage(QualifiedMandelName name, boolean showlast)
+  {
+    return setImage(new QualifiedMandelNameImageFactory(name),showlast);
   }
 
   public boolean setImage(MandelHandle h)
   {
-    return setImage(new MandelHandleImageFactory(h));
+    return setImage(h,false);
+  }
+
+  public boolean setImage(MandelHandle h, boolean showlast)
+  {
+    return setImage(new MandelHandleImageFactory(h),showlast);
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -1946,6 +2005,163 @@ public class MandelImagePanel  extends GBCPanel
     return n.getSubAreaName();
   }
 
+  ////////////////////////////////////////////////////////////////////////////
+  // sub area highlight
+
+  public class ExplicitHighlight {
+    private String id;
+    private QualifiedMandelName name;
+    private boolean enabled;
+
+    public ExplicitHighlight(String id, boolean enabled)
+    {
+      this.id=id;
+      this.enabled=enabled;
+    }
+
+    public ExplicitHighlight(String id)
+    {
+      this(id,false);
+    }
+
+    public boolean isActive()
+    {
+      return enabled && name!=null &&
+             MandelImagePanel.this.getMandelName().isHigher(getMandelName());
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+      this.enabled=enabled;
+    }
+
+    public boolean isEnabled()
+    {
+      return enabled;
+    }
+
+    public MandelName getMandelName()
+    {
+      if (name==null) return null;
+      return name.getMandelName();
+    }
+    
+    public QualifiedMandelName getQualifiedName()
+    {
+      return name;
+    }
+
+    public void setQualifiedName(QualifiedMandelName name)
+    {
+      this.name=name;
+    }
+
+    public void setName(ExplicitHighlight hl)
+    {
+      setQualifiedName(hl.getQualifiedName());
+    }
+
+    public boolean isSet()
+    {
+      return name!=null;
+    }
+
+    public void clear()
+    {
+      name=null;
+    }
+
+    @Override
+    public String toString()
+    {
+      return "ExplicitHighlight{"+"id="+id+"; name="+name+"; enabled="+enabled+
+                                           "; active="+isActive()+'}';
+    }
+  }
+
+  public final class ExplicitHighlights {
+    private List<ExplicitHighlight> list;
+
+    public ExplicitHighlights()
+    {
+      list=new ArrayList<ExplicitHighlight>();
+    }
+
+    public void add(ExplicitHighlight hl)
+    {
+      if (!list.contains(hl)) list.add(hl);
+    }
+
+    public void remove(ExplicitHighlight hl)
+    {
+       list.remove(hl);
+    }
+
+    public Handler createHandler()
+    {
+      return new Handler();
+    }
+
+    public final class Handler {
+      private List<ExplicitHighlight> list;
+
+      private Handler()
+      {
+        list=new ArrayList<ExplicitHighlight>();
+        for (ExplicitHighlight h:ExplicitHighlights.this.list) {
+          if (h.isActive() && !contains(h.getQualifiedName())) {
+            if (debugHL) System.out.println("-- add "+h);
+            list.add(h);
+          }
+          else {
+            if (debugHL) System.out.println("-- ignore "+h);
+          }
+        }
+      }
+
+      public boolean contains(QualifiedMandelName n)
+      {
+        if (n==null) return false;
+        return contains(n.getMandelName());
+      }
+
+      public boolean contains(MandelName n)
+      {
+        if (n!=null) for (ExplicitHighlight h:list) {
+          if (h.getQualifiedName().getMandelName().equals(n)) return true;
+        }
+        return false;
+      }
+
+      public void handleAlreadyShown(QualifiedMandelName n)
+      {
+        if (n==null) return;
+        handleAlreadyShown(n.getMandelName());
+      }
+      
+      public void handleAlreadyShown(MandelName n)
+      {
+        if (n==null) return;
+        ListIterator<ExplicitHighlight> i=list.listIterator();
+        while (i.hasNext()) {
+          ExplicitHighlight h=i.next();
+          if (h.getQualifiedName().getMandelName().equals(n)) {
+            if (debugHL) System.out.println("-- remove already seen "+h);
+            i.remove();
+          }
+        }
+      }
+
+      public void show()
+      {
+        for (ExplicitHighlight h:list) {
+          if (debugHL) System.out.println("-- show "+h);
+          showSubRect(h.getQualifiedName(),true);
+        }
+      }
+    }
+  }
+
   private void updateSubRects()
   {
     _updateSubRects(true);
@@ -1972,45 +2188,33 @@ public class MandelImagePanel  extends GBCPanel
   private void _updateSubRects(boolean rescan, MandelName name, boolean vis)
   { Set<MandelName> subs;
     MandelScanner scanner=env.getAutoMetaScanner();
-    boolean h_found=highlight_name==null || !name.isHigher(highlight_name.getMandelName());
-    boolean m_found=marked==null || !name.isHigher(marked.getMandelName());
+    ExplicitHighlights.Handler highlights=explicitHighlights.createHandler();
 
     if (rescan) scanner.rescan(false);
     subs=MandUtils.getSubNames(name, scanner);
     if (debug) System.out.println("**** found "+subs.size()+" sub areas");
     for (MandelName n:subs) {
-      showSubRect(n,vis);
+      if (showSubRect(n,vis)) highlights.handleAlreadyShown(n);
       subareas.add(new QualifiedMandelName(n));
-      if (!h_found && n.equals(highlight_name.getMandelName())) {
-        h_found=true;
-      }
-      if (!m_found && n.equals(marked.getMandelName())) {
-        m_found=true;
-      }
     }
-    if (!h_found && name.isHigher(highlight_name.getMandelName())) {
-      showSubRect(highlight_name,true);
-    }
-    if (!m_found && name.isHigher(marked.getMandelName())) {
-      showSubRect(marked,true);
-    }
+    highlights.show();
   }
 
-  private void showSubRect(MandelName n, boolean vis)
+  private boolean showSubRect(MandelName n, boolean vis)
   {
     MandelHandle h=env.getMetaScanner().getMandelInfo(n);
-    showSubRect(h,vis);
+    return showSubRect(h,vis);
   }
 
-  private void showSubRect(QualifiedMandelName n, boolean vis)
+  private boolean showSubRect(QualifiedMandelName n, boolean vis)
   {
     MandelHandle h=env.getMetaScanner().getMandelInfo(n);
-    showSubRect(h,vis);
+    return showSubRect(h,vis);
   }
 
-  private void showSubRect(MandelHandle h, boolean vis)
+  private boolean showSubRect(MandelHandle h, boolean vis)
   {
-    if (h==null) return;
+    if (h==null) return false;
     MandelName n=h.getName().getMandelName();
     MandelData data;
     try {
@@ -2026,8 +2230,7 @@ public class MandelImagePanel  extends GBCPanel
     }
     else {
       MandelInfo info=data.getInfo();
-      boolean ht=(highlight_name!=null && highlight(n)) ||
-                 (marked!=null && n.equals(marked.getMandelName()));
+      boolean ht=(highlighted.isActive() && highlight(n));
       if (rect==null) rect=getImagePane().createRect(n.getName(),
                                                      getLabel(n), info);
       updateRect(rect, info);
@@ -2046,7 +2249,9 @@ public class MandelImagePanel  extends GBCPanel
         }
       }
       rect.setFixed(true);
+      return ht||vis;
     }
+    return false;
   }
 
   public void showSubRects()
@@ -2080,7 +2285,7 @@ public class MandelImagePanel  extends GBCPanel
  
   private boolean highlight(MandelName n)
   {
-    if (highlight_name!=null && highlight_name.getMandelName().equals(n)) return true;
+    if (highlighted.isActive() && highlighted.getMandelName().equals(n)) return true;
 
     switch (highlight_mode) {
       case H_FAVORITES:
@@ -2195,35 +2400,35 @@ public class MandelImagePanel  extends GBCPanel
   {
     if (n==null) clearMark();
     else {
-      marked=n;
-      if (getMandelName().isHigher(n.getMandelName())) {
+      marked.setQualifiedName(n);
+      if (marked.isActive()) {
         updateSubRects();
       }
-      updateObjects("mark",marked);
+      updateObjects("mark",marked.getQualifiedName());
     }
   }
 
   public void setAutoMark()
   {
-    if (marked==null || !getMandelName().isAbove(marked.getMandelName())) {
+    if (!marked.isSet() || !getMandelName().isAbove(marked.getMandelName())) {
       setMark();
     }
   }
 
   public QualifiedMandelName getMark()
   {
-    return marked;
+    return marked.getQualifiedName();
   }
 
   public void clearMark()
   {
-    if (marked==null) return;
-    MandelName old=marked.getMandelName();
-    marked=null;
-    if (getMandelName().isHigher(old)) {
+    if (!marked.isSet()) return;
+    boolean was_active=marked.isActive();
+    marked.clear();
+    if (was_active) {
       updateSubRects();
     }
-     updateObjects("mark",marked);
+    updateObjects("mark",marked.getQualifiedName());
   }
 
   /////////////////////////////
@@ -2237,6 +2442,14 @@ public class MandelImagePanel  extends GBCPanel
     {
       return getMark()!=null;
     }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      if (marked.isSet())  // TODO: check for isPossible
+        markActionPerformed(e);
+    }
+
+    protected abstract void markActionPerformed(ActionEvent e);
   }
 
   private class SetMarkAction extends AbstractAction {
@@ -2255,13 +2468,11 @@ public class MandelImagePanel  extends GBCPanel
     { super("Swap");
     }
 
-    public void actionPerformed(ActionEvent e)
+    protected void markActionPerformed(ActionEvent e)
     {
-      if (marked!=null) {
-        QualifiedMandelName old=getQualifiedMandelName();
-        setImage(marked);
-        setMark(old);
-      }
+      QualifiedMandelName old=getQualifiedMandelName();
+      setImage(marked.getQualifiedName());
+      setMark(old);
     }
   }
 
@@ -2270,7 +2481,7 @@ public class MandelImagePanel  extends GBCPanel
     { super("Clear");
     }
 
-    public void actionPerformed(ActionEvent e)
+    protected void markActionPerformed(ActionEvent e)
     {
       clearMark();
     }
@@ -2281,18 +2492,17 @@ public class MandelImagePanel  extends GBCPanel
     { super("Jump");
     }
 
-    public void actionPerformed(ActionEvent e)
+    protected void markActionPerformed(ActionEvent e)
     {
-      if (marked!=null) {
-        setImage(marked);
-      }
+      setImage(marked.getQualifiedName());
     }
 
     @Override
     public void updateObject(UpdateContext ctx)
     {
       super.updateObject(ctx);
-      putValue(Action.NAME, marked==null?"Jump":marked.toString());
+      putValue(Action.NAME, marked.isSet()?marked.getQualifiedName().toString()
+                                          :"Jump");
     }
   }
 
@@ -2302,11 +2512,9 @@ public class MandelImagePanel  extends GBCPanel
     { super("Memorize");
     }
 
-    public void actionPerformed(ActionEvent e)
+    protected void markActionPerformed(ActionEvent e)
     {
-      if (marked!=null) {
-        getEnvironment().getMemoryModel().add(marked);
-      }
+      getEnvironment().getMemoryModel().add(marked.getQualifiedName());
     }
   }
 
@@ -2316,11 +2524,9 @@ public class MandelImagePanel  extends GBCPanel
     { super("Link from");
     }
 
-    public void actionPerformed(ActionEvent e)
+    protected void markActionPerformed(ActionEvent e)
     {
-      if (marked!=null) {
-        getEnvironment().addLink(marked.getMandelName(), getMandelName());
-      }
+      getEnvironment().addLink(marked.getMandelName(), getMandelName());
     }
   }
 
@@ -2331,11 +2537,31 @@ public class MandelImagePanel  extends GBCPanel
     { super("Unlink from");
     }
 
-    public void actionPerformed(ActionEvent e)
+    protected void markActionPerformed(ActionEvent e)
     {
-      if (marked!=null) {
-        getEnvironment().removeLink(marked.getMandelName(), getMandelName());
-      }
+      getEnvironment().removeLink(marked.getMandelName(), getMandelName());
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+
+  private class CommonAncestorAction extends MarkActionBase {
+    public CommonAncestorAction()
+    { super("Common Ancestor");
+    }
+
+    protected void markActionPerformed(ActionEvent e)
+    {
+      MandelName n=getMandelName();
+      while (!n.isAbove(marked.getMandelName())) n=n.getParentName();
+      setImage(n, true);
+    }
+
+    @Override
+    protected boolean isPossible()
+    {
+      return super.isPossible() &&
+             !getMandelName().isAbove(marked.getMandelName());
     }
   }
 
@@ -2353,7 +2579,7 @@ public class MandelImagePanel  extends GBCPanel
     return null;
   }
 
-  private class AreaUpAction extends UpdatableAction {
+  private class AreaUpAction extends OptionalAction {
     public AreaUpAction()
     { super("Key Area");
     }
@@ -2373,9 +2599,9 @@ public class MandelImagePanel  extends GBCPanel
     }
 
     @Override
-    public void updateObject(UpdateContext ctx)
+    protected boolean isPossible()
     {
-      setEnabled(getAreaMarker(getMandelName())!=null);
+      return getAreaMarker(getMandelName())!=null;
     }
   }
 
@@ -2428,6 +2654,9 @@ public class MandelImagePanel  extends GBCPanel
 
     /**
      * must be overridden, also, if a derived class redefines isPossible().
+     * keep expensive condition evaluation in update context to reuse
+     * the evaluation result for other derived classes sharing the
+     * same condition.
      * @param ctx update context used to cache condition evaluation
      * @return per update cached result of isPossible();
      */
@@ -2442,12 +2671,38 @@ public class MandelImagePanel  extends GBCPanel
     }
   }
 
+  private MandelName getNextForkMarker(MandelName n)
+  {
+    if (getMark()==null) return null;
+    MandelName name=getMark().getMandelName();
+
+    while (!n.equals(name) && (n=n.sub(name))!=null) {
+      Set<MandelName> set=MandUtils.getSubNames(n, env.getAllScanner());
+      if (set!=null&&set.size()>1) return n;
+    }
+    return null;
+  }
+
+  private class ForkAreaDownAction extends AboveMarkAction {
+    public ForkAreaDownAction()
+    { super("Fork Area Down");
+    }
+
+    protected void markActionPerformed(ActionEvent e)
+    {
+      MandelName n=getNextForkMarker(getMandelName());
+      if (n!=null) {
+        setImage(n);
+      }
+    }
+  }
+
   private class KeyAreaDownAction extends AboveMarkAction {
     public KeyAreaDownAction()
     { super("Key Area Down");
     }
 
-    public void actionPerformed(ActionEvent e)
+    protected void markActionPerformed(ActionEvent e)
     {
       MandelList list=getEnvironment().getAreas();
       QualifiedMandelName name=getMark();
@@ -2466,13 +2721,43 @@ public class MandelImagePanel  extends GBCPanel
     { super("Down");
     }
 
-    public void actionPerformed(ActionEvent e)
+    protected void markActionPerformed(ActionEvent e)
     {
       QualifiedMandelName name=getMark();
       MandelName n=getMandelName();
       n=n.sub(name.getMandelName());
       if (n!=null) {
         setImage(n);
+      }
+    }
+  }
+
+  private class LinksAction extends AbstractAction {
+    public LinksAction()
+    { super("Links");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      if (linkhist.isEnabled()) {
+        RectPointEvent re=((RectangleActionEvent)e).getRectanglePointEvent();
+        JPopupMenu m=linkhist.getPopupMenu();
+        m.show(MandelImagePanel.this,re.getX(), re.getY());
+      }
+    }
+  }
+
+  private class KeyAreasAction extends AbstractAction {
+    public KeyAreasAction()
+    { super("KeyAreas");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      if (keyareasmenu.isEnabled()) {
+        RectPointEvent re=((RectangleActionEvent)e).getRectanglePointEvent();
+        JPopupMenu m=keyareasmenu.getPopupMenu();
+        m.show(MandelImagePanel.this,re.getX(), re.getY());
       }
     }
   }
@@ -3383,7 +3668,7 @@ public class MandelImagePanel  extends GBCPanel
   {
     if (highlight_active) highlight_timer.stop();
     highlight_active=false;
-    highlight_name=null;
+    highlighted.clear();
   }
 
   ////////////////////////////////////////////////////////////////////////////

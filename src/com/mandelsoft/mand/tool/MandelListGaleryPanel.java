@@ -28,6 +28,7 @@ import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.DnDJList;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
@@ -178,10 +179,10 @@ public class MandelListGaleryPanel
     }
 
     @Override
-    protected JPopupMenu createContextMenu(Integer index)
+    protected JPopupMenu createItemContextMenu(Integer index)
     {
       JMenuItem it;
-      JPopupMenu menu=super.createContextMenu(index);
+      JPopupMenu menu=super.createItemContextMenu(index);
       if (list.getVisibleRowCount()==1 &&
           scrollPane.getHorizontalScrollBar().isVisible()) {
         if (menu==null) {
@@ -198,13 +199,20 @@ public class MandelListGaleryPanel
         it.getAction().setEnabled(ticker.isRunning());
         menu.add(it);
       }
+      return menu;
+    }
+
+    @Override
+    protected JPopupMenu createListContextMenu(JPopupMenu menu)
+    {
+      menu=super.createListContextMenu(menu);
       if (rootName!=null) {
         if (menu==null) menu=new JPopupMenu();
-        else            menu.addSeparator();
         menu.add(new JMenuItem(rootAction));
       }
       return menu;
     }
+
 
     /////////////////////////////////////////////////////////////////
     private Action rootAction=new RootAction();

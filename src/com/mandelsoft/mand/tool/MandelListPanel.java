@@ -448,15 +448,15 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
     }
 
     @Override
-    protected JPopupMenu createContextMenu(Integer index)
+    protected JPopupMenu createListContextMenu(JPopupMenu menu)
     {
       JMenuItem it;
-      JPopupMenu menu=super.createContextMenu(index);
+      menu=super.createListContextMenu(menu);
       if (menu==null) menu=new JPopupMenu();
-      else            menu.addSeparator();
       it=new JMenuItem("Galery");
       it.addActionListener(galery);
       menu.add(it);
+      
       if (rootName!=null) { 
         menu.add(new JMenuItem(rootAction));
       }
@@ -476,6 +476,5 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
         return new QualifiedMandelName(rootName);
       }
     }
-
   }
 }

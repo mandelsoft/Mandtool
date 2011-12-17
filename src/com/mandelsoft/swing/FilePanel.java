@@ -44,6 +44,7 @@ public class FilePanel extends GBCPanel {
   private JButton select;
   private Window frame;
   private boolean editable;
+  private int mode=JFileChooser.FILES_ONLY;
 
   public FilePanel(String name, String def, Window frame)
   {
@@ -90,6 +91,11 @@ public class FilePanel extends GBCPanel {
     field.setText(name);
   }
 
+  public void setFileChooserMode(int m)
+  {
+    mode=m;
+  }
+
   private class FilenameListener implements DocumentListener {
     private String old=field.getText();
 
@@ -131,7 +137,7 @@ public class FilePanel extends GBCPanel {
       else {
         c.setSelectedFile(f);
       }
-      c.setFileSelectionMode(JFileChooser.FILES_ONLY);
+      c.setFileSelectionMode(mode);
       int result=c.showDialog(frame, "select");
       if (result==JFileChooser.APPROVE_OPTION) {
         field.setText(c.getSelectedFile().getPath());

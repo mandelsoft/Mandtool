@@ -255,43 +255,43 @@ public class MandelListsDialog extends ControlDialog {
         handleContextMenu(comp, evt, row);
       }
 
-      @Override
-      protected JPopupMenu createContextMenu(Integer index)
-      {
-        JPopupMenu menu;
-        QualifiedMandelName sel=null;
-
-        MandelWindowAccess access=getMandelWindowAccess();
-        MandelImagePanel mp=getMandelWindowAccess().getMandelImagePane();
-        MandelListModel model=getModel();
-
-        if (index<0) return null;
-
-        sel=model.getQualifiedName(index);
-        menu=createLabeledMenu(sel.toString());
-
-        MandelHandle h=model.getMandelHandle(index);
-        menu.add(showMetaAction);
-        if (h!=null&&h.getHeader().hasImageData()) {
-          menu.add(showImageAction);
-          if (mp!=null) {
-            menu.add(loadImageAction);
-            if (sel.getQualifier()!=null) {
-              menu.add(loadRegImageAction);
-            }
-          }
-        }
-        menu.add(addMemoryAction);
-        Component comp=getContextComponent();
-        menu.add(
-          access.getEnvironment().getListActions().createMenu(comp, sel));
-
-        return menu;
-      }
+//      @Override
+//      protected JPopupMenu createItemContextMenu(Integer index)
+//      {
+//        JPopupMenu menu;
+//        QualifiedMandelName sel=null;
+//
+//        MandelWindowAccess access=getMandelWindowAccess();
+//        MandelImagePanel mp=getMandelWindowAccess().getMandelImagePane();
+//        MandelListModel model=getModel();
+//
+//        if (index<0) return null;
+//
+//        sel=model.getQualifiedName(index);
+//        menu=createLabeledMenu(sel.toString());
+//
+//        MandelHandle h=model.getMandelHandle(index);
+//        menu.add(showMetaAction);
+//        if (h!=null&&h.getHeader().hasImageData()) {
+//          menu.add(showImageAction);
+//          if (mp!=null) {
+//            menu.add(loadImageAction);
+//            if (sel.getQualifier()!=null) {
+//              menu.add(loadRegImageAction);
+//            }
+//          }
+//        }
+//        menu.add(addMemoryAction);
+//        Component comp=getContextComponent();
+//        menu.add(
+//          access.getEnvironment().getListActions().createMenu(comp, sel));
+//
+//        return menu;
+//      }
     }
   }
 
-   /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
   // areas tab
   /////////////////////////////////////////////////////////////////////////
   private class AreasPanel extends MandelListPanel {

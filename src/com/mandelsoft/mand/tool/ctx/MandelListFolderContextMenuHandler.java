@@ -31,8 +31,10 @@ import com.mandelsoft.mand.tool.MandelListModel;
 import com.mandelsoft.mand.tool.MandelListSelector;
 import com.mandelsoft.mand.tool.MandelListTableModel;
 import com.mandelsoft.mand.tool.MandelWindowAccess;
+import com.mandelsoft.mand.tool.PictureSaveDialog;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
+import javax.swing.AbstractAction;
 
 /**
  *
@@ -229,6 +231,26 @@ public class MandelListFolderContextMenuHandler
     }
   }
 
+  private class SaveImagesAction extends AbstractAction {
+
+    public SaveImagesAction()
+    {
+      super("Save Images");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      MandelListFolder f=getSelectedItem();
+      String title="Save Images for "+f.getPath();
+      if (f.hasMandelList()) {
+        PictureSaveDialog d=new PictureSaveDialog(getMandelWindowAccess(),
+                                                  title,
+                                                  f.getMandelList());
+        d.setVisible(true);
+      }
+    }
+  }
+
   private Action addImageAction=new AddCurrentImageAction();
   private Action removeImageAction=new RemoveCurrentImageAction();
   private Action newFolderAction=new NewFolderAction(this);
@@ -240,6 +262,7 @@ public class MandelListFolderContextMenuHandler
   private Action clearThumbnailAction=new ClearThumbnailAction();
   private Action addListShortcutAction=new AddListShortcutAction();
   private Action removeListShortcutAction=new RemoveListShortcutAction();
+  private Action saveImagesAction=new SaveImagesAction();
 
   @Override
   protected JPopupMenu createContextMenu(TreePath p)
@@ -265,8 +288,11 @@ public class MandelListFolderContextMenuHandler
     if (!folder.isLeaf()) {
       menu.add(showGaleryAction);
     }
-    if (folder.getMandelList()!=null) {
+    if (folder.hasMandelList()) {
       menu.add(showImageGaleryAction);
+      if (acc!=null && !acc.getEnvironment().isReadonly()) {
+        menu.add(saveImagesAction);
+      }
       if (pane!=null) {
         menu.add(pane.getSlideShowModel().createMenu(null,this));
         MandelListTableModel mt=m.getMandelListModel(folder);

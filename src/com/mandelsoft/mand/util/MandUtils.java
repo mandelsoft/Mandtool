@@ -22,18 +22,16 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import com.mandelsoft.io.AbstractFile;
+import com.mandelsoft.mand.MandelAreaSpec;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
-import com.mandelsoft.mand.MandelSpec;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.scan.ContextMandelScanner;
 import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.scan.MandelScannerUtils;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -62,10 +60,15 @@ public class MandUtils extends MandArith {
     return m+":"+d;
   }
 
-  public static MandelName lookupRoot(MandelScanner scan, MandelSpec spec)
+  public static MandelName lookupRoot(MandelScanner scan, MandelAreaSpec spec)
+  {
+    return lookupRoot(scan,MandelName.ROOT,spec);
+  }
+
+  public static MandelName lookupRoot(MandelScanner scan,
+                                      MandelName mn, MandelAreaSpec spec)
   {
     MandelName found=null;
-    MandelName mn=MandelName.ROOT;
     MandelData md;
 
     while (mn!=null) {
@@ -74,16 +77,19 @@ public class MandUtils extends MandArith {
       while (s!=null) {
         //System.out.println("checking "+s);
         try {
-          md=scan.getMandelInfo(s).getInfo();
-          if (md!=null) {
-            MandelInfo info=md.getInfo();
-            if (info!=null) {
-              if (info.contains(spec.getXM(), spec.getYM())) {
-                if (spec.getDX().compareTo(info.getDX())<0
-                  ||spec.getDY().compareTo(info.getDY())<0) {
-                  break;
+          MandelHandle handle=scan.getMandelInfo(s);
+          if (handle!=null) {
+            md=handle.getInfo();
+            if (md!=null) {
+              MandelInfo info=md.getInfo();
+              if (info!=null) {
+                if (info.contains(spec.getXM(), spec.getYM())) {
+                  if (spec.getDX().compareTo(info.getDX())<0
+                    ||spec.getDY().compareTo(info.getDY())<0) {
+                    break;
+                  }
+                  if (info.isSameArea(spec)) return s;
                 }
-                if (info.isSameArea(spec)) return s;
               }
             }
           }

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.mandelsoft.mand.tool;
+package com.mandelsoft.swing;
 
 /**
  *

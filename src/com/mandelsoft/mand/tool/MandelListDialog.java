@@ -17,6 +17,9 @@
 package com.mandelsoft.mand.tool;
 
 import com.mandelsoft.mand.MandelName;
+import com.mandelsoft.util.ChangeEvent;
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractAction;
 import javax.swing.JDialog;
 
 /**
@@ -24,7 +27,9 @@ import javax.swing.JDialog;
  * @author Uwe Krueger
  */
 public class MandelListDialog extends MandelDialog {
-  MandelListPanel panel;
+  private MandelListPanel panel;
+  private String title;
+  private MandelListListener listener;
 
   public MandelListDialog(MandelWindowAccess owner, MandelListTableModel model)
   {
@@ -36,13 +41,39 @@ public class MandelListDialog extends MandelDialog {
                           MandelListTableModel model)
   {
     super(owner,title);
+    this.title=title;
     setup(model);
     panel.setTitle(title);  // don't generate title line in panel !!!
+    model.addMandelListListener(listener=new MandelListListener() {
+      public void listChanged(ChangeEvent evt)
+      {
+        updateTitle();
+      }
+    });
+    updateTitle();
+  }
+
+  protected void updateTitle()
+  {
+    int c=panel.getModel().getRowCount();
+    setTitle(title+" ("+c+(c==1?" entry":" entries)"));
+  }
+
+  @Override
+  protected void cleanup()
+  {
+    super.cleanup();
+    if (listener!=null) {
+      panel.getModel().removeMandelListListener(listener);
+    }
   }
 
   protected void setup(MandelListTableModel model)
   {
     panel=new MandelListPanel(null,model,model.isModifiable());
+    if (!getEnvironment().isReadonly()) {
+      panel.addButton(new SaveAction());
+    }
     add(panel);
     pack();
     setVisible(true);
@@ -58,5 +89,24 @@ public class MandelListDialog extends MandelDialog {
   public MandelName getRootName()
   {
     return panel.getRootName();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+
+  private class SaveAction extends AbstractAction {
+
+    public SaveAction()
+    {
+      super("Save Images");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      PictureSaveDialog d=new PictureSaveDialog(getMandelWindowAccess(),
+                                                getTitle(),
+                                                panel.getModel().getList());
+      d.setVisible(true);
+    }
+
   }
 }

@@ -28,6 +28,8 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 /**
@@ -43,6 +45,8 @@ public class TablePanel<T extends TableModel>
   private JScrollPane scrollpane;
   private T model;
   private String title;
+  private ModelListener modellistener;
+  private boolean showsize;
 
   protected TablePanel()
   {
@@ -59,22 +63,76 @@ public class TablePanel<T extends TableModel>
     setup(header, model, action);
   }
 
+  @Override
+  protected void panelUnbound()
+  {
+    super.panelUnbound();
+    if (modellistener!=null && model!=null && label!=null) {
+      model.removeTableModelListener(modellistener);
+    }
+  }
+
   public void setModel(T model)
   {
+    if (this.model==model) return;
+    if (this.model!=null && modellistener!=null) {
+      this.model.removeTableModelListener(modellistener);
+    }
     this.model=model;
+    if (this.model!=null && label!=null) {
+      if (modellistener==null) modellistener=new ModelListener();
+      this.model.addTableModelListener(modellistener);
+    }
     this.table.setModel(model);
     table.getRowSorter().toggleSortOrder(0);
   }
 
   public void setTitle(String name)
   {
-    if (label!=null) label.setText(name);
-    else title=name;
+    title=name;
+    updateTitle();
   }
 
   public String getTitle()
   {
-    return label==null?title:label.getText();
+    return title;
+  }
+
+  protected void updateTitle()
+  {
+    if (label!=null) {
+      if (showsize) {
+        int c=getModel().getRowCount();
+        label.setText(title+"("+c+(c==1?" entry)":" entries)"));
+      }
+      else {
+        label.setText(title);
+      }
+    }
+  }
+
+  public boolean isShowSize()
+  {
+    return showsize;
+  }
+
+  public void setShowSize(boolean showsize)
+  {
+    if (showsize==this.showsize) return;
+    this.showsize=showsize;
+    if (showsize) {
+      if (label!=null&&model!=null) {
+        if (modellistener==null) modellistener=new ModelListener();
+        model.addTableModelListener(modellistener);
+      }
+    }
+    else {
+      if (modellistener!=null&&model!=null) {
+        model.removeTableModelListener(modellistener);
+      }
+      modellistener=null;
+    }
+    updateTitle();
   }
 
   public void setFillsViewportHeight(boolean fillsViewportHeight)
@@ -107,6 +165,7 @@ public class TablePanel<T extends TableModel>
   {
     JLabel c;
 
+    showsize=true;
     if (debug) System.out.println("*** creating "+this);
     if (action!=null) addActionListener(action);
     if (!com.mandelsoft.util.Utils.isEmpty(header)) {
@@ -278,8 +337,15 @@ public class TablePanel<T extends TableModel>
     }
   }
 
+  private class ModelListener implements TableModelListener {
+    public void tableChanged(TableModelEvent e)
+    {
+      updateTitle();
+    }
+  }
+
   ////////////////////////////////////////////////////////////////
-  // listener support
+  // mouselistener support
   ////////////////////////////////////////////////////////////////
 
   public void addActionListener(ActionListener l)
@@ -347,19 +413,19 @@ public class TablePanel<T extends TableModel>
   }
 
   private DnDJTable.ContextMenuHandler ctxmenu;
-  private Listener           listener;
+  private Listener                     mouselistener;
 
   synchronized
   public void setContextMenuHandler(DnDJTable.ContextMenuHandler h)
   {
     if (h==null) {
-      if (ctxmenu!=null) removeMouseListener(listener);
+      if (ctxmenu!=null) removeMouseListener(mouselistener);
     }
     else {
       if (ctxmenu==null) {
-        if (listener==null) listener=new Listener();
-        addMouseListener(listener);
-        scrollpane.getViewport().addMouseListener(listener);
+        if (mouselistener==null) mouselistener=new Listener();
+        addMouseListener(mouselistener);
+        scrollpane.getViewport().addMouseListener(mouselistener);
       }
     }
     ctxmenu=h;

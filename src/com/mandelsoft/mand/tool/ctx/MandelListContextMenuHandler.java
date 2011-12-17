@@ -28,6 +28,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import com.mandelsoft.mand.MandelData;
+import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.cm.Colormap;
 import com.mandelsoft.mand.cm.ColormapModel;
@@ -37,11 +38,16 @@ import com.mandelsoft.mand.scan.MandelScannerUtils;
 import com.mandelsoft.mand.tool.MandelAreaViewDialog;
 import com.mandelsoft.mand.tool.MandelImageAreaDialog;
 import com.mandelsoft.mand.tool.MandelImagePanel;
+import com.mandelsoft.mand.tool.MandelListGaleryDialog;
 import com.mandelsoft.mand.tool.MandelListModel;
 import com.mandelsoft.mand.tool.MandelListModelMenu;
 import com.mandelsoft.mand.tool.MandelListModelSource;
 import com.mandelsoft.mand.tool.MandelWindowAccess;
+import com.mandelsoft.mand.tool.PictureSaveDialog;
 import java.util.Set;
+import javax.swing.JDialog;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 
 /**
  *
@@ -269,6 +275,93 @@ public abstract class MandelListContextMenuHandler
     }
   }
 
+  private class LinkFromMarkAction extends ContextAction {
+    public LinkFromMarkAction()
+    {
+      super("Link from mark");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      QualifiedMandelName sel=getSelectedItem();
+      if (sel==null) return;
+      MandelWindowAccess access=getMandelWindowAccess();
+      QualifiedMandelName marked=access.getMandelImagePane().getMark();
+      access.getEnvironment().addLink(marked.getMandelName(), sel.getMandelName());
+    }
+  }
+
+  private class UnlinkFromMarkAction extends ContextAction {
+    public UnlinkFromMarkAction()
+    {
+      super("Unlink from mark");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      QualifiedMandelName sel=getSelectedItem();
+      if (sel==null) return;
+      MandelWindowAccess access=getMandelWindowAccess();
+      QualifiedMandelName marked=access.getMandelImagePane().getMark();
+      access.getEnvironment().removeLink(marked.getMandelName(), sel.getMandelName());
+    }
+  }
+
+  private class LinkFromCurrentAction extends ContextAction {
+    public LinkFromCurrentAction()
+    {
+      super("Link from current");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      QualifiedMandelName sel=getSelectedItem();
+      if (sel==null) return;
+      MandelWindowAccess access=getMandelWindowAccess();
+      MandelName marked=access.getMandelName();
+      access.getEnvironment().addLink(marked, sel.getMandelName());
+    }
+  }
+
+  private class UnlinkFromCurrentAction extends ContextAction {
+    public UnlinkFromCurrentAction()
+    {
+      super("Unlink from current");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      QualifiedMandelName sel=getSelectedItem();
+      if (sel==null) return;
+      MandelWindowAccess access=getMandelWindowAccess();
+      MandelName marked=access.getMandelName();
+      access.getEnvironment().removeLink(marked, sel.getMandelName());
+    }
+  }
+
+  private class SaveImagesAction extends ContextAction {
+
+    public SaveImagesAction()
+    {
+      super("Save Images");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      String title="Image Save Dialog";
+
+      JDialog dia=getDialog();
+      if (dia!=null&&dia.getTitle()!=null) {
+        title="Save Images for "+dia.getTitle();
+      }
+      System.out.println(title);
+      PictureSaveDialog d=new PictureSaveDialog(getMandelWindowAccess(),
+                                                title,
+                                                getModel().getList());
+      d.setVisible(true);
+    }
+  }
+
   //////////////////////////////////////////////////////////////////////////
 
   protected Action addCurrentImageAction=new AddCurrentImageAction();
@@ -281,6 +374,13 @@ public abstract class MandelListContextMenuHandler
   protected Action loadImageAction=new LoadImageAction();
   protected Action loadParentAction=new LoadParentAction();
   protected Action loadRegImageAction=new LoadRegImageAction();
+
+  protected Action linkMarkAction=new LinkFromMarkAction();
+  protected Action unlinkMarkAction=new UnlinkFromMarkAction();
+  protected Action linkCurrentAction=new LinkFromCurrentAction();
+  protected Action unlinkCurrentAction=new UnlinkFromCurrentAction();
+  
+  protected Action saveImagesAction=new SaveImagesAction();
 
   protected JPopupMenu createLabeledMenu(String text)
   {
@@ -295,10 +395,17 @@ public abstract class MandelListContextMenuHandler
     return menu;
   }
 
-  protected JPopupMenu createContextMenu(Integer index)// </editor-fold>
+  protected JPopupMenu createContextMenu(Integer index)
+  {
+    JPopupMenu menu=createItemContextMenu(index);
+    return createListContextMenu(menu);
+  }
+
+  protected JPopupMenu createItemContextMenu(Integer index)
   {
     JPopupMenu menu;
     QualifiedMandelName sel=null;
+    JMenu link=new JMenu("Linking");
 
     //System.out.println("create list ctx menu for "+index);
 
@@ -318,8 +425,22 @@ public abstract class MandelListContextMenuHandler
 
     boolean sep=false;
 
+    if (access!=null && !access.getEnvironment().isReadonly() && sel!=null) {
+      if (access.getQualifiedName()!=null &&
+          !sel.getMandelName().equals(access.getQualifiedName().getMandelName())) {
+        link.add(linkCurrentAction);
+        link.add(unlinkCurrentAction);
+      }
+      if (mp!=null && mp.getMark()!=null &&
+          !sel.getMandelName().equals(mp.getMark().getMandelName())) {
+        if (link.getItemCount()>0) link.addSeparator();
+        link.add(linkMarkAction);
+        link.add(unlinkMarkAction);
+      }
+    }
+
     if (model.isModifiable()) {
-      if (getMandelWindowAccess().getQualifiedName()!=null) {
+      if (access.getQualifiedName()!=null) {
         sep=true;
         menu.add(addCurrentImageAction);
         menu.add(removeCurrentImageAction);
@@ -354,6 +475,8 @@ public abstract class MandelListContextMenuHandler
       else {
         menu.add(loadParentAction);
       }
+      link.setEnabled(link.getItemCount()>0);
+      menu.add(link);
       menu.add(addMemoryAction);
       menu.add(access.getEnvironment().getListActions().createMenu(comp, sel));
     }
@@ -397,5 +520,17 @@ public abstract class MandelListContextMenuHandler
                                     "Cannot load image: "+sel,
                                     "Mandel IO", JOptionPane.WARNING_MESSAGE);
     }
+  }
+
+  protected JPopupMenu createListContextMenu(JPopupMenu menu)
+  {
+    if (getMandelWindowAccess()!=null
+      &&!getMandelWindowAccess().getEnvironment().isReadonly()) {
+      if (menu==null) menu=new JPopupMenu();
+      else menu.addSeparator();
+
+      menu.add(new JMenuItem(saveImagesAction));
+    }
+    return menu;
   }
 }
