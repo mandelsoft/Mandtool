@@ -11,6 +11,8 @@ Version 1.2
    - display list size in list title
    - parent links menu on middle-left button
    - list of previous marks
+   * 1.2.1
+   - fix mass save function with author option
 
 Version 1.1
    - remove new raster from tab (use unseen instead)

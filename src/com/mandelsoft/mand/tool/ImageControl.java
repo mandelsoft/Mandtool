@@ -414,7 +414,7 @@ public class ImageControl extends ControlDialog {
             (g=tmp.getGraphics()).drawImage(im, 0, 0, w, h, null);
             im=tmp;
           }
-          if (decoration.isSelected()) {
+          if (decorationButton.isSelected()) {
             if (tmp==null) {
               tmp=new BufferedImage(im.getWidth(),im.getHeight(),BufferedImage.TYPE_INT_RGB);
               (g=tmp.getGraphics()).drawImage(im, 0, 0, null);

@@ -38,7 +38,7 @@ public abstract class PictureSavePanel extends ActionPanel
                                     implements MandelWindowAccessSource {
 
     protected JComboBox formats;
-    protected JCheckBox decoration;
+    protected JCheckBox decorationButton;
     protected IntegerField width;
     protected FilePanel imagefile;
 
@@ -74,10 +74,10 @@ public abstract class PictureSavePanel extends ActionPanel
       c=new JLabel("Show Creator");
       addContent(c, GBC(0, 2).setRightInset(10).setAnchor(GBC.EAST).setWeight(
               100, 100));
-      decoration=new JCheckBox();
-      decoration.setSelected(getEnvironment().getCopyright()!=null);
-      decoration.setEnabled(!decoration.isSelected());
-      addContent(decoration, GBC(1, 2).setAnchor(GBC.WEST).setWeight(
+      decorationButton=new JCheckBox();
+      decorationButton.setSelected(getEnvironment().getCopyright()!=null);
+      decorationButton.setEnabled(!decorationButton.isSelected());
+      addContent(decorationButton, GBC(1, 2).setAnchor(GBC.WEST).setWeight(
               100, 100));
 
       imagefile=new FilePanel(fileLabel, "", (JFrame)getOwner());
@@ -90,8 +90,8 @@ public abstract class PictureSavePanel extends ActionPanel
     {
       AbstractFile file=getMandelWindowAccess().getMandelData().getFile();
       if (file!=null) {
-        if (!file.isFile()) decoration.setSelected(true);
-        decoration.setEnabled(file.isFile());
+        if (!file.isFile()) decorationButton.setSelected(true);
+        decorationButton.setEnabled(file.isFile());
       }
     }
 

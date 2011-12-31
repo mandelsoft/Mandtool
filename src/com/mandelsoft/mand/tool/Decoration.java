@@ -111,5 +111,11 @@ public class Decoration {
 //        System.out.println("decoration bounds "+g.getClipBounds().getWidth()
 //                                           +","+g.getClipBounds().getHeight());
     }
-    }
+  }
+
+  @Override
+  public String toString()
+  {
+    return ""+decoration+"("+showDecoration()+")";
+  }
 }

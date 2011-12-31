@@ -19,6 +19,7 @@ package com.mandelsoft.mand.tool;
 import com.mandelsoft.swing.worker.UIFunction;
 import com.mandelsoft.swing.worker.UIExecution;
 import com.mandelsoft.mand.Environment;
+import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.Settings;
 import com.mandelsoft.mand.cm.Colormap;
@@ -171,8 +172,7 @@ public class PictureSaveDialog extends MandelDialog {
         task=new Worker(list, getMandelWindowAccess(),
                             imagefile.getFilename(),
                             (String)formats.getSelectedItem(), width,
-                            getMandelWindowAccess().getMandelImagePane().
-                               getDecoration());
+                            decorationButton.isSelected());
         new WorkerProgressMonitor(PictureSaveDialog.this,
                                                   "Writing Images", task);
       }
@@ -214,26 +214,28 @@ public class PictureSaveDialog extends MandelDialog {
     }
   }
 
-  private class Worker extends CallbackWorker<Void, UIExecution,
-                                                     PictureSaveDialog> {
+  //////////////////////////////////////////////////////////////////////
+  // Worker
+  //////////////////////////////////////////////////////////////////////
+  private class Worker extends CallbackWorker<Void, UIExecution, PictureSaveDialog> {
+
     private List<MandelHandle> list;
     private Colormap cm;
     private Mapper mapper;
     private ResizeMode mode;
     private Environment env;
-
     private String path;
     private String fmt;
     private int width;
-    private Decoration decoration;
+    private boolean showDecoration;
 
     public Worker(List<MandelHandle> list, MandelWindowAccess acc,
-                  String path, String fmt, int width, Decoration decoration)
+                  String path, String fmt, int width, boolean showDecoration)
     {
       super(PictureSaveDialog.this);
       this.list=list;
       this.env=acc.getEnvironment();
-      
+
       ColormapModel cm=acc.getColormapModel();
       this.cm=cm.getColormap();
       this.mode=cm.getResizeMode();
@@ -242,12 +244,21 @@ public class PictureSaveDialog extends MandelDialog {
       this.path=path;
       this.fmt=fmt;
       this.width=width;
-      this.decoration=decoration;
+      this.showDecoration=showDecoration;
+    }
+
+    public Decoration getDecoration(MandelInfo info)
+    {
+      Decoration decoration=new Decoration();
+      decoration.setShowDecoration(showDecoration);
+      decoration.setDecoration(env.getCopyright(info));
+      System.out.println("*** decoration is "+decoration);
+      return decoration;
     }
 
     public MandelAreaImage getMandelImage(MandelHandle h) throws IOException
     {
-      return env.getMandelImage(h,mode,cm,mapper,null);
+      return env.getMandelImage(h, mode, cm, mapper, null);
     }
 
     @Override
@@ -259,7 +270,8 @@ public class PictureSaveDialog extends MandelDialog {
 
     @Override
     protected Void doInBackground() throws Exception
-    { int c=0;
+    {
+      int c=0;
       boolean overwrite=false;
       boolean oset=false;
 
@@ -275,7 +287,7 @@ public class PictureSaveDialog extends MandelDialog {
             if (!oset) {
               int r=call(new OverwriteQuestion(f));
               if (r==4) {
-                 break;
+                break;
               }
               overwrite=(r%2)==0;
               oset=r>1;
@@ -292,32 +304,36 @@ public class PictureSaveDialog extends MandelDialog {
           Graphics g=null;
           int w=width;
           int h;
-          
+
           if (w!=0) {
             h=w*im.getHeight()/im.getWidth();
-            tmp=new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);
+            tmp=new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             (g=tmp.getGraphics()).drawImage(im, 0, 0, w, h, null);
             im=tmp;
           }
-          if (decoration!=null) {
+          Decoration decoration=getDecoration(mai.getInfo());
+          if (decoration!=null && decoration.showDecoration()) {
             if (tmp==null) {
-              tmp=new BufferedImage(im.getWidth(),im.getHeight(),BufferedImage.TYPE_INT_RGB);
+              tmp=new BufferedImage(im.getWidth(), im.getHeight(),
+                                    BufferedImage.TYPE_INT_RGB);
               (g=tmp.getGraphics()).drawImage(im, 0, 0, null);
               im=tmp;
             }
             if (g==null) g=im.getGraphics();
-            decoration.paintDecoration(g,im.getWidth(),im.getHeight());
+            decoration.paintDecoration(g, im.getWidth(), im.getHeight());
           }
-          
+
           try {
             ImageIO.write(im, fmt, f);
           }
           catch (Exception ex) {
-            call(new ErrorNotification("Image IO", "Cannot write image: "+ex.toString()));
+            call(new ErrorNotification("Image IO", "Cannot write image: "+ex.
+              toString()));
           }
         }
         catch (IOException ex) {
-           call(new ErrorNotification("Image IO", "Cannot find area image: "+ex.toString()));
+          call(new ErrorNotification("Image IO", "Cannot find area image: "+ex.
+            toString()));
         }
         finally {
           setProgress(++c*100/list.size());
@@ -327,6 +343,6 @@ public class PictureSaveDialog extends MandelDialog {
       setProgress(100);
       return null;
     }
-
   }
+
 }
