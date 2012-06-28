@@ -89,7 +89,7 @@ public interface MandelImage {
       this.colormapSource=colormap;
     }
 
-    protected Colormap getDefaultColormap(MandelData data, Colormap defcolmap)
+    final protected Colormap getDefaultColormap(MandelData data, Colormap defcolmap)
     {
       if (defcolmap!=null) return defcolmap;
       return getColormap();
@@ -110,7 +110,7 @@ public interface MandelImage {
     { return getImage(f,defcolmap.getResizeMode(),defcolmap.getColormap());
     }
 
-    public MandelImage getImage(File f, ResizeMode mode, Colormap defcolmap)
+    public MandelImage getImage(File f, ResizeMode mode, ColormapSource defcolmap)
                           throws IOException
     { return getImage(new MandelData(f), mode, defcolmap);
     }
@@ -119,13 +119,18 @@ public interface MandelImage {
     { return getImage(data,ResizeMode.RESIZE_PROPORTIONAL,null);
     }
 
+    public MandelImage getImage(MandelData data, ColormapSource defcolmap)
+                          throws IOException
+    { return getImage(data,ResizeMode.RESIZE_PROPORTIONAL,defcolmap);
+    }
+
     public MandelImage getImage(MandelData data, ColormapModel defcolmap)
                        throws IOException
     { return getImage(data,defcolmap.getResizeMode(),defcolmap.getColormap());
     }
 
     public MandelImage getImage(MandelData data, ResizeMode mode,
-                                Colormap defcolmap)
+                                ColormapSource defcolmap)
                        throws IOException
     { return getImage(data,mode,defcolmap,null);
     }
@@ -138,7 +143,7 @@ public interface MandelImage {
     }
 
     public MandelImage getImage(MandelData data, ResizeMode mode,
-                                                 Colormap defcolmap,
+                                                 ColormapSource defcolmap,
                                                  Mapper defmapper)
                        throws IOException
     {
@@ -149,7 +154,8 @@ public interface MandelImage {
           // first setup default image settings, if not present
           MandelData d=new MandelData(data);
           if (!h.hasColormap()) {
-            d.setColormap(mode,getDefaultColormap(d, defcolmap));
+            Colormap cm=defcolmap==null?null:defcolmap.getColormap();
+            d.setColormap(mode,getDefaultColormap(d, cm));
             data=d;
           }
           if (!h.hasMapping()) {

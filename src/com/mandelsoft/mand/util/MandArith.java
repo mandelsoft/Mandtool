@@ -89,7 +89,7 @@ public class MandArith implements MandelConstants {
 
   static public BigDecimal round(BigDecimal a, BigDecimal b, int res, int r)
   {
-    System.out.println("rounding "+a+": res="+res+", prec="+b);
+    // System.out.println("rounding "+a+": res="+res+", prec="+b);
     b=div(b,res);
     int m=minScale(b)+1+r;
     a=a.setScale(m,RoundingMode.HALF_EVEN);

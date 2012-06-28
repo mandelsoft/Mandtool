@@ -17,7 +17,10 @@
 package com.mandelsoft.mand.tool.thumb;
 
 import com.mandelsoft.mand.QualifiedMandelName;
+import com.mandelsoft.mand.cm.ColormapSource;
+import com.mandelsoft.mand.cm.ColormapSourceFactory;
 import com.mandelsoft.mand.image.MandelImage;
+import com.mandelsoft.mand.image.MandelImage.Factory;
 import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.tool.AbstractMandelListModel;
@@ -38,11 +41,19 @@ public abstract class MandelImageRequestQueue<E> {
   private List<MandelImageSource> requests;
   private Dimension maxSize;
   private MandelImage.Factory factory;
+  private ColormapSourceFactory colmapfac;
   private Worker worker;
 
   public MandelImageRequestQueue()
   {
     this.requests=new ArrayList<MandelImageSource>();
+  }
+
+  public MandelImageRequestQueue(Factory factory,
+                                 ColormapSourceFactory colmapfac)
+  {
+    this.factory=factory;
+    this.colmapfac=colmapfac;
   }
 
   public abstract MandelScanner getMandelScanner();
@@ -57,6 +68,16 @@ public abstract class MandelImageRequestQueue<E> {
   public Dimension getMaxSize()
   {
     return maxSize;
+  }
+
+  public ColormapSourceFactory getColormapSourceFactory()
+  {
+    return colmapfac;
+  }
+
+  public void setColormapSourceFactory(ColormapSourceFactory colmapfac)
+  {
+    this.colmapfac=colmapfac;
   }
 
   synchronized
@@ -148,7 +169,11 @@ public abstract class MandelImageRequestQueue<E> {
     MandelHandle mh=getMandelScanner().getMandelData(n);
     if (mh!=null) {
       try {
-        MandelImage mi=getFactory().getImage(mh.getData());
+        ColormapSource cms=null;
+        if (colmapfac!=null && !mh.getHeader().hasColormap()) {
+          cms=colmapfac.getColormapSource(n);
+        }
+        MandelImage mi=getFactory().getImage(mh.getData(),cms);
         if (mi!=null) {
           image=mi.getImage();
         }

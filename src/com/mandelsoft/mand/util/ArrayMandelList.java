@@ -21,6 +21,7 @@ import com.mandelsoft.mand.QualifiedMandelName;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 
 
 /**
@@ -30,6 +31,18 @@ import java.io.OutputStream;
 
 public class ArrayMandelList extends ArrayBaseList<QualifiedMandelName>
                              implements MandelList {
+
+  public ArrayMandelList(int initialCapacity)
+  { super(initialCapacity);
+  }
+
+  public ArrayMandelList()
+  {
+  }
+
+  public ArrayMandelList(Collection<? extends QualifiedMandelName> c)
+  { super(c);
+  }
 
  
   ///////////////////////////////////////////////////////////////////////////

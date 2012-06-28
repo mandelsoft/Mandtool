@@ -46,10 +46,11 @@ public class MandToolStarter extends JApplet
   public String[][] getParameterInfo()
   {
     String[][] info = {
-      // Parameter Name     Kind of Value   Description
-        {"datasource",     "URL",          "a directory containing the config"},
-        {"showsub",        "boolean",      "initially show sub areas"},
-        {"tooltipmode",    "String",       "initial tool tip mode"}
+      // Parameter Name       Kind of Value   Description
+        {"datasource",       "URL",        "a directory containing the config"},
+        {"showsub",          "boolean",    "initially show sub areas"},
+        {"upstreamcolormap", "boolean",    "use upstream colormap as default"},
+        {"tooltipmode",      "String",     "initial tool tip mode"}
     };
     return info;
   }
@@ -92,11 +93,13 @@ public class MandToolStarter extends JApplet
       URL base=getDocumentBase();
       boolean showsub=getBooleanParameter("showsub",false);
       boolean showtooltip=getBooleanParameter("showtooltip",false);
+      boolean upstream=getBooleanParameter("upstreamcolormap",false);
       
       System.out.println("document base is "+base);
       System.out.println("data source is   "+data);
       System.out.println("show sub is      "+showsub);
       System.out.println("show tooltip     "+showtooltip);
+      System.out.println("upstream is      "+upstream);
       System.out.println("tooltipmode is   "+tooltipmode);
       if (data==null) data=".";
       URL dataURL=new URL(base, data);
@@ -104,7 +107,7 @@ public class MandToolStarter extends JApplet
       MandelAreaImage img=env.getMandelImage(env.getInitialName());
       MandToolStarter.this.showStatus("setup done");
       System.out.println("setup done");
-      setup(env,img,showsub,showtooltip,tooltipmode);
+      setup(env,img,showsub,showtooltip,upstream,tooltipmode);
     }
     catch (MalformedURLException ex) {
       System.out.println("url failed: "+ex);
@@ -140,6 +143,7 @@ public class MandToolStarter extends JApplet
   public void setup(ToolEnvironment env, MandelAreaImage img,
                     boolean showsub,
                     boolean showtooltip,
+                    boolean upstream,
                     String tooltipmode) throws IOException
   {
     BufferedComponent bc;
@@ -156,6 +160,7 @@ public class MandToolStarter extends JApplet
       }
     }
     if (showsub) panel.showSubRects();
+    panel.getParentColormapModel().setState(upstream);
   }
 
   public ColormapModel getColormapModel()

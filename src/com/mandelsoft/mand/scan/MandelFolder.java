@@ -75,6 +75,14 @@ public class MandelFolder extends FolderLock  {
     return cache!=null;
   }
 
+  synchronized void createCache() throws IOException
+  {
+    if (cache==null) {
+      cache=new MandelFolderCache(this.getFolder());
+      cache.recreate();
+    }
+  }
+
   synchronized
   public void recreate() throws IOException
   {
@@ -301,5 +309,21 @@ public class MandelFolder extends FolderLock  {
       MandelFolder mf=getMandelFolder(d.getParentFile());
       return mf.renameTo(s,d);
     }
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
+  static public void main(String[] args)
+  {
+    File n=new File(".");
+    if (args.length>0) n=new File(args[0]);
+    try {
+      MandelFolder f=getMandelFolder(n);
+      f.createCache();
+    }
+    catch (IOException ex) {
+      System.out.println("cannot handle folder "+n+": "+ex);
+    }
+
   }
 }

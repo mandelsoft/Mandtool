@@ -16,6 +16,8 @@
 
 package com.mandelsoft.mand;
 
+import java.math.BigDecimal;
+
 /**
  *
  * @author Uwe Krueger
@@ -28,4 +30,10 @@ public interface PixelIterator {
   int getMagnification();
   boolean isFast();
   int iter();
+
+  BigDecimal getCX();
+  BigDecimal getCY();
+
+  double getX(BigDecimal x);
+  double getY(BigDecimal y);
 }

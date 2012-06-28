@@ -17,6 +17,7 @@
 package com.mandelsoft.mand.util;
 
 import com.mandelsoft.mand.*;
+import com.mandelsoft.util.Utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -40,7 +41,7 @@ public interface MandelList extends BaseList<QualifiedMandelName> {
 
     public static void write(MandelList ml, OutputStream os, String msg) throws IOException
     {
-      System.out.println("write "+msg+" "+ml.size()+" entries");
+      System.out.println("write "+msg+" "+Utils.sizeString(ml.size(),"entry"));
       PrintWriter w=new PrintWriter(new BufferedWriter(
               new OutputStreamWriter(os)));
       try {
@@ -70,7 +71,7 @@ public interface MandelList extends BaseList<QualifiedMandelName> {
       finally {
         r.close();
       }
-      System.out.println("reading "+msg+" "+ml.size()+" entries");
+      System.out.println("reading "+msg+" "+Utils.sizeString(ml.size(),"entry"));
     }
   }
 }

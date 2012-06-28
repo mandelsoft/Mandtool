@@ -16,29 +16,39 @@
 
 package com.mandelsoft.mand.util.lists;
 
+import com.mandelsoft.mand.MandelData;
+import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
+import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
-import com.mandelsoft.mand.util.MandUtils;
+import java.io.IOException;
 
 /**
  *
  * @author Uwe Krueger
  */
-public class DeadEndFactory extends SubAreaFactory {
-
+public class DeadEndFactory extends AbstractDeadEndFactory {
   public DeadEndFactory(MandelScanner scanner, MandelName basename)
   {
     super(scanner,basename,"Dead Ends");
   }
 
-  @Override
-  protected boolean accept(QualifiedMandelName n)
+  protected boolean hasMandel(QualifiedMandelName n)
   {
-    if (super.accept(n) && !MandUtils.hasSubNames(n.getMandelName(), getScanner())) {
-      return true;
+    MandelHandle h=getScanner().getMandelInfo(n);
+    if (h!=null) {
+      try {
+        MandelData md=h.getInfo();
+        MandelInfo mi=md.getInfo();
+        long nm=mi.getMCnt();
+        long np=mi.getRX()*mi.getRY();
+        if (nm*100/(double)np>0.1) return true;
+      }
+      catch (IOException ex) {
+        // not found
+      }
     }
     return false;
   }
-
 }

@@ -20,15 +20,14 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import javax.swing.JOptionPane;
 import com.mandelsoft.mand.QualifiedMandelName;
-import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.tool.ctx.MandelListContextMenuHandler;
 import com.mandelsoft.mand.util.MandelList;
+import com.mandelsoft.swing.Selection;
+import com.mandelsoft.swing.TableSelection;
 import com.mandelsoft.swing.TablePanel;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
-import javax.swing.JPopupMenu;
 
 /**
  *
@@ -209,10 +208,10 @@ public class MandelListsDialog extends ControlDialog {
     }
 
     @Override
-    protected void setSelection(int index, int col)
+    protected void setSelection(TableSelection sel)
     {
-      mandelname=getModel().getQualifiedName(index);
-      System.out.println("model index: "+index+
+      mandelname=getModel().getQualifiedName(sel.getLeadSelection());
+      System.out.println("model index: "+sel.getLeadSelection()+
          "("+getTable().getSelectionModel().getMaxSelectionIndex()+"): "+
          mandelname);
     }
@@ -246,14 +245,7 @@ public class MandelListsDialog extends ControlDialog {
 
     //////////////////////////////////////////////////////////////////////////
     private class ContextHandler extends MandelListContextMenuHandler
-      implements ContextMenuHandler {
-
-      @Override
-      public void handleContextMenu(JComponent comp, MouseEvent evt,
-                                    int row, int col)
-      {
-        handleContextMenu(comp, evt, row);
-      }
+                                 implements ContextMenuHandler {
 
 //      @Override
 //      protected JPopupMenu createItemContextMenu(Integer index)

@@ -42,8 +42,11 @@ public class MandelListsMenuFactory extends MandelContextMenuFactory {
     add(new FavoritesListAction());
     add(new TodoListAction());
     add(new SubAreaListAction());
+    add(new MandelAreaListAction());
     add(new LeafImagesListAction());
     add(new DeadEndListAction());
+    add(new PendingWorkListAction());
+    add(new MandelLeafListAction());
     if (!readonly)
       add(new UnseenListAction());
     add(new RequestListAction());

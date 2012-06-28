@@ -39,7 +39,8 @@ public class IdentityMapper extends MapperSupport {
   { RasterInfo info=new RasterInfo(raster);
 
     if (colmapsize<info.getSize()+1)
-      throw new IllegalArgumentException("colormap size does not match");
+      throw new IllegalArgumentException("colormap size does not match: "+
+                   "col: "+colmapsize+ " rsater: "+info.getSize());
     int[] mapping=new int[info.getSize()];
     for (int i=0; i<info.getSize(); i++)
       mapping[i]=i+1;

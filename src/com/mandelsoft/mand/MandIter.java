@@ -26,7 +26,7 @@ import com.mandelsoft.mand.util.MandArith;
 public class MandIter extends MandArith {
   static private BigDecimal br=new BigDecimal(5.e-16);
   
-  static public PixelIterator createPixelIterator(MandelInfo mi)
+  static public PixelIterator createPixelIterator(MandelSpec mi)
   {
     BigDecimal x0=mi.getXMin();
     BigDecimal y0=mi.getYMax();
@@ -164,6 +164,28 @@ public class MandIter extends MandArith {
       cy=y0-(y*dy)/dry;
     }
 
+     public BigDecimal getCX()
+    {
+      return new BigDecimal(cx);
+    }
+
+    public BigDecimal getCY()
+    {
+      return new BigDecimal(cy);
+    }
+    
+    public double getX(BigDecimal x)
+    {
+      double xd=x.doubleValue();
+      return (xd-x0)*drx/dx;
+    }
+
+    public double getY(BigDecimal y)
+    {
+      double yd=y.doubleValue();
+      return (y0-yd)*dry/dy;
+    }
+
     public int iter()
     {
       return iter(0.0, 0.0, cx, cy, bound, limit);
@@ -192,7 +214,7 @@ public class MandIter extends MandArith {
   // big decimal iterator support
   /////////////////////////////////////////////////////////////////////////
 
-  private static abstract class BigDecimalIterator extends MandPixelIterator {
+  public static abstract class BigDecimalIterator extends MandPixelIterator {
     protected BigDecimal dx;
     protected BigDecimal dy;
     protected BigDecimal drx;
@@ -201,6 +223,12 @@ public class MandIter extends MandArith {
     protected BigDecimal y0;
     protected BigDecimal cx;
     protected BigDecimal cy;
+
+    public BigDecimalIterator(MandelSpec spec)
+    {
+      this(spec.getXMin(),spec.getYMax(),spec.getDX(),spec.getDY(),
+           spec.getRX(),spec.getRY(),spec.getLimitIt());
+    }
 
     public BigDecimalIterator(BigDecimal x0,
                               BigDecimal y0,
@@ -233,6 +261,26 @@ public class MandIter extends MandArith {
     public void setY(int y)
     {
       cy=sub(y0, div(mul(dy, y), dry));
+    }
+
+    public BigDecimal getCX()
+    {
+      return cx;
+    }
+
+    public BigDecimal getCY()
+    {
+      return cy;
+    }
+
+    public double getX(BigDecimal x)
+    {
+      return div(mul(sub(x,x0),drx),dx).doubleValue();
+    }
+
+    public double getY(BigDecimal y)
+    {
+       return div(mul(sub(y0,y),dry),dy).doubleValue();
     }
   }
 

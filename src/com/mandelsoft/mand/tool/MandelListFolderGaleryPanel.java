@@ -28,6 +28,7 @@ import com.mandelsoft.mand.tool.ctx.MandelListFolderContextMenuHandler;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
 import com.mandelsoft.swing.DnDJList;
+import com.mandelsoft.swing.Selection;
 
 /**
  *
@@ -143,11 +144,12 @@ public class MandelListFolderGaleryPanel
 
     private Action backAction = new BackAction();
 
-    public void handleContextMenu(JComponent comp, MouseEvent evt, int index)
+    public void handleContextMenu(JComponent comp, MouseEvent evt, Selection sel)
     {
       MandelListFolder folder;
       MandelListFolderListModel model;
       TreePath p;
+      int index=sel.getLeadSelection();
 
       model=MandelListFolderGaleryPanel.this.getModel();
 

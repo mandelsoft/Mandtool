@@ -16,11 +16,8 @@
 
 package com.mandelsoft.mand.tool;
 
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import javax.swing.JButton;
 import com.mandelsoft.mand.MandelConstants;
@@ -32,7 +29,6 @@ import com.mandelsoft.mand.tool.MandelAreaCreationDialog.CreationView;
 import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.swing.BufferedComponent.RectModifiedEvent;
 import com.mandelsoft.swing.BufferedComponent.RectModifiedEventListener;
-import com.mandelsoft.swing.BufferedComponent.VisibleRect;
 
 /**
  *
@@ -44,19 +40,6 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
   {
     super(owner, title,null, owner.getMandelName(),
                              owner.getMandelData().getInfo());
-    getDialog().addWindowListener(new WindowAdapter() {
-
-      @Override
-      public void windowClosing(WindowEvent e)
-      {
-        handleClose();
-      }
-      @Override
-      public void windowClosed(WindowEvent e)
-      {
-        System.out.println("closed variant area");
-      }
-    });
   }
 
   @Override
@@ -66,17 +49,12 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
     if (!b) handleClose();
   }
 
-  protected void handleClose()
-  {
-    ((SubAreaView)getView()).handleClose();
-  }
-
   @Override
   protected MandelAreaView createView(QualifiedMandelName name, Object info,
                                       boolean change, boolean readonly)
   {
     System.out.println("mandel frame is "+getMandelFrame());
-    return new SubAreaView(name,(MandelInfo)info);
+    return new VariationView(name,(MandelInfo)info);
   }
 
   
@@ -84,37 +62,19 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
   // view
   ///////////////////////////////////////////////////////////////////////
 
-  protected class SubAreaView extends CreationView {
-    private VisibleRect rect;
-
+  protected class VariationView extends CreationView {
     private JButton namebutton;
-    private JButton showbutton;
     private JButton resetbutton;
 
     private MandelName base;
     private MandelInfo initial;
 
-    public SubAreaView(QualifiedMandelName name, MandelInfo info)
+    public VariationView(QualifiedMandelName name, MandelInfo info)
     {
       super(name, new MandelInfo(info));
       initial=info;
       base=getMandelFrame().getMandelName();
       determineFilename();
-    }
-
-    protected void handleClose()
-    {
-      System.out.println("closing variant area");
-      if (rect!=null) {
-        System.out.println(" discard old rect");
-        rect.discard();
-        if (rect.getName()!=null) {
-          fireMandelAreaEvent(
-                  new MandelAreaEvent(MandelVariationCreationDialog.this,
-                                      MandelAreaEvent.MA_UPDATE));
-        }
-        rect=null;
-      }
     }
 
     @Override
@@ -123,8 +83,7 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
       super.setupButtons();
       namebutton=createButton("Name", "Determine variation name",
                    new NameAction());
-      showbutton=createButton("Show", "Show variation area",
-                   new ShowAction());
+      addShowButton("Show variation area", false);
       resetbutton=createButton("Reset", "Reset to initial values",
                    new ResetAction());
     }
@@ -146,25 +105,6 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
       setFilename(new File(path,mfn.toString()).getPath());
     }
 
-    private class ModifiedListener implements RectModifiedEventListener {
-      public void rectModified(RectModifiedEvent e)
-      {
-        MandelInfo info=getInfo();
-        System.out.println("info is "+info);
-        updateInfo(info,rect._getRect());
-        //TODO!!
-//        ProportionProvider p=getMandelWindowAccess().getMandelImagePane().getProportionSelectionModel().getProportionProvider();
-//        if (p!=imagepropprov) {
-//          // adjust pixel size according to selected proportion
-//          if (((double)info.getRX())/info.getRY()!=p.getProportion()) {
-//            info.setRY((int)((double)info.getRX()/p.getProportion()));
-//          }
-//        }
-        MandUtils.round(info);
-        setInfo(info);
-      }
-    }
-
     private class ResetAction implements ActionListener {
 
       public void actionPerformed(ActionEvent e)
@@ -182,39 +122,10 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
       }
     }
 
-    private class ShowAction implements ActionListener {
-
-      public void actionPerformed(ActionEvent e)
-      {
-        if (rect==null) {
-          rect=getMandelWindowAccess().getMandelImagePane().getImagePane().
-                createRect(getTitle(), getTitle());
-          rect.addRectModifiedEventListener(new ModifiedListener());
-        }
-        getMandelWindowAccess().getMandelImagePane().hideSubRects();
-        rect.activate();
-        updateSlave();
-        rect.setVisible(true);
-      }
-    }
-
     @Override
-    protected void updateSlave()
+     protected String getRectLabel()
     {
-      System.out.println("update slave");
-      if (rect!=null) updateRect(rect,getInfo());
-    }
-
-    private void updateRect(VisibleRect rect, MandelInfo info)
-    {
-      getMandelWindowAccess().getMandelImagePane()
-      .updateRect(rect,info);
-    }
-
-    synchronized public void updateInfo(MandelInfo info, Rectangle rect)
-    {
-      getMandelWindowAccess().getMandelImagePane()
-      .updateInfo(info, rect);
+      return getTitle();
     }
   }
 }

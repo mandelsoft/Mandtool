@@ -36,6 +36,8 @@ import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.io.AbstractFile;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
+import com.mandelsoft.mand.Settings;
+import com.mandelsoft.mand.cm.Colormap;
 import com.mandelsoft.mand.cm.ColormapModel;
 import com.mandelsoft.mand.image.MandelAreaImage;
 import com.mandelsoft.mand.image.MandelImage;
@@ -43,6 +45,7 @@ import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.scan.MandelScannerListenerAdapter;
 import com.mandelsoft.mand.tool.lists.MandelListsMenuFactory;
+import com.mandelsoft.mand.util.MandelColormapCache;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
 import com.mandelsoft.mand.util.MandelListFolderTree;
@@ -86,6 +89,8 @@ public class ToolEnvironment extends Environment {
   private MandelListsMenuFactory listactions;
 
   private ImageBaseModel imagebase_model;
+  private MandelColormapCache colormap_cache;
+
   ///////////////////////////////////////////////////////////////////////
   // Tool control
   ///////////////////////////////////////////////////////////////////////
@@ -129,6 +134,23 @@ public class ToolEnvironment extends Environment {
     ComposedMandelListFolderTreeModel userlists;
     List<MandelListFolderTree> tmp;
 
+    int size=80;
+    String v=getProperty(Settings.COLORMAP_CACHE_SIZE);
+    if (v!=null) {
+      try {
+      size=Integer.parseInt(v);
+      if (size<=0) size=80;
+      }
+      catch (NumberFormatException nfe) {
+        System.out.println("illegal colormap cache size "+v+": "+nfe);
+        // keep default
+      }
+    }
+
+    colormap_cache=new MandelColormapCache(size);
+    Colormap cm=getDefaultColormap();
+    if (cm!=null) colormap_cache.lock(QualifiedMandelName.ROOT, cm);
+    
     refresh_pending=new HashMap<MandelListTableModel,Boolean>();
     refresh_order=new ArrayList<MandelListTableModel>();
     toolControl = new ToolControlAction();
@@ -293,6 +315,14 @@ public class ToolEnvironment extends Environment {
     }
   }
 
+  synchronized
+  public MandelColormapCache getColormapCache()
+  {
+    return colormap_cache;
+  }
+
+  //////////////////////////////////////////////////////////////////////////
+
   //////////////////////////////////////////////////////////////////////////
 
   public WindowControlAction getToolControlAction()
@@ -379,7 +409,7 @@ public class ToolEnvironment extends Environment {
       b=super.handleRasterSeen(f);
       if (b && newrasters!=null) {
         QualifiedMandelName name=QualifiedMandelName.create(f);
-        System.out.println("remove from new rasters");
+        System.out.println("remove from new rasters "+f);
         newrasters.setModifiable(true);
         newrasters.remove(name);
         newrasters.setModifiable(false);

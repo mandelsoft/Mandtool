@@ -138,6 +138,18 @@ public class Utils {
     }
   }
 
+  static public String plural(String txt)
+  {
+    if (txt.endsWith("y")) return txt.substring(0,txt.length()-1)+"ies";
+    if (txt.endsWith("h")) return txt+"es";
+    return txt+"s";
+  }
+
+  static public String sizeString(int n, String elemtype)
+  {
+    return ""+n+" "+(n==1?elemtype:plural(elemtype));
+  }
+
   //////////////////////////////////////////////////////////////////////////
   // main
   //////////////////////////////////////////////////////////////////////////

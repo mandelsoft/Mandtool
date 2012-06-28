@@ -17,11 +17,13 @@
 package com.mandelsoft.mand.tool;
 
 import com.mandelsoft.mand.MandelData;
+import com.mandelsoft.mand.MandelFileName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.swing.GBCPanel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -82,7 +84,8 @@ public class GotoDialog extends MandelDialog {
             else {
               QualifiedMandelName name=QualifiedMandelName.create(txt);
               if (name==null) {
-                mandelError("'"+txt+"' is no valid area name");
+                if (handleFile(txt))
+                  GotoDialog.this.setVisible(false);
               }
               else {
                 if (handleArea(name))
@@ -94,6 +97,11 @@ public class GotoDialog extends MandelDialog {
       }
 
       protected abstract boolean handleArea(QualifiedMandelName name);
+      protected boolean handleFile(String txt)
+      {
+        mandelError("'"+txt+"' is no valid area name");
+        return false;
+      }
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -124,6 +132,15 @@ public class GotoDialog extends MandelDialog {
         super("Meta Data");
       }
 
+      protected void showMeta(MandelData md, QualifiedMandelName name)
+      {
+        MandelImageAreaDialog v=new MandelImageAreaDialog(
+          getMandelWindowAccess(), "Mandel Image Meta Information",
+                                   name, md);
+        v.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        v.setVisible(true);
+      }
+
       @Override
       protected boolean handleArea(QualifiedMandelName name)
       {
@@ -135,11 +152,7 @@ public class GotoDialog extends MandelDialog {
         else {
           try {
             MandelData data=found.getInfo();
-            MandelImageAreaDialog v=new MandelImageAreaDialog(
-              getMandelWindowAccess(), "Mandel Image Meta Information",
-              name, data);
-            v.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            v.setVisible(true);
+            showMeta(data,name);
             return true;
           }
           catch (IOException ex) {
@@ -148,6 +161,34 @@ public class GotoDialog extends MandelDialog {
         }
         return false;
       }
+
+      @Override
+      protected boolean handleFile(String txt)
+      {
+        File f=new File(txt);
+        if (f.isFile()) {
+          try {
+            MandelFileName mfn=MandelFileName.create(f);
+            if (mfn==null) {
+              mandelError(txt+" is no mandel file");
+            }
+            else {
+              MandelData md=new MandelData(f);
+              showMeta(md,mfn.getQualifiedName());
+              return true;
+            }
+          }
+          catch (IOException ex) {
+            mandelError("cannot read "+txt+": "+ex);
+          }
+        }
+        else {
+          mandelError(txt+" is no qualified mandel name or file");
+        }
+        return false;
+      }
+
+
     }
   }
 }

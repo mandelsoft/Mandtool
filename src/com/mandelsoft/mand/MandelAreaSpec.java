@@ -70,15 +70,44 @@ public class MandelAreaSpec extends MandArith {
     setDY(i.getDY());
   }
 
+
+  // temporary cache values
+  private BigDecimal x0;
+  private BigDecimal x1;
+  private BigDecimal y0;
+  private BigDecimal y1;
+
+  private void clearAlt()
+  {
+    x0=x1=y0=y1=null;
+  }
+
+  private void setAlt()
+  {
+    if (x0==null) {
+      x0=sub(getXM(), div(getDX(), 2));
+      x1=add(getXM(), div(getDX(), 2));
+      y0=sub(getYM(), div(getDY(), 2));
+      y1=add(getYM(), div(getDY(), 2));
+    }
+  }
+  public boolean containsY(BigDecimal y)
+  {
+    setAlt();
+    if (y.compareTo(y0)<0||y.compareTo(y1)>=0) return false;
+    return true;
+  }
+
+  public boolean containsX(BigDecimal x)
+  {
+    setAlt();
+    if (x.compareTo(x0)<0||x.compareTo(x1)>=0) return false;
+    return true;
+  }
+
   public boolean contains(BigDecimal x, BigDecimal y)
   {
-    BigDecimal x0=sub(getXM(), div(getDX(), 2));
-    BigDecimal y0=sub(getYM(), div(getDY(), 2));
-    BigDecimal x1=add(getXM(), div(getDX(), 2));
-    BigDecimal y1=add(getYM(), div(getDY(), 2));
-    if (x.compareTo(x0)<0||x.compareTo(x1)>0) return false;
-    if (y.compareTo(y0)<0||y.compareTo(y1)>0) return false;
-    return true;
+    return containsX(x) && containsY(y);
   }
 
   public BigDecimal getDX()
@@ -98,12 +127,14 @@ public class MandelAreaSpec extends MandArith {
 
   public BigDecimal getXMax()
   {
-    return add(getXM(), div(getDX(), 2));
+    setAlt();
+    return x1;
   }
 
   public BigDecimal getXMin()
   {
-    return sub(getXM(), div(getDX(), 2));
+    setAlt();
+    return x0;
   }
 
   public BigDecimal getYM()
@@ -113,52 +144,58 @@ public class MandelAreaSpec extends MandArith {
 
   public BigDecimal getYMax()
   {
-    return add(getYM(), div(getDY(), 2));
+    setAlt();
+    return y1;
   }
 
   public BigDecimal getYMin()
   {
-    return sub(getYM(), div(getDY(), 2));
+    setAlt();
+    return y0;
   }
 
   public void setDX(BigDecimal dx)
   {
+    clearAlt();
     this.dx=dx;
   }
 
   public void setDX(double dx)
   {
-    this.dx=BigDecimal.valueOf(dx);
+    setDX(BigDecimal.valueOf(dx));
   }
 
   public void setDY(BigDecimal dy)
   {
+    clearAlt();
     this.dy=dy;
   }
 
   public void setDY(double dy)
   {
-    this.dy=BigDecimal.valueOf(dy);
+    setDY(BigDecimal.valueOf(dy));
   }
 
   public void setXM(BigDecimal xm)
   {
+    clearAlt();
     this.xm=xm;
   }
 
   public void setXM(double xm)
   {
-    this.xm=BigDecimal.valueOf(xm);
+    setXM(BigDecimal.valueOf(xm));
   }
 
   public void setYM(BigDecimal ym)
   {
+    clearAlt();
     this.ym=ym;
   }
 
   public void setYM(double ym)
   {
-    this.ym=BigDecimal.valueOf(ym);
+    setYM(BigDecimal.valueOf(ym));
   }
 
   public boolean isSameArea(MandelAreaSpec o)

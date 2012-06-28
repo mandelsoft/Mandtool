@@ -40,6 +40,7 @@ public class MandelFolderCache extends MandelInventory {
 
   //////////////////////////////////////////////////////////////////////////
   private AbstractFile file;
+  private boolean valid;
   private long timestamp;
 
   public MandelFolderCache(File f) throws IOException
@@ -58,10 +59,17 @@ public class MandelFolderCache extends MandelInventory {
     read();
   }
 
+  public boolean isValid()
+  {
+    return valid;
+  }
+
   final public void read()
   {
+    valid=false;
     try {
       read(file);
+      valid=true;
     }
     catch (IOException io) {
       System.out.println("cannot read cache "+file+": "+io);
@@ -80,6 +88,7 @@ public class MandelFolderCache extends MandelInventory {
       File cachefile=new File(file.getFile().getPath());
       try {
         write(new FileOutputStream(cachefile),cachefile.toString());
+        valid=true;
       }
       finally {
         timestamp=cachefile.lastModified();

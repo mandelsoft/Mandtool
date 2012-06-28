@@ -42,6 +42,7 @@ import com.mandelsoft.mand.tool.mapper.MapperModel;
 import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
+import com.mandelsoft.mand.util.UpstreamColormapSourceFactory;
 import com.mandelsoft.util.Utils;
 import java.awt.event.ActionListener;
 import javax.swing.Timer;
@@ -56,13 +57,14 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
   public String[][] getParameterInfo()
   {
     String[][] info = {
-      // Parameter Name     Kind of Value   Description
-        {"datasource",     "URL",          "a directory containing the config"},
-        {"list",           "list path",    "a list to display"},
-        {"itemwidth",      "int",          "width of galary items"},
-        {"itemheight",     "int",          "height of galary items"},
-        {"framewidth",     "int",          "image browser max size"},
-        {"ticker",         "bool",         "start as ticker"}
+      // Parameter Name       Kind of Value   Description
+        {"datasource",       "URL",          "a directory containing the config"},
+        {"list",             "list path",    "a list to display"},
+        {"itemwidth",        "int",          "width of galary items"},
+        {"itemheight",       "int",          "height of galary items"},
+        {"framewidth",       "int",          "image browser max size"},
+        {"upstreamcolormap", "bool",         "use upstream colormap as default"},
+        {"ticker",           "bool",         "start as ticker"}
     };
     return info;
   }
@@ -98,21 +100,25 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
       String p_maxs=getParameter("framewidth");
       String p_width=getParameter("itemwidth");
       String p_height=getParameter("itemheight");
+      String p_upstream=getParameter("upstreamcolormap");
       String p_ticker=getParameter("ticker");
       URL base=getDocumentBase();
       boolean ticker=false;
+      boolean upstream=false;
 
-      System.out.println("document base is "+base);
-      System.out.println("data source is   "+p_datasource);
-      System.out.println("list is          "+p_listpath);
-      System.out.println("max is           "+p_maxs);
-      System.out.println("width is         "+p_width);
-      System.out.println("height is        "+p_height);
-      System.out.println("ticker is        "+p_ticker);
+      System.out.println("document base is     "+base);
+      System.out.println("data source is       "+p_datasource);
+      System.out.println("list is              "+p_listpath);
+      System.out.println("max is               "+p_maxs);
+      System.out.println("width is             "+p_width);
+      System.out.println("height is            "+p_height);
+      System.out.println("upstream colormap is "+p_upstream);
+      System.out.println("ticker is            "+p_ticker);
       if (p_datasource==null) p_datasource=".";
       if (p_listpath==null) p_listpath="favorites";
 
       ticker=Utils.parseBoolean(p_ticker, false);
+      upstream=Utils.parseBoolean(p_upstream, false);
 
       maxx=400;
       if (p_maxs!=null) {
@@ -161,7 +167,7 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
         GaleryStarter.this.showStatus("setup done");
         System.out.println("setup done");
       }
-      setup(env,model);
+      setup(env,model,upstream);
       if (ticker) {
         timer=new Timer(10000,new ActionListener() {
 
@@ -214,7 +220,8 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
    int height;
    int rows=1;
 
-  public void setup(ToolEnvironment env, MandelListTableModel model) throws IOException
+  public void setup(ToolEnvironment env, MandelListTableModel model,
+                    boolean upstream) throws IOException
   {
     MandelListProxyListModelForTable proxyModel;
 
@@ -231,6 +238,12 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
     panel.setMaxFrame(maxx);
     MandelImage.Factory factory=new MandelImage.Factory(env.getDefaultColormap());
     proxyModel.setFactory(factory);
+    if (upstream) {
+      proxyModel.setColormapSourceFactory(
+        new UpstreamColormapSourceFactory(model.getMandelScanner(),
+                                          env.getDefaultColormap(),
+                                          env.getColormapCache()));
+    }
     add(panel);
   }
 

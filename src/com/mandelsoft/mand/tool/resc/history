@@ -1,3 +1,10 @@
+Dev Version
+   - button to show area on main window for area meta data window
+   - pending work + mandel end derived list
+   - use upstream colormap as default
+   - list selection available for context menus + save images for selection
+   - goto dialog support for files
+
 Version 1.2
    - common ancestor action for mark menu
    - linking for entries in mandel list views
@@ -5,7 +12,7 @@ Version 1.2
    - hand cursor for sensitive areas
    - next fork are down to mark action
    - refined subarea name determination considering available nested areas
-   - multi-area filter for calculation deamon
+   - multi-area filter for calculation daemon
    - area to list
    - mass creation of image files
    - display list size in list title

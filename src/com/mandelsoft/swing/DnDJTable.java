@@ -232,23 +232,19 @@ public class DnDJTable extends IJTable {
       if (e.isPopupTrigger()&&ctxmenu!=null) {
         // find row of click and
         int row=rowAtPoint(e.getPoint());
-        // translate to table model index
-        int modelRow=convertRowIndexToModel(row);
-
         // find column of click and
         int col=columnAtPoint(e.getPoint());
-        // translate to table model index
-        int modelCol=convertColumnIndexToModel(col);
 
-        if (debug) System.out.println("CTX POPUP at "+modelRow+","+modelCol);
-        ctxmenu.handleContextMenu(DnDJTable.this, e, modelRow, modelCol);
+        TableSelection sel=new TableSelection(DnDJTable.this,row,col);
+        if (debug) System.out.println("CTX POPUP at "+sel);
+        ctxmenu.handleContextMenu(DnDJTable.this, e, sel);
       }
     }
   }
 
   public interface ContextMenuHandler {
     void handleContextMenu(JComponent comp, MouseEvent evt,
-                           int row, int col);
+                           Selection sel);
   }
 
   private ContextMenuHandler ctxmenu;

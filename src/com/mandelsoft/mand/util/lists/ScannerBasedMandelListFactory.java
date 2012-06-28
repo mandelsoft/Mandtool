@@ -16,10 +16,14 @@
 
 package com.mandelsoft.mand.util.lists;
 
+import com.mandelsoft.mand.MandelData;
+import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.QualifiedMandelName;
+import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.MandelList;
+import java.io.IOException;
 
 /**
  *
@@ -60,5 +64,23 @@ public abstract class ScannerBasedMandelListFactory implements MandelListFactory
   protected boolean acceptType(QualifiedMandelName n)
   {
     return true;
+  }
+
+  protected boolean hasMandel(QualifiedMandelName n)
+  {
+    MandelHandle h=getScanner().getMandelInfo(n);
+    if (h!=null) {
+      try {
+        MandelData md=h.getInfo();
+        MandelInfo mi=md.getInfo();
+        long nm=mi.getMCnt();
+        long np=mi.getRX()*mi.getRY();
+        if (nm*100/(double)np>0.1) return true;
+      }
+      catch (IOException ex) {
+        // not found
+      }
+    }
+    return false;
   }
 }

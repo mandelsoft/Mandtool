@@ -253,21 +253,22 @@ public class AreaHandler implements Request {
     int sy=req.getSY();
     MandelInfo info=data.getInfo();
     int[][] raster=getRaster();
-    int[] buffer=req.createData();
     boolean found=false;
     int minit=info.getMinIt();
     int maxit=info.getMinIt();
     long mcnt=info.getMCnt();
     long ccnt=info.getMCCnt();
     long numit=info.getNumIt();
-
-
+  //int[] buffer=
+    req.createData();
+    
     for (int x=0; x<nx; x++) {
       for (int y=0; y<ny; y++) {
         int ax=sx+x;
         int ay=sy+y;
         int it=raster[ay][ax];
-        buffer[req.getIndexRel(x, y)]=it;
+        req.setDataRel(x,y,it);
+        //buffer[req.getIndexRel(x, y)]=it;
         if (it==0) {
           found=true;
         }

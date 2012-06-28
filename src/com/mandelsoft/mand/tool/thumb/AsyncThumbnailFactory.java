@@ -16,6 +16,7 @@
 
 package com.mandelsoft.mand.tool.thumb;
 
+import com.mandelsoft.mand.cm.ColormapSourceFactory;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import com.mandelsoft.mand.QualifiedMandelName;
@@ -51,6 +52,16 @@ public class AsyncThumbnailFactory extends AbstractThumbnailFactory {
   {
     this(client);
     this.maxcache=max;
+  }
+
+  public void setColormapSourceFactory(ColormapSourceFactory colmapfac)
+  {
+    queue.setColormapSourceFactory(colmapfac);
+  }
+
+  public ColormapSourceFactory getColormapSourceFactory()
+  {
+    return queue.getColormapSourceFactory();
   }
 
   public void setFactory(MandelImage.Factory factory)

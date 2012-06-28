@@ -29,7 +29,7 @@ public class LeafImagesFactory extends SubAreaFactory {
 
   public LeafImagesFactory(MandelScanner scanner, MandelName basename)
   {
-    super(scanner,basename,"Dead Ends");
+    super(scanner,basename,"Leaf images");
   }
 
   @Override

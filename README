@@ -1,6 +1,9 @@
 Requirements:
   at least JDK 1.6
 
+To compile and run the movie package you need the Xuggler libraries
+(see http://www.xuggle.com/xuggler/).
+
 Setup:
   - create a folder with the contents of the installation archive
   - set the environment variable JAVA_HOME accordingly.

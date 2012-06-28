@@ -17,8 +17,6 @@ package com.mandelsoft.mand.tool;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import javax.swing.JButton;
 import com.mandelsoft.mand.MandelConstants;
@@ -63,55 +61,18 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
   {
     ((SubAreaView)getView()).setRectHandled();
   }
-
-  protected void handleClose()
-  {
-    ((SubAreaView)getView()).handleClose();
-  }
-
   
   ///////////////////////////////////////////////////////////////////////
   // view
   ///////////////////////////////////////////////////////////////////////
 
   protected class SubAreaView extends CreationView {
-    private VisibleRect rect;
     private JButton namebutton;
     private JButton nextnamebutton;
-    private JButton showbutton;
 
     public SubAreaView(QualifiedMandelName name, MandelInfo info)
     {
       super(name, info);
-      getDialog().addWindowListener(new WindowAdapter() {
-
-      @Override
-      public void windowClosing(WindowEvent e)
-      {
-        handleClose();
-      }
-
-      @Override
-      public void windowClosed(WindowEvent e)
-      {
-        System.out.println("closed sub area");
-      }
-    });
-    }
-
-    protected void handleClose()
-    {
-      System.out.println("closing sub area");
-      if (rect!=null) {
-        System.out.println(" discard old rect");
-        rect.discard();
-        if (rect.getName()!=null) {
-          fireMandelAreaEvent(
-                  new MandelAreaEvent(MandelSubAreaCreationDialog.this,
-                                      MandelAreaEvent.MA_UPDATE));
-        }
-        rect=null;
-      }
     }
 
     @Override
@@ -122,8 +83,7 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
                    new NameAction());
       nextnamebutton=createButton("Next", "Determine next free area name for given name",
                    new NextNameAction());
-      showbutton=createButton("Show", "Enable Area View",
-                   new ShowAction());
+      addShowButton("Show sub area", true);
     }
 
     @Override
@@ -191,28 +151,6 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
       {
         determineNextFilename();
       }
-    }
-
-    private class ShowAction implements ActionListener {
-
-      public void actionPerformed(ActionEvent e)
-      {
-        rect.activate(true);
-        updateSlave();
-        rect.setVisible(true);
-      }
-    }
-
-    @Override
-    protected void updateSlave()
-    {
-      System.out.println("update slave");
-      if (rect!=null) updateRect(rect,getInfo());
-    }
-
-    private void updateRect(VisibleRect rect, MandelInfo info)
-    { 
-      getMandelWindowAccess().getMandelImagePane().updateRect(rect,info);
     }
 
     public void setRectHandled()

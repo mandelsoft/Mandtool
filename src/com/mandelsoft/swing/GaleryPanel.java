@@ -77,7 +77,6 @@ public abstract class GaleryPanel<E,M extends ThumbnailListModel<E>> extends GBC
     };
     panel.setBackground(backColor);
     this.model=model;
-    if (model!=null) model.addThumbnailListener(thumblistener);
     renderer=new Renderer();
     list=new DnDJList(model);
     list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
@@ -104,8 +103,12 @@ public abstract class GaleryPanel<E,M extends ThumbnailListModel<E>> extends GBC
   {
     System.out.println("galery item size "+Dimensions.toString(item));
     super.panelBound();
-    if (model!=null && (model instanceof ProxyModel))
-      ((ProxyModel)model).bind();
+    if (model!=null) {
+      model.addThumbnailListener(thumblistener);
+      if (model instanceof ProxyModel) {
+        ((ProxyModel)model).bind();
+      }
+    }
   }
 
   @Override
@@ -113,8 +116,12 @@ public abstract class GaleryPanel<E,M extends ThumbnailListModel<E>> extends GBC
   {
     System.out.println("cleanup galery");
     super.panelUnbound();
-    if (model!=null && (model instanceof ProxyModel))
-      ((ProxyModel)model).unbind();
+    if (model!=null) {
+      if (model instanceof ProxyModel) {
+        ((ProxyModel)model).unbind();
+      }
+      model.removeThumbnailListener(thumblistener);
+    }
   }
 
   protected abstract String getLabel(E elem);
@@ -339,7 +346,7 @@ public abstract class GaleryPanel<E,M extends ThumbnailListModel<E>> extends GBC
     {
       if (e.isPopupTrigger()&&ctxmenu!=null) {
         System.out.println("CTX POPUP at panel");
-        ctxmenu.handleContextMenu(panel, e, -1);
+        ctxmenu.handleContextMenu(panel, e, new ListSelection(list));
       }
     }
   }

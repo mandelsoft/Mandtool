@@ -26,6 +26,13 @@ import java.awt.Graphics;
  * @author Uwe Krueger
  */
 public class Decoration {
+  protected static final int DEFAULT_INSET=10;
+
+  public static final int ALIGN_CENTER=0;
+  public static final int ALIGN_LEFT=-1;
+  public static final int ALIGN_RIGHT=1;
+  public static final int ALIGN_TOP=-1;
+  public static final int ALIGN_BOTTOM=1;
 
   static private String[] fontnames=new String[] {
     "Brush Script MT-18",
@@ -55,16 +62,79 @@ public class Decoration {
   }
 
   //////////////////////////////////////////////////////////////////////////
-  private int INSET=10;
-  private String decoration="by Uwe Krüger";
-  private int dw, dh;
+  protected int h_inset=DEFAULT_INSET;
+  protected int v_inset=DEFAULT_INSET;
+  protected int h_align=ALIGN_RIGHT;
+  protected int v_align=ALIGN_BOTTOM;
+
+
+  protected String decoration="by Uwe Krüger";
+  protected  int dw, dh;
   private Font font;
+  private float size;
+  private Color color=Color.WHITE;
   private boolean showDecoration;
+
+  public Decoration()
+  {
+  }
+
+  public Decoration(String txt)
+  {
+    decoration=txt;
+  }
+
+  public void reset()
+  {
+    dw=dh=0;
+  }
+
+  public int getHAlign()
+  {
+    return h_align;
+  }
+
+  public void setHAlign(int h_align)
+  {
+    this.h_align=h_align;
+  }
+
+  public int getHInset()
+  {
+    return h_inset;
+  }
+
+  public void setHInset(int h_inset)
+  {
+    this.h_inset=h_inset;
+  }
+
+  public int getVAlign()
+  {
+    return v_align;
+  }
+
+  public void setVAlign(int v_align)
+  {
+    this.v_align=v_align;
+  }
+
+  public int getVInset()
+  {
+    return v_inset;
+  }
+
+  public void setVInset(int v_inset)
+  {
+    this.v_inset=v_inset;
+  }
 
   public void setDecoration(String s)
   {
-    decoration=s;
-    dw=dh=0;
+    if (s==null||decoration==null||!s.equals(decoration)) {
+      decoration=s;
+      reset();
+    }
   }
 
   public String getDecoration()
@@ -79,37 +149,118 @@ public class Decoration {
 
   public boolean showDecoration()
   {
-    return showDecoration;
+    return showDecoration && color.getTransparency()!=0;
+  }
+
+  public void setAlpha(int a)
+  {
+    color=new Color(color.getRed(),color.getGreen(),color.getBlue(),a);
+  }
+
+  public void setFontSize(float s)
+  {
+    if (font!=null) {
+      font=font.deriveFont(s);
+    }
+    size=s;
+    reset();
+  }
+
+  public void setColor(Color color)
+  {
+    this.color=color;
+  }
+
+  public Color getColor()
+  {
+    return color;
+  }
+
+  public void setFont(Font f)
+  {
+    font=f;
+    size=f.getSize();
+  }
+
+  public void setFont(String f)
+  {
+    font=Font.decode(f);
+  }
+  
+  public Font getFont()
+  {
+    return font;
+  }
+
+  protected int getX(int w, int h, int dw, int dh)
+  {
+    switch (h_align) {
+      case ALIGN_LEFT:   return h_inset;
+      case ALIGN_RIGHT:  return w-h_inset-dw;
+      case ALIGN_CENTER: return (w-dw)/2+h_inset;
+    }
+    throw new IllegalArgumentException("illegal horizontal alignment");
+  }
+
+  protected int getY(int w, int h, int dw, int dh)
+  {
+    switch (v_align) {
+      case ALIGN_TOP:    return v_inset+dh;
+      case ALIGN_BOTTOM: return h-v_inset;
+      case ALIGN_CENTER:
+        System.out.println("h="+h+",dh="+dh+", inset="+v_inset);
+        return (h+dh)/2+v_inset;
+    }
+    throw new IllegalArgumentException("illegal vertical alignment");
+  }
+
+  protected void draw(Graphics g, int w, int h, int dw, int dh)
+  {
+    int dx=getX(w,h,dw,dh);
+    int dy=getY(w,h,dw,dh);
+
+    //System.out.println("decoration: "+dx+","+dy+" "+decoration);
+
+    g.drawString(decoration, dx, dy);
+    //g.drawLine(dx, dy, dx+dw, dy);
+    //g.drawLine(dx, dy-dh, dx+dw, dy-dh);
   }
 
   public void paintDecoration(Graphics g, int w, int h)
   {
     if (decoration!=null) {
-      if (dw==0) {
-        if (font==null) {
-          font=getAnnotationFont(g);
-        }
+      prepare(g);
+      setup(g);
+      draw(g,w,h, dw,dh);
+//        System.out.println("decoration bounds "+g.getClipBounds().getWidth()
+//                                           +","+g.getClipBounds().getHeight());
+    }
+  }
+
+  public void setup(Graphics g)
+  {
+    prepare(g);
+    g.setColor(color);
+    g.setFont(font);
+  }
+
+  public void prepare(Graphics g)
+  {
+    if (dw==0) {
+      if (font==null) {
+        font=getAnnotationFont(g);
+        if (size!=0) font=font.deriveFont(size);
+        else size=font.getSize();
+      }
 //          String[] f=GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
 //          if (f!=null) for (String s:f) {
 //            System.out.println("  "+s);
 //          }
-        g.setFont(font);
-        FontMetrics metrics=g.getFontMetrics();
-        // get the height of a line of text in this font and render context
-        dh=metrics.getHeight();
-        // get the advance of my text in this font and render context
-        dw=metrics.stringWidth(decoration);
-      }
-      else g.setFont(font);
-      int dx=w-INSET-dw;
-      int dy=h-INSET;
-
-      //System.out.println("decoration: "+dx+","+dy+" "+decoration);
-      g.setColor(Color.WHITE);
-      g.drawString(decoration, dx, dy);
-
-//        System.out.println("decoration bounds "+g.getClipBounds().getWidth()
-//                                           +","+g.getClipBounds().getHeight());
+      FontMetrics metrics=g.getFontMetrics(font);
+      // get the height of a line of text in this font and render context
+      dh=metrics.getAscent();
+      // get the advance of my text in this font and render context
+      dw=metrics.stringWidth(decoration);
     }
   }
 

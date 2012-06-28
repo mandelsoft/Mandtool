@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import javax.swing.JDialog;
 import com.mandelsoft.mand.image.MandelImage;
 import com.mandelsoft.mand.util.MandelListFolder;
+import com.mandelsoft.mand.util.UpstreamColormapSourceFactory;
 
 /**
  *
@@ -46,6 +47,13 @@ public class MandelListFolderGaleryDialog extends MandelDialog {
     model.setModifiable(!owner.getEnvironment().isReadonly());
     MandelImage.Factory factory=new MandelImage.Factory(owner.getColormapModel());
     model.setFactory(factory);
+    MandelImagePanel mp=owner.getMandelImagePane();
+    if (mp!=null && mp.getParentColormapModel().isSet()) {
+      model.setColormapSourceFactory(
+        new UpstreamColormapSourceFactory(model.getMandelScanner(),
+                                          owner.getColormapModel(),
+                                 owner.getEnvironment().getColormapCache()));
+    }
 
     MandelListFolderGaleryPanel p=new MandelListFolderGaleryPanel(model);
     add(p);

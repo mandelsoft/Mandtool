@@ -47,6 +47,7 @@ public class TablePanel<T extends TableModel>
   private String title;
   private ModelListener modellistener;
   private boolean showsize;
+  private TableSelection selection;
 
   protected TablePanel()
   {
@@ -103,7 +104,7 @@ public class TablePanel<T extends TableModel>
     if (label!=null) {
       if (showsize) {
         int c=getModel().getRowCount();
-        label.setText(title+"("+c+(c==1?" entry)":" entries)"));
+        label.setText(title+"("+com.mandelsoft.util.Utils.sizeString(c,"entry")+")");
       }
       else {
         label.setText(title);
@@ -177,6 +178,7 @@ public class TablePanel<T extends TableModel>
       c=new JLabel("height");
     }
     table=createTable();
+    selection=new TableSelection(table);
     setupTable(table);
     if (model!=null) setModel(model);
     table.getSelectionModel().addListSelectionListener(
@@ -215,26 +217,11 @@ public class TablePanel<T extends TableModel>
       {
         //System.out.println("check table ctx popup event");
         if (e.isPopupTrigger() && ctxmenu!=null) {
-          // find row of click and
-          int row=table.rowAtPoint(e.getPoint());
-          // translate to table model index
-          
-          int modelRow;
-          
-          if (row>=0) modelRow=table.convertRowIndexToModel(row);
-          else        modelRow=-1;
-
-          // find column of click and
-          int col=table.columnAtPoint(e.getPoint());
-          // translate to table model index
-          int modelCol;
-          if (col>=0) modelCol=table.convertColumnIndexToModel(col);
-          else        modelCol=-1;
-
+          selection.setLeadSelection(e);
           System.out.println("CTX POPUP at "+e.getPoint().getX()+","+
                                              e.getPoint().getY()+" ("
-                                             +modelRow+","+modelCol+")");
-          ctxmenu.handleContextMenu(table, e, modelRow, modelCol);
+                                             +selection+")");
+          ctxmenu.handleContextMenu(table, e, selection);
         }
       }
     });
@@ -262,7 +249,7 @@ public class TablePanel<T extends TableModel>
     table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
   }
 
-  protected void setSelection(int row, int column)
+  protected void setSelection(TableSelection s)
   {
 //    setSelection(row);
   }
@@ -332,8 +319,9 @@ public class TablePanel<T extends TableModel>
 //                                    "@"+col);
       index=ix2;
       if (index<0) return;
-      index=table.convertRowIndexToModel(index);
-      setSelection(index,table.convertColumnIndexToModel(col));
+      selection.setLeadSelection(index,col);
+      System.out.println("SELECTION: "+selection);
+      setSelection(selection);
     }
   }
 
@@ -407,7 +395,8 @@ public class TablePanel<T extends TableModel>
     {
       if (e.isPopupTrigger()&&ctxmenu!=null) {
         System.out.println("CTX POPUP at panel");
-        ctxmenu.handleContextMenu(TablePanel.this, e, -1, -1);
+        ctxmenu.handleContextMenu(TablePanel.this, e, 
+                                  new TableSelection(table,-1, -1));
       }
     }
   }

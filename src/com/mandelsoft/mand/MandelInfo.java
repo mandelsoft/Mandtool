@@ -80,18 +80,24 @@ public class MandelInfo extends MandelSpec
     this.hidden=hidden;
   }
 
-
   public MandelInfo(MandelInfo mi)
   {
-    this(mi.getXM(), mi.getYM(),
-         mi.getDX(), mi.getDY(),
-         mi.getRX(), mi.getRY(),
-         mi.getLimitIt(),mi.hidden);
-    setName(mi.getName());
-    setLocation(mi.getLocation());
-    setCreator(mi.getCreator());
-    setSite(mi.getSite());
-    setKeywords(mi.getKeywords());
+    this(mi,mi);
+  }
+
+  public MandelInfo(MandelSpec spec, MandelInfo mi)
+  {
+    this(spec.getXM(), spec.getYM(),
+         spec.getDX(), spec.getDY(),
+         spec.getRX(), spec.getRY(),
+         spec.getLimitIt(),mi==null?false:mi.hidden);
+    if (mi!=null) {
+      setName(mi.getName());
+      setLocation(mi.getLocation());
+      setCreator(mi.getCreator());
+      setSite(mi.getSite());
+      setKeywords(mi.getKeywords());
+    }
   }
 
   private void setup()

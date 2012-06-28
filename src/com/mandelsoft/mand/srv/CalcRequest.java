@@ -15,7 +15,10 @@
  */
 package com.mandelsoft.mand.srv;
 
-import com.mandelsoft.mand.*;
+import com.mandelsoft.mand.MandelSpec;
+import com.mandelsoft.mand.calc.AreaCalculator;
+import com.mandelsoft.mand.calc.CalculationContext;
+import com.mandelsoft.mand.calc.SimpleAreaCalculator;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -27,34 +30,14 @@ import com.mandelsoft.util.StateChangeSupport;
  *
  * @author Uwe Krueger
  */
-public class CalcRequest extends MandelSpec implements Request {
+public class CalcRequest extends CalculationContext implements Request {
+  static private AreaCalculator calc=new SimpleAreaCalculator();
+
   static private final int VERSION=1;
 
   private int version; // found version
-
   private long reqid;
-
-  // basic request info
-  private int sx;          // start x pixel
-  private int sy;          // start y pixel
-  private int nx;          // number x pixels
-  private int ny;          // number y pixels
-  
-
-  // content relted image information
-  private int minit;   // minimum iteration
-  private int maxit;   // maximum iterations
-  private long numit;  // number of total iteration steps
-  private long mtime;  // calculation time in milli seconds
-
-  // internal calculation related information
-  private long ccnt;    // calculated number pixels
-  private long mcnt;    // number of mandel set pixel
-  
   private int[] data;   // iteration data
-
-  // temporary
-  private PixelIterator iter;
 
   static volatile long lastid=0;
 
@@ -72,10 +55,10 @@ public class CalcRequest extends MandelSpec implements Request {
   {
     this();
     setSpec(spec);
-    this.sx=sx;
-    this.sy=sy;
-    this.nx=nx;
-    this.ny=ny;
+    setSX(sx);
+    setSY(sy);
+    setNX(nx);
+    setNY(ny);
   }
 
   public CalcRequest(MandelSpec spec, int sx, int sy,
@@ -91,74 +74,10 @@ public class CalcRequest extends MandelSpec implements Request {
     return reqid;
   }
 
-  public int getSX()
-  {
-    return sx;
-  }
-
-  public int getSY()
-  {
-    return sy;
-  }
-
-  public int getNX()
-  {
-    return nx;
-  }
-
-  public int getNY()
-  {
-    return ny;
-  }
-
-  
-
-  public int getMinIt()
-  {
-    return minit;
-  }
-
-  public int getMaxIt()
-  {
-    return maxit;
-  }
-
-  // content related data
-
-  public long getNumIt()
-  {
-    return numit;
-  }
-
-  public long getMTime()
-  {
-    return mtime;
-  }
-
-  public long getCCnt()
-  {
-    return ccnt;
-  }
-
-  public long getMCnt()
-  {
-    return mcnt;
-  }
 
   public int[] getData()
   {
     return data;
-  }
-
-  public PixelIterator getPixelIterator()
-  {
-    if (iter==null) {
-      iter=MandIter.createPixelIterator(getXMin(), getYMax(),
-                                        getDX(), getDY(),
-                                        getRX(), getRY(),
-                                        getLimitIt());
-    }
-    return iter;
   }
 
   private void setReqId(long id)
@@ -166,76 +85,9 @@ public class CalcRequest extends MandelSpec implements Request {
     reqid=id;
   }
 
-  public void setSX(int sx)
-  {
-    this.sx=sx;
-  }
-
-  public void setSY(int sy)
-  {
-    this.sy=sy;
-  }
-
-  public void setNX(int nx)
-  {
-    this.nx=nx;
-  }
-
-  public void setNY(int ny)
-  {
-    this.ny=ny;
-  }
-
-  // content related data
-  
-  public void setMinIt(int minit)
-  {
-    this.minit=minit;
-  }
-
-  public void setMaxIt(int maxit)
-  {
-    this.maxit=maxit;
-  }
-
-  public void setNumIt(long numit)
-  {
-    this.numit=numit;
-  }
-
-  public void setMTime(long mtime)
-  {
-    this.mtime=mtime;
-  }
-
-  public void setCCnt(long ccnt)
-  {
-    this.ccnt=ccnt;
-  }
-
-  public void setMCnt(long mcnt)
-  {
-    this.mcnt=mcnt;
-  }
-
   public void setData(int[] data)
   {
     this.data=data;
-  }
-
-
-  public void setPixelIterator(PixelIterator i)
-  {
-    this.iter=i;
-  }
-
-  public boolean isSameSpec(CalcRequest o)
-  {
-    return getSX()==o.getSX() &&
-           getSY()==o.getSY() &&
-           getNX()==o.getNX() &&
-           getNY()==o.getNY() &&
-           isSameSpec(getSpec());
   }
 
   ///////////////////////////////////////////////////////////////
@@ -244,17 +96,25 @@ public class CalcRequest extends MandelSpec implements Request {
 
   public int getIndexAbs(int x, int y)
   {
-    return (x-sx)+(y-sy)*nx;
+    return (x-getSX())+(y-getSY())*getNX();
   }
 
   public int getIndexRel(int x, int y)
   {
-    return x+y*nx;
+    return x+y*getNX();
   }
 
-  public int getDataAbs(int x, int y)
+  public void createData()
   {
-    return data[getIndexAbs(x,y)];
+    if (data==null) {
+      data=new int[getNX()*getNY()];
+    }
+  }
+
+  @Override
+  protected void resetData()
+  {
+    data=null;
   }
 
   public int getDataRel(int x, int y)
@@ -262,51 +122,15 @@ public class CalcRequest extends MandelSpec implements Request {
     return data[getIndexRel(x,y)];
   }
 
-  public int[] createData()
+  @Override
+  public void setDataRel(int x, int y, int it)
   {
-    if (data==null) {
-      data=new int[nx*ny];
-    }
-    return data;
+    data[getIndexRel(x,y)]=it;
   }
-  
+
   public void calc()
-  { PixelIterator pi=getPixelIterator();
-    int x,y,it;
-    long time=System.currentTimeMillis();
-    createData();
-    minit=getLimitIt();
-    for (y=0; y<ny; y++) {
-      pi.setY(y+sy);
-      for (x=0; x<nx; x++) {
-        pi.setX(x+sx);
-        handle(pi,x,y);
-      }
-    }
-    setMTime(System.currentTimeMillis()-time);
-  }
-
-  private int handle(PixelIterator pi, int x, int y)
-  { int ix=getIndexRel(x,y);
-    int it=data[ix];
-
-    if (it==0) {
-      int i=pi.iter();
-      ccnt++;
-      if (i>getLimitIt()) {
-          data[ix]=it=0;
-          mcnt++;
-          i--;
-      }
-      else {
-        data[ix]=it=i;
-      }
-      if (i<minit) minit=i;
-      if (i>maxit) maxit=i;
-      numit+=i;
-    }
-    else numit+=it;
-    return it;
+  {
+    calc.calc(this);
   }
 
   ///////////////////////////////////////////////////////////////
@@ -352,17 +176,17 @@ public class CalcRequest extends MandelSpec implements Request {
     dos.writeInt(getRY());
     dos.writeInt(getLimitIt());
 
-    dos.writeInt(sx);
-    dos.writeInt(sy);
-    dos.writeInt(nx);
-    dos.writeInt(ny);
+    dos.writeInt(getSX());
+    dos.writeInt(getSY());
+    dos.writeInt(getNX());
+    dos.writeInt(getNY());
 
-    dos.writeInt(minit);
-    dos.writeInt(maxit);
-    dos.writeLong(numit);
-    dos.writeLong(mtime);
-    dos.writeLong(mcnt);
-    dos.writeLong(ccnt);
+    dos.writeInt(getMinIt());
+    dos.writeInt(getMaxIt());
+    dos.writeLong(getNumIt());
+    dos.writeLong(getMTime());
+    dos.writeLong(getMCnt());
+    dos.writeLong(getCCnt());
 
     if (data==null) dos.writeInt(0);
     else {
@@ -401,17 +225,17 @@ public class CalcRequest extends MandelSpec implements Request {
     setRY(dis.readInt());
     setLimitIt(dis.readInt());
 
-    sx=dis.readInt();
-    sy=dis.readInt();
-    nx=dis.readInt();
-    ny=dis.readInt();
+    setSX(dis.readInt());
+    setSY(dis.readInt());
+    setNX(dis.readInt());
+    setNY(dis.readInt());
 
-    minit=dis.readInt();
-    maxit=dis.readInt();
-    numit=dis.readLong();
-    mtime=dis.readLong();
-    mcnt=dis.readLong();
-    ccnt=dis.readLong();
+    setMinIt(dis.readInt());
+    setMaxIt(dis.readInt());
+    setNumIt(dis.readLong());
+    setMTime(dis.readLong());
+    setMCnt(dis.readLong());
+    setCCnt(dis.readLong());
 
     int len=dis.readInt();
 

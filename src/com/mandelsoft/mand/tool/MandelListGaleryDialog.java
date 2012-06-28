@@ -24,6 +24,7 @@ import javax.swing.event.TreeModelEvent;
 import com.mandelsoft.mand.image.MandelImage;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
+import com.mandelsoft.mand.util.UpstreamColormapSourceFactory;
 import com.mandelsoft.swing.AbstractTreeModelListener;
 
 /**
@@ -31,7 +32,8 @@ import com.mandelsoft.swing.AbstractTreeModelListener;
  * @author Uwe Krueger
  */
 public class MandelListGaleryDialog extends MandelDialog {
-  private MandelListProxyListModelForTable model;
+  private MandelListProxyListModelForTable pmodel;
+  private AbstractMandelListListModel model;
   private Listener listener;
   private MandelListFolderTreeModel fmodel;
   private MandelListFolder folder;
@@ -51,11 +53,36 @@ public class MandelListGaleryDialog extends MandelDialog {
   public MandelListGaleryDialog(MandelWindowAccess owner,
                             MandelListTableModel tmodel, String name)
   {
+    this(owner,new MandelListProxyListModelForTable(tmodel),name);
+    pmodel=(MandelListProxyListModelForTable)model; // remember local wrapper
+    pmodel.setModifiable(!owner.getEnvironment().isReadonly());
+  }
+
+  public MandelListGaleryDialog(MandelWindowAccess owner,
+                            MandelList tmplist, String name)
+  {
+    this(owner,new DefaultMandelListListModel(tmplist,
+                          owner.getEnvironment().getImageDataScanner()),name);
+  }
+
+  public MandelListGaleryDialog(MandelWindowAccess owner,
+                            AbstractMandelListListModel lmodel, String name)
+  {
     super(owner,name);
-    model=new MandelListProxyListModelForTable(tmodel);
-    model.setModifiable(!owner.getEnvironment().isReadonly());
+    model=lmodel;
     MandelImage.Factory factory=new MandelImage.Factory(owner.getColormapModel());
     model.setFactory(factory);
+    MandelImagePanel mp=owner.getMandelImagePane();
+    if (mp!=null && mp.getParentColormapModel().isSet()) {
+      model.setColormapSourceFactory(
+        new UpstreamColormapSourceFactory(model.getMandelScanner(),
+                                          mp.getColormapModel(),
+                                owner.getEnvironment().getColormapCache()));
+      System.out.println("-> galery with upstream colormap");
+    }
+    else {
+      System.out.println("-> galery with main colormap");
+    }
 
     galery=new MandelListGaleryPanel(model);
     if (owner.getMandelImagePane()!=null) {
@@ -95,7 +122,7 @@ public class MandelListGaleryDialog extends MandelDialog {
   public void dispose()
   {
     System.out.println("close galery");
-    model.setModel(null);
+    if (pmodel!=null) pmodel.setModel(null); // cleanup local wrapper model
     getEnvironment().getMandelListFolderTreeModel().removeMandelListFolderTreeModelListener(
                                            listener);
     getEnvironment().removeEnvironmentListener(listener);

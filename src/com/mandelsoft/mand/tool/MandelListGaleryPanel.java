@@ -20,15 +20,14 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.tool.ctx.MandelListContextMenuHandler;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.DnDJList;
+import com.mandelsoft.swing.Selection;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
@@ -172,17 +171,10 @@ public class MandelListGaleryPanel
     }
 
     @Override
-    public void handleContextMenu(JComponent comp, MouseEvent evt, int index)
-    {
-      super.handleContextMenu(comp,evt,index); // transform parameter type
-                                               // int to Integer !!!!!!!!
-    }
-
-    @Override
-    protected JPopupMenu createItemContextMenu(Integer index)
+    protected JPopupMenu createItemContextMenu(Selection select)
     {
       JMenuItem it;
-      JPopupMenu menu=super.createItemContextMenu(index);
+      JPopupMenu menu=super.createItemContextMenu(select);
       if (list.getVisibleRowCount()==1 &&
           scrollPane.getHorizontalScrollBar().isVisible()) {
         if (menu==null) {

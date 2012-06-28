@@ -104,6 +104,25 @@ public class MandUtils extends MandArith {
     return found;
   }
 
+  public static MandelHandle lookupColormap(MandelScanner scan, MandelName n)
+  {
+    MandelHandle cm=null;
+
+    while (cm==null && n!=null) {
+      Set<MandelHandle> set=scan.getMandelHandles(n);
+      if (set!=null) {
+        for (MandelHandle h:set) {
+          if (h.getHeader().hasColormap()) {
+            cm=h;
+            if (h.getName().getQualifier()==null) break;
+          }
+        } // for set
+      }
+      n=n.getParentName();
+    }
+    return cm;
+  }
+
   public static File mapFile(AbstractFile f, String dstSuf, File d)
   {
     String n=f.getName();
@@ -206,7 +225,7 @@ public class MandUtils extends MandArith {
       return ((ContextMandelScanner)scan).hasSubNames(n,f);
     }
     else {
-      return MandelScannerUtils.hasSubNames(n, null, scan);
+      return MandelScannerUtils.hasSubNames(n, null, scan, f);
     }
   }
 
@@ -357,6 +376,17 @@ public class MandUtils extends MandArith {
 
     info.setDX(round(info.getDX(),info.getDX(),info.getRX(),r));
     info.setDY(round(info.getDY(),info.getDY(),info.getRY(),r));
+  }
+
+  static public int getMagnification(MandelInfo i)
+  {
+    BigDecimal d=div(i.getDY(),3.0);  // initial size of typical root
+    int m=0;
+    while (d.compareTo(BigDecimal.ONE)<0) {
+      d=d.scaleByPowerOfTen(1);
+      m++;
+    }
+    return m;
   }
 
   static public MandelInfo createRoot()

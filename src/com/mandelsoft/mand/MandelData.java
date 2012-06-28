@@ -317,15 +317,15 @@ public class MandelData extends Command implements MandelConstants {
                           colormap.getSize()+"!="+mapping.getTargetSize());
       }
     }
-    else {
+//    else {
       this.colormap=colormap;
-      if (colormap!=null && colormap.getSize()>=info.getTargetSize() &&
-          mapping==null) {
-        System.out.println("create identity mapping");
-        setMapping(new IdentityMapper().createMapping(raster, colormap.getSize()));
-      }
+//      if (colormap!=null && colormap.getSize()>=info.getTargetSize() &&
+//          mapping==null) {
+//        System.out.println("create identity mapping");
+//        setMapping(new IdentityMapper().createMapping(raster, colormap.getSize()));
+//      }
       setModified(true);
-    }
+//    }
   }
 
   public Colormap resizeColormap(ResizeMode mode, int size)

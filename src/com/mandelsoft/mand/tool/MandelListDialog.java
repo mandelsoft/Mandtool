@@ -18,6 +18,7 @@ package com.mandelsoft.mand.tool;
 
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.util.ChangeEvent;
+import com.mandelsoft.util.Utils;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JDialog;
@@ -56,7 +57,7 @@ public class MandelListDialog extends MandelDialog {
   protected void updateTitle()
   {
     int c=panel.getModel().getRowCount();
-    setTitle(title+" ("+c+(c==1?" entry":" entries)"));
+    setTitle(title+" ("+Utils.sizeString(c,"entry")+")");
   }
 
   @Override

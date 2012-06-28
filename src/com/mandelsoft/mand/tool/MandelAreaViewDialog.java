@@ -42,8 +42,12 @@ import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
+import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
+import com.mandelsoft.swing.BufferedComponent.RectModifiedEvent;
+import com.mandelsoft.swing.BufferedComponent.RectModifiedEventListener;
+import com.mandelsoft.swing.BufferedComponent.VisibleRect;
 import com.mandelsoft.swing.DataField;
 import com.mandelsoft.swing.GBC;
 import com.mandelsoft.swing.GBCPanel;
@@ -51,12 +55,13 @@ import com.mandelsoft.swing.NumberField;
 import com.mandelsoft.swing.TextField;
 import com.mandelsoft.swing.Utils;
 import com.mandelsoft.swing.WindowControlAction;
+import java.awt.Component;
 
 /**
  *
  * @author Uwe Krueger
  */
-public class MandelAreaViewDialog extends MandelDialog {
+public abstract class MandelAreaViewDialog extends MandelDialog {
 
   static public boolean isReadonly(MandelWindowAccess owner, AbstractFile f,
                                    QualifiedMandelName name)
@@ -71,6 +76,7 @@ public class MandelAreaViewDialog extends MandelDialog {
   ///////////////////////////////////////////////////////////////////////
   public  class MandelAreaView extends GBCPanel {
     protected QualifiedMandelName qname;
+    protected VisibleRect rect;
     private boolean inupdate;
     private MandelInfo info;    // core data
     protected MandelData data;  // optional information
@@ -83,6 +89,8 @@ public class MandelAreaViewDialog extends MandelDialog {
     private PropertyChangeListener updateListener;
     protected NumberField limitfield;
     protected JTextField infofield;
+
+    protected JButton    showbutton;
 
     public MandelAreaView(QualifiedMandelName name, MandelInfo info, boolean change,
                                                         boolean readonly)
@@ -114,6 +122,15 @@ public class MandelAreaViewDialog extends MandelDialog {
     public MandelAreaView(boolean change)
     {
       this(null, new MandelInfo(), change, !change);
+    }
+
+    @Override
+    protected void panelUnbound()
+    {
+      super.panelUnbound();
+      if (rect!=null) {
+        rect.discard();
+      }
     }
 
     public void setName(QualifiedMandelName name)
@@ -177,6 +194,16 @@ public class MandelAreaViewDialog extends MandelDialog {
       return data;
     }
 
+    public QualifiedMandelName getQualifiedName()
+    {
+      return qname;
+    }
+
+    public boolean isChangeable()
+    {
+      return change;
+    }
+    
     @Override
     protected void adjustBorderArea(Rectangle rect)
     {
@@ -369,7 +396,7 @@ public class MandelAreaViewDialog extends MandelDialog {
       field.setEditable(change);
       //field.setEnabled(change);
       field.setHorizontalAlignment(JTextField.TRAILING);
-      field.setColumns(15);
+      field.setColumns(field_length);
 
       if (up!=null) {
         field.addActionListener(up);
@@ -386,7 +413,7 @@ public class MandelAreaViewDialog extends MandelDialog {
 
     protected JTextField createInfoField(String name, String value)
     {
-      return createInfoField(name, value, 15);
+      return createInfoField(name, value, field_length);
     }
 
     protected JTextField createInfoField(String name, String value, int len)
@@ -400,6 +427,22 @@ public class MandelAreaViewDialog extends MandelDialog {
       return field;
     }
 
+    private static final int LEN_1=60;
+    private static final int LEN_2=15;
+
+    private int field_length=LEN_1;
+
+    protected void updateFieldLength(int len)
+    {
+      if (field_length==len) return;
+      field_length=len;
+      for (Component c:getComponents()) {
+        if (c instanceof JTextField) {
+          ((JTextField)c).setColumns(len);
+        }
+      }
+    }
+
     protected void addField(JLabel label, JComponent field)
     {
       label.setLabelFor(field);
@@ -407,6 +450,7 @@ public class MandelAreaViewDialog extends MandelDialog {
       add(label, new GBC(col*2, row[col]).setWeight(0, 0).setAnchor(GBC.WEST));
       add(field,
             new GBC(col*2+1, row[col]++).setWeight(100, 10).setLeftInset(10));
+      if (col>0 && field_length==LEN_1) updateFieldLength(LEN_2);
     }
 
     protected void setupField(JTextField field, String name)
@@ -621,6 +665,59 @@ public class MandelAreaViewDialog extends MandelDialog {
       }
     }
 
+    ////////////////////////////////////////////////////////////////////
+    // prepare show
+    ////////////////////////////////////////////////////////////////////
+
+    private class ModifiedListener implements RectModifiedEventListener {
+      public void rectModified(RectModifiedEvent e)
+      {
+        MandelInfo info=getInfo();
+        System.out.println("info is "+info);
+        updateInfo(info,rect._getRect());
+        MandUtils.round(info);
+        setInfo(info);
+      }
+    }
+
+    protected String getRectLabel()
+    {
+      QualifiedMandelName n=getQualifiedName();
+      if (n!=null) return n.toString();
+      return getTitle();
+    }
+
+    protected void addShowButton(String help, boolean subst)
+    {
+       showbutton=createButton("Show", help, new ShowAction(subst));
+    }
+
+    private class ShowAction implements ActionListener {
+      private boolean subst;
+
+      public ShowAction(boolean subst)
+      {
+        this.subst=subst;
+      }
+
+      public void actionPerformed(ActionEvent e)
+      {
+        if (rect==null) {
+          String label=getRectLabel();
+          rect=getMandelWindowAccess().getMandelImagePane().getImagePane().
+                createRect(label,label);
+          rect.addRectModifiedEventListener(new ModifiedListener());
+          rect.setFixed(!isChangeable());
+        }
+        // getMandelWindowAccess().getMandelImagePane().hideSubRects();
+        rect.activate(subst);
+        updateSlave();
+        rect.setVisible(true);
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////
+
     protected void setupFields()
     {
       createField("area center X", "XM");
@@ -652,7 +749,19 @@ public class MandelAreaViewDialog extends MandelDialog {
 
     protected void updateSlave()
     {
+      System.out.println("update slave");
       if (qname!=null && infofield!=null) infofield.setText(getInfoString());
+      if (rect!=null) updateRect(rect,getInfo());
+    }
+
+    protected void updateRect(VisibleRect rect, MandelInfo info)
+    {
+      getMandelWindowAccess().getMandelImagePane().updateRect(rect,info);
+    }
+
+    synchronized public void updateInfo(MandelInfo info, Rectangle rect)
+    {
+      getMandelWindowAccess().getMandelImagePane().updateInfo(info, rect);
     }
 
     class UpdateListener implements PropertyChangeListener {
@@ -949,5 +1058,4 @@ public class MandelAreaViewDialog extends MandelDialog {
       }
     }
   }
-
 }

@@ -74,6 +74,7 @@ import com.mandelsoft.swing.ScaleAdapter;
 import com.mandelsoft.swing.ScaleEvent;
 import com.mandelsoft.swing.ScaleEventListener;
 import com.mandelsoft.swing.TablePanel;
+import com.mandelsoft.swing.TableSelection;
 import com.mandelsoft.util.Utils;
 import java.awt.Graphics;
 import java.awt.event.ComponentAdapter;
@@ -601,13 +602,15 @@ public class ImageControl extends ControlDialog {
     }
 
     @Override
-    protected void setSelection(int index, int col)
+    protected void setSelection(TableSelection sel)
     {
       try {
-        AbstractFile file=getModel().getFile(index);
-        if (debug) System.out.println("model index: "+index+": "+file);
+        AbstractFile file=getModel().getFile(sel.getLeadSelection());
+        if (debug) {
+          System.out.println("model index: "+sel.getLeadSelection()+": "+file);
+        }
         if (file==null) {
-          filename.setFilename(getModel().getName(index).getName());
+          filename.setFilename(getModel().getName(sel.getLeadSelection()).getName());
         }
         else {
           filename.setFilename(file.toString());
@@ -908,6 +911,8 @@ public class ImageControl extends ControlDialog {
     private JComboBox selection;
     private JComboBox proportion;
 
+    private JCheckBox parent_colormap;
+
     private JCheckBox autoshow_info;
     private JCheckBox automark_keyarea;
     private JCheckBox automark_fork;
@@ -921,6 +926,8 @@ public class ImageControl extends ControlDialog {
       decoration=createCheckbox(row++,mp.getDecorationModel());
       ////////////
       fullareanames=createCheckbox(row++,mp.getFullAreaNamesModel());
+       ////////////
+      parent_colormap=createCheckbox(row++,mp.getParentColormapModel());
       ////////////
       autoshow_info=createCheckbox(row++,mp.getAutoShowInfoModel());
       ////////////

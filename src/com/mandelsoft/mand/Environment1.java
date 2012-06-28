@@ -30,6 +30,7 @@ import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.cm.Colormap;
 import com.mandelsoft.mand.cm.ColormapModel;
 import com.mandelsoft.mand.cm.ColormapModel.ResizeMode;
+import com.mandelsoft.mand.cm.ColormapSource;
 import com.mandelsoft.mand.image.MandelAreaImage;
 import com.mandelsoft.mand.image.MandelImage;
 import com.mandelsoft.mand.mapping.Mapper;
@@ -57,7 +58,7 @@ import com.mandelsoft.util.Utils;
 public class Environment1 implements MandelConstants  {
   static public boolean debug=false;
 
-  public static class FileInfo {
+  public static class FileInfo implements ColormapSource {
     private Colormap cm;
 
     public Colormap getColormap()
@@ -184,13 +185,16 @@ public class Environment1 implements MandelConstants  {
         if (defcolormap==null) {
           System.err.println("colormap "+cmname+" not found");
         }
+        else {
+          System.out.println("default colormap is "+cmname);
+        }
       }
       catch (IOException io) {
         System.err.println("cannot read colormap "+cmname);
       }
     }
     else {
-      if (debug) System.out.println("no default colormap");
+      System.out.println("no default colormap");
     }
   }
   
@@ -987,7 +991,7 @@ public class Environment1 implements MandelConstants  {
   }
 
   public MandelAreaImage getMandelImage(MandelName name, ResizeMode mode,
-                                    Colormap cm)
+                                    ColormapSource cm)
                      throws IOException
   { return getMandelImage(name,mode,cm,null);
   }
@@ -1000,14 +1004,14 @@ public class Environment1 implements MandelConstants  {
   }
 
   public MandelAreaImage getMandelImage(MandelName name, ResizeMode mode,
-                                    Colormap cm, Mapper m)
+                                    ColormapSource cm, Mapper m)
                      throws IOException
   {
     return getMandelImage(name,mode,cm,m,null);
   }
 
   public MandelAreaImage getMandelImage(MandelName name, ResizeMode mode,
-                                    Colormap cm, Mapper m, FileInfo info)
+                                    ColormapSource cm, Mapper m, FileInfo info)
                      throws IOException
   { MandelHandle h=getMandelImageData(name);
     if (h==null) {
@@ -1028,7 +1032,7 @@ public class Environment1 implements MandelConstants  {
   }
 
   public MandelAreaImage getMandelImage(QualifiedMandelName name, ResizeMode mode,
-                                    Colormap cm)
+                                    ColormapSource cm)
                      throws IOException
   { return getMandelImage(name,mode, cm,null);
   }
@@ -1042,14 +1046,14 @@ public class Environment1 implements MandelConstants  {
   }
 
   public MandelAreaImage getMandelImage(QualifiedMandelName name, ResizeMode mode,
-                                    Colormap cm, Mapper m)
+                                    ColormapSource cm, Mapper m)
                      throws IOException
   {
     return getMandelImage(name,mode,cm,m,null);
   }
 
   public MandelAreaImage getMandelImage(QualifiedMandelName name, ResizeMode mode,
-                                    Colormap cm, Mapper m, FileInfo info)
+                                    ColormapSource cm, Mapper m, FileInfo info)
                      throws IOException
   { MandelHandle h=getMandelImageData(name);
     if (h==null) {
@@ -1086,7 +1090,7 @@ public class Environment1 implements MandelConstants  {
 //  }
     
   public MandelAreaImage getMandelImage(MandelHandle h, ResizeMode mode,
-                                    Colormap cm, Mapper m, FileInfo info)
+                                    ColormapSource cm, Mapper m, FileInfo info)
                      throws IOException
   {
     MandelData md=h.getData();
@@ -1095,7 +1099,7 @@ public class Environment1 implements MandelConstants  {
 
   public MandelAreaImage getMandelImage(QualifiedMandelName name, MandelData md,
                                     ResizeMode mode,
-                                    Colormap cm, Mapper m, FileInfo info)
+                                    ColormapSource cm, Mapper m, FileInfo info)
                      throws IOException
   {
     MandelImage img;

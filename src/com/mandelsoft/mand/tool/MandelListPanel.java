@@ -40,6 +40,7 @@ import com.mandelsoft.mand.tool.ctx.MandelListContextMenuHandler;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.DnDJTable;
 import com.mandelsoft.swing.MenuButton;
+import com.mandelsoft.swing.Selection;
 import com.mandelsoft.swing.TablePanel;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -439,13 +440,6 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
 
   private class ContextHandler extends MandelListContextMenuHandler
                                implements ContextMenuHandler {
-
-    @Override
-    public void handleContextMenu(JComponent comp, MouseEvent evt,
-                                   int row, int col)
-    {
-      handleContextMenu(comp,evt,row);
-    }
 
     @Override
     protected JPopupMenu createListContextMenu(JPopupMenu menu)

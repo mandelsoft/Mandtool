@@ -16,6 +16,7 @@
 
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.util.MandelColormapCache;
 import com.mandelsoft.util.upd.UpdatableObject;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -92,6 +93,7 @@ import com.mandelsoft.util.ChangeEvent;
 import com.mandelsoft.mand.MandelRaster;
 import com.mandelsoft.mand.Settings;
 import com.mandelsoft.mand.cm.Colormap;
+import com.mandelsoft.mand.cm.ColormapSource;
 import com.mandelsoft.mand.image.MandelAreaImage;
 import com.mandelsoft.mand.scan.MandelFolder;
 import com.mandelsoft.mand.scan.MandelHandle;
@@ -105,6 +107,7 @@ import com.mandelsoft.mand.tool.slideshow.SlideShowSourceAdapter;
 import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MemoryMandelListFolderTree;
+import com.mandelsoft.mand.util.UpstreamColormapSource;
 import com.mandelsoft.swing.AbstractListDataListener;
 import com.mandelsoft.swing.BooleanAttribute;
 import com.mandelsoft.swing.BufferedComponent.ProportionalRectangleSelector;
@@ -686,10 +689,12 @@ public class MandelImagePanel  extends GBCPanel
 
   private MandelListModelMenu links;
   private JMenu               linkhist;
+  private JPopupMenu          linkhistpopup;
   private LinkListener        linkListener;
 
   private MandelListModel     keyareas;
   private MandelListModelMenu keyareasmenu;
+  private MandelListModelMenu keyareaspopupmenu;
 
   private MandelImage         image;
   private MapperModel         mappermodel;
@@ -717,6 +722,9 @@ public class MandelImagePanel  extends GBCPanel
   private Action showColormapAction;
   private Action showMetaAction;
   private Action variationAction;
+  private Action linksGaleryAction;
+  private Action keyareasGaleryAction;
+  private Action zoomGaleryAction;
   private Action cloneAction;
   private Action gotoAction;
   private Action saveAction;
@@ -740,6 +748,7 @@ public class MandelImagePanel  extends GBCPanel
   private AreaSelectionModel selector;
   private ProportionSelectionModel proportion;
   private ToolTipSelectionModel tooltip;
+  private BooleanAttribute parentcolormap;
   private BooleanAttribute fullareanames;
   private BooleanAttribute automark_parent;
   private BooleanAttribute automark_keyarea;
@@ -769,6 +778,7 @@ public class MandelImagePanel  extends GBCPanel
 
     this.links=new MandelListModelMenu("Links",this,null);
     this.linkhist=new JMenu("Parent Links");
+    this.linkhistpopup=new JPopupMenu("Parent Links");
     this.links.setSorted(true);
     this.linkListener=new EnvListener();
 
@@ -815,6 +825,8 @@ public class MandelImagePanel  extends GBCPanel
     this.selector=new AreaSelectionModel();
     this.proportion=new ProportionSelectionModel();
     this.tooltip=new ToolTipSelectionModel();
+    this.parentcolormap=new BooleanAttribute(this,"range colormap",
+                           "Use upstream colormap as default",true);
     this.autoshow_info=new BooleanAttribute(this,"show info popup",
                            "Show info popup at image switch");
     this.automark_fork=new BooleanAttribute(this,"automark_fork",
@@ -988,6 +1000,9 @@ public class MandelImagePanel  extends GBCPanel
     showColormapAction=new ShowColormapAction(colormapDialog);
     if (!isReadonly()) variationAction=new VariationAction();
     showMetaAction=new ShowMetaAction();
+    linksGaleryAction=new LinksGaleryAction();
+    keyareasGaleryAction=new KeyAreasGaleryAction();
+    zoomGaleryAction=new ZoomGaleryAction();
     cloneAction=new CloneAction();
     gotoAction=new GotoAction();
     if (!isReadonly()) saveAction=new SaveAction();
@@ -1134,6 +1149,11 @@ public class MandelImagePanel  extends GBCPanel
     return buffer.getPixelToolTipModel();
   }
 
+  public BooleanAttribute getParentColormapModel()
+  {
+    return parentcolormap;
+  }
+  
   public BooleanAttribute getFullAreaNamesModel()
   {
     return fullareanames;
@@ -1253,7 +1273,7 @@ public class MandelImagePanel  extends GBCPanel
     {
       if (debug) System.out.println("image changed...");
       if (image.getColormap()!=null) {
-        if (debug) System.out.println("  setting image colormap");
+        if (debug) System.out.println("  setting image and default colormap");
         colormapmodel.setColormap(defcolormap=image.getColormap());
       }
       colormapmodel.setModifiable(image.getRasterData()!=null);
@@ -1457,10 +1477,19 @@ public class MandelImagePanel  extends GBCPanel
     menu.addSeparator();
     it=new JMenuItem(showMetaAction);
     menu.add(it);
+
+    JMenu galerymenu=new JMenu("Galeries");
+    galerymenu.add(linksGaleryAction);
+    galerymenu.add(keyareasGaleryAction);
+    galerymenu.add(zoomGaleryAction);
+
+    menu.add(galerymenu);
     menu.add(links);
     menu.add(linkhist);
+
+    MandelListMenu.SelectAction selectAction;
     menu.add(keyareasmenu=new MandelListModelMenu("Key Areas",this,keyareas));
-    keyareasmenu.addSelectAction(new MandelListMenu.SelectAction() {
+    keyareasmenu.addSelectAction(selectAction=new MandelListMenu.SelectAction() {
       public void selectArea(MandelWindowAccess access, QualifiedMandelName name)
       {
         if (automark_keyarea.isSet()) {
@@ -1468,6 +1497,8 @@ public class MandelImagePanel  extends GBCPanel
         }
       }
     });
+    keyareaspopupmenu=new MandelListModelMenu("Key Areas",this,keyareas);
+    keyareaspopupmenu.addSelectAction(selectAction);
 
     it=new UpdatableJMenuItem(areaUpAction);
     menu.add(it);
@@ -1664,40 +1695,52 @@ public class MandelImagePanel  extends GBCPanel
 
   private void updateKeyAreas()
   {
+    System.out.println("update upstream key areas");
     MandelList list=getEnvironment().getAreas();
     keyareas.clear();
     if (!name.isRoot()) {
       MandelName loop=name.getMandelName().getParentName();
       while (!loop.isRoot()) {
         QualifiedMandelName n=new QualifiedMandelName(loop);
-        if (list.contains(n)) keyareas.add(n);
+        if (list.contains(n)) {
+          keyareas.add(n);
+          System.out.println("  found "+n);
+        }
         loop=loop.getParentName();
       }
     }
+    keyareasGaleryAction.setEnabled(!keyareas.getList().isEmpty());
   }
 
   private void updateLinks()
   {
     MandelListModel m=getEnvironment().getLinkModel(name.getMandelName());
-    if (m==null) {
-//      m=new DefaultMandelListTableModel(new ArrayMandelList(),
-//                                        getEnvironment().getAllScanner());
-    }
+    linksGaleryAction.setEnabled(m!=null && !m.getList().isEmpty());
     links.setMandelListModel(m);
 
-    MandelListModelMenu menu;
     MandelName loop=name.getMandelName();
+    boolean found=false;
+    boolean parent=false;
     linkhist.removeAll();
     linkhist.setEnabled(false);
+    linkhistpopup.removeAll();
+    linkhistpopup.setEnabled(false);
     while (!loop.isRoot()) {
       m=getEnvironment().getLinkModel(loop);
-      if (m!=null) {
-        menu=new MandelListModelMenu(loop.getName(),this,m);
-        linkhist.add(menu);
-        linkhist.setEnabled(true);
+      if (m!=null && m.getList().size()>0) {
+        if (parent) {
+          System.out.println("found parent links for "+loop);
+          linkhist.add(new MandelListModelMenu(loop.getName(),this,m));
+          linkhist.setEnabled(found=true);
+        }
+
+        linkhistpopup.add(new MandelListModelMenu(loop.getName(),this,m));
+        linkhistpopup.setEnabled(true);
       }
       loop=loop.getParentName();
+      parent=true;
     }
+    if (!found) System.out.println("no parent links found");
   }
   
   private void setImageData(MandelAreaImage img, boolean showlast)
@@ -1770,7 +1813,9 @@ public class MandelImagePanel  extends GBCPanel
 
   private Colormap getDefColormap()
   {
-    if (defcolormap==null) return colormapmodel.getColormap();
+    if (defcolormap==null) {
+      return colormapmodel.getColormap();
+    }
     return defcolormap;
   }
 
@@ -1782,7 +1827,8 @@ public class MandelImagePanel  extends GBCPanel
   { 
     fileinfo=new Environment.FileInfo();
     MandelAreaImage im=env.getMandelImage(name,colormapmodel.getResizeMode(),
-            getDefColormap(), mappermodel.getMapper(),fileinfo);
+            createColormapSource(name, fileinfo),
+            mappermodel.getMapper(),fileinfo);
     return im;
   }
 
@@ -1790,7 +1836,8 @@ public class MandelImagePanel  extends GBCPanel
    {
     fileinfo=new Environment.FileInfo();
     MandelAreaImage im=env.getMandelImage(name,colormapmodel.getResizeMode(),
-            getDefColormap(), mappermodel.getMapper(),fileinfo);
+            createColormapSource(name.getMandelName(), fileinfo),
+            mappermodel.getMapper(),fileinfo);
     return im;
   } 
 
@@ -1798,10 +1845,69 @@ public class MandelImagePanel  extends GBCPanel
    {
     fileinfo=new Environment.FileInfo();
     MandelAreaImage im=env.getMandelImage(h, colormapmodel.getResizeMode(),
-            getDefColormap(), mappermodel.getMapper(),fileinfo);
+            createColormapSource(h.getName().getMandelName(), fileinfo),
+            mappermodel.getMapper(),fileinfo);
     return im;
   }
 
+  synchronized
+  public MandelColormapCache getColormapCache()
+  {
+    return getEnvironment().getColormapCache();
+  }
+
+  private ColormapSource createColormapSource(MandelName n,
+                                              Environment.FileInfo fileinfo)
+  {
+    if (parentcolormap.isSet()) {
+      return new PanelColormapSource(n, fileinfo);
+    }
+    else {
+      return getDefColormap();
+    }
+  }
+
+  private class PanelColormapSource extends UpstreamColormapSource {
+    private Environment.FileInfo fileinfo;
+
+    public PanelColormapSource(MandelName n, Environment.FileInfo fileinfo)
+    {
+      super(n,getEnvironment().getImageDataScanner(),getColormapCache());
+      this.fileinfo=fileinfo;
+    }
+
+    @Override
+    protected Colormap optimizedLoad(MandelHandle h)
+    {
+      if (getMandelName()!=null&&getMandelName().isAbove(getBasename())) {
+        if (h.getName().getMandelName().isAbove(getMandelName())) {
+          if (debug)
+            System.out.println("new area is downstream");
+          return getDefColormap();
+        }
+      }
+      return super.optimizedLoad(h);
+    }
+
+    @Override
+    protected void colormapFound(MandelHandle h, Colormap cm)
+    {
+      if (cm!=getDefColormap()) {
+        super.colormapFound(h, cm);
+        if (fileinfo!=null) fileinfo.setColormap(cm);
+      }
+    }
+
+    @Override
+    public Colormap getColormap()
+    {
+      Colormap cm=super.getColormap();
+      if (cm==null) cm=getDefColormap();
+      return cm;
+    }
+  }
+
+  ////////////////////////
   private abstract class ImageFactory<T> {
     protected T arg;
 
@@ -2732,6 +2838,70 @@ public class MandelImagePanel  extends GBCPanel
     }
   }
 
+  private class LinksGaleryAction extends AbstractAction {
+
+    public LinksGaleryAction()
+    {
+      super("Links");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      MandelListModel m=getEnvironment().getLinkModel(getMandelName());
+      if (m!=null && !m.getList().isEmpty()) {
+        MandelList ml=new ArrayMandelList(m.getList());
+        String title="Links Galery for "+getMandelName()+
+                     " ("+Utils.sizeString(ml.size(), "entry")+")";
+        System.out.println(title);
+        new MandelListGaleryDialog(MandelImagePanel.this.getFrameAccess(), ml, title);
+      }
+    }
+  }
+
+  private class KeyAreasGaleryAction extends AbstractAction {
+
+    public KeyAreasGaleryAction()
+    {
+      super("Key areas");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      MandelListModel m=keyareas;
+      if (m!=null && !m.getList().isEmpty()) {
+        MandelList ml=new ArrayMandelList(m.getList());
+        String title="Key Areas Galery for "+getMandelName()+
+                     " ("+Utils.sizeString(ml.size(), "entry")+")";
+        System.out.println(title);
+        new MandelListGaleryDialog(MandelImagePanel.this.getFrameAccess(), ml, title);
+      }
+    }
+  }
+
+  private class ZoomGaleryAction extends AbstractAction {
+
+    public ZoomGaleryAction()
+    {
+      super("Zoom");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      MandelList ml=new ArrayMandelList();
+      MandelName n=getMandelName();
+      ml.add(getQualifiedName());
+      while (!n.isRoot()) {
+        n=n.getParentName();
+        ml.add(0, new QualifiedMandelName(n));
+      }
+      String title="Zoom Galery for "+getMandelName()
+        +" ("+Utils.sizeString(ml.size(), "entry")+")";
+      System.out.println(title);
+      new MandelListGaleryDialog(MandelImagePanel.this.getFrameAccess(), ml,
+                                 title);
+    }
+  }
+
   private class LinksAction extends AbstractAction {
     public LinksAction()
     { super("Links");
@@ -2739,9 +2909,10 @@ public class MandelImagePanel  extends GBCPanel
 
     public void actionPerformed(ActionEvent e)
     {
-      if (linkhist.isEnabled()) {
+      JPopupMenu m=linkhistpopup;
+
+      if (m.isEnabled()) {
         RectPointEvent re=((RectangleActionEvent)e).getRectanglePointEvent();
-        JPopupMenu m=linkhist.getPopupMenu();
         m.show(MandelImagePanel.this,re.getX(), re.getY());
       }
     }
@@ -2754,9 +2925,9 @@ public class MandelImagePanel  extends GBCPanel
 
     public void actionPerformed(ActionEvent e)
     {
-      if (keyareasmenu.isEnabled()) {
+      if (keyareaspopupmenu.isEnabled()) {
         RectPointEvent re=((RectangleActionEvent)e).getRectanglePointEvent();
-        JPopupMenu m=keyareasmenu.getPopupMenu();
+        JPopupMenu m=keyareaspopupmenu.getPopupMenu();
         m.show(MandelImagePanel.this,re.getX(), re.getY());
       }
     }
@@ -3011,6 +3182,8 @@ public class MandelImagePanel  extends GBCPanel
             }
           }
         }
+        getEnvironment().getColormapCache().add(getQualifiedName(), 
+                              new Colormap(d.getColormap()));
       }
       catch (IOException io) {
         mandelError("Image cannot be saved",io);
@@ -3460,12 +3633,8 @@ public class MandelImagePanel  extends GBCPanel
 
     public void setData(MandelInfo i, QualifiedMandelName name)
     {
-      BigDecimal d=i.getDY();
-      int m=0;
-      while (d.compareTo(BigDecimal.ONE)<0) {
-        d=d.scaleByPowerOfTen(1);
-        m++;
-      }
+      
+      int m=MandUtils.getMagnification(i);
       setMagnification(m);
       setInfo(name);
       setMin(i.getMinIt());

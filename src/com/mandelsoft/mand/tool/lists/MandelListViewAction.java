@@ -58,7 +58,12 @@ public abstract class MandelListViewAction extends MandelContextAction {
   {
     return getMandelWindowAccess().getEnvironment();
   }
-  
+
+  protected MandelScanner getMandelScanner(ToolEnvironment env)
+  {
+    return env.getAllScanner();
+  }
+
   protected MandelScanner getMandelScanner()
   {
     if (scanner==null) {
@@ -67,7 +72,7 @@ public abstract class MandelListViewAction extends MandelContextAction {
         if (acc!=null) {
           ToolEnvironment env=acc.getEnvironment();
           if (env!=null) {
-            scanner=env.getAllScanner();
+            scanner=getMandelScanner(env);
           }
         }
       }

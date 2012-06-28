@@ -16,6 +16,7 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.cm.ColormapSourceFactory;
 import com.mandelsoft.mand.tool.thumb.ImageChangeListener;
 import java.awt.Dimension;
 import java.awt.datatransfer.DataFlavor;
@@ -111,6 +112,16 @@ public abstract class AbstractMandelListTableModel extends AbstractTableModel
 
   public void setModifiable(boolean m)
   { this.modifiable=m;
+  }
+
+  public void setColormapSourceFactory(ColormapSourceFactory colmapfac)
+  {
+    factory.setColormapSourceFactory(colmapfac);
+  }
+
+  public ColormapSourceFactory getColormapSourceFactory()
+  {
+    return factory.getColormapSourceFactory();
   }
 
   public void setFactory(Factory factory)

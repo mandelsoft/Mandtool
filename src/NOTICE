@@ -1,4 +1,4 @@
-Mandtool Tool Set (Copyright 2011, Uwe Krueger)
+Mandtool Tool Set (Copyright 2012, Uwe Krueger)
 
 This Java Archive contains the toolset for working with Mandelbrot set areas.
 It includes a GUI (applet and standalone), a calculation server and various
@@ -18,4 +18,4 @@ The URL for using as an extension database is
   http://beauty-of-chaos.de/mandel/mandel
 
 Have fun
-Uwe Krüger
+Uwe Krueger

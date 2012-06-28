@@ -18,18 +18,20 @@ package com.mandelsoft.mand.tool;
 
 import com.mandelsoft.swing.worker.UIFunction;
 import com.mandelsoft.swing.worker.UIExecution;
-import com.mandelsoft.mand.Environment;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.Settings;
-import com.mandelsoft.mand.cm.Colormap;
 import com.mandelsoft.mand.cm.ColormapModel;
 import com.mandelsoft.mand.cm.ColormapModel.ResizeMode;
+import com.mandelsoft.mand.cm.ColormapSource;
+import com.mandelsoft.mand.cm.ColormapSourceFactory;
 import com.mandelsoft.mand.image.MandelAreaImage;
 import com.mandelsoft.mand.mapping.Mapper;
 import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.util.MandelList;
+import com.mandelsoft.mand.util.SimpleColormapSourceFactory;
+import com.mandelsoft.mand.util.UpstreamColormapSourceFactory;
 import com.mandelsoft.swing.worker.CallbackWorker;
 import com.mandelsoft.swing.worker.ErrorNotification;
 import com.mandelsoft.swing.worker.WorkerProgressMonitor;
@@ -220,10 +222,10 @@ public class PictureSaveDialog extends MandelDialog {
   private class Worker extends CallbackWorker<Void, UIExecution, PictureSaveDialog> {
 
     private List<MandelHandle> list;
-    private Colormap cm;
+    private ColormapSourceFactory cmfac;
     private Mapper mapper;
     private ResizeMode mode;
-    private Environment env;
+    private ToolEnvironment env;
     private String path;
     private String fmt;
     private int width;
@@ -233,14 +235,29 @@ public class PictureSaveDialog extends MandelDialog {
                   String path, String fmt, int width, boolean showDecoration)
     {
       super(PictureSaveDialog.this);
+
+      ColormapSource cm;
+      ColormapModel cmm;
       this.list=list;
       this.env=acc.getEnvironment();
 
-      ColormapModel cm=acc.getColormapModel();
-      this.cm=cm.getColormap();
-      this.mode=cm.getResizeMode();
+      cmm=acc.getColormapModel();
+      cm=cmm.getColormap();
+      this.mode=cmm.getResizeMode();
       this.mapper=acc.getMapperModel().getMapper();
 
+      MandelImagePanel mp=acc.getMandelImagePane();
+      if (mp!=null&&mp.getParentColormapModel().isSet()) {
+        cmfac=new UpstreamColormapSourceFactory(env.getImageDataScanner(),
+                                                mp.getColormapModel(),
+                                                env.getColormapCache());
+        System.out.println("-> save with upstream colormap");
+      }
+      else {
+        System.out.println("-> save with main colormap");
+        cmfac=new SimpleColormapSourceFactory(cm);
+      }
+      
       this.path=path;
       this.fmt=fmt;
       this.width=width;
@@ -258,6 +275,7 @@ public class PictureSaveDialog extends MandelDialog {
 
     public MandelAreaImage getMandelImage(MandelHandle h) throws IOException
     {
+      ColormapSource cm=cmfac.getColormapSource(h.getName());
       return env.getMandelImage(h, mode, cm, mapper, null);
     }
 

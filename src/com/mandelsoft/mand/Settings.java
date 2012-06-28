@@ -50,6 +50,7 @@ public class Settings {
   static public final String PROXY="proxy";
   static public final String USER="username";
   static public final String SITE="sitename";
+  static public final String HOMEPAGE="homepage";
   static public final String COPYRIGHT="copyright";
   
   static public final String BACKUP_PATH="path.backup";
@@ -99,6 +100,8 @@ public class Settings {
 
   static public final String NESTED="path.base";
   static public final String ALIASES="aliases";
+
+  static public final String COLORMAP_CACHE_SIZE="cache.colormaps";
   
   ////////////////////////////////////////////////////////////////////////
   // factory

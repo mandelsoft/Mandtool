@@ -36,6 +36,8 @@ import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.swing.BufferedComponent.VisibleRect;
 import com.mandelsoft.swing.GBC;
 import com.mandelsoft.util.Utils;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /**
  *
@@ -82,6 +84,11 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
   { return getMandelWindowAccess();
   }
 
+  protected void handleClose()
+  {
+    ((CreationView)getView()).handleClose();
+  }
+  
   ///////////////////////////////////////////////////////////////////////
   // view
   ///////////////////////////////////////////////////////////////////////
@@ -95,6 +102,34 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
     {
       super(name, info, true, false);
       automode=true;
+      getDialog().addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowClosing(WindowEvent e)
+        {
+          handleClose();
+        }
+
+        @Override
+        public void windowClosed(WindowEvent e)
+        {
+          System.out.println("closed creation area");
+        }
+      });
+    }
+
+    protected void handleClose()
+    {
+      System.out.println("closing creation dialog "+getClass().getSimpleName());
+      if (rect!=null) {
+        System.out.println(" discard old rect");
+        rect.discard();
+        if (rect.getName()!=null) {
+          fireMandelAreaEvent(
+                  new MandelAreaEvent(MandelAreaCreationDialog.this,
+                                      MandelAreaEvent.MA_UPDATE));
+        }
+        rect=null;
+      }
     }
 
     public void setFilename(String n)

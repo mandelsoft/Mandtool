@@ -207,6 +207,8 @@ public class MandelImageAreaDialog extends MandelAreaViewDialog {
     protected void setupButtons()
     {
       super.setupButtons();
+      addShowButton("Show area",false);
+                  
       if (!readonlyMode) {
         save=this.createButton("Save", "Save changes", new ActionListener() {
           public void actionPerformed(ActionEvent e)
@@ -237,8 +239,6 @@ public class MandelImageAreaDialog extends MandelAreaViewDialog {
         });
       }
     }
-
-
   }
 
   static String formatTime(long t)

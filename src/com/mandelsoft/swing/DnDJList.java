@@ -18,7 +18,6 @@ package com.mandelsoft.swing;
 
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.Point;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -235,16 +234,15 @@ public class DnDJList extends JList {
     {
       if (e.isPopupTrigger()&&ctxmenu!=null) {
         // find item
-        Point p = e.getPoint();
-        int index = locationToIndex(p);
-        if (debug) System.out.println("CTX POPUP at "+index);
-        ctxmenu.handleContextMenu(DnDJList.this, e, index);
+        ListSelection sel=new ListSelection(DnDJList.this, e);
+        if (debug) System.out.println("CTX POPUP at "+sel);
+        ctxmenu.handleContextMenu(DnDJList.this, e, sel);
       }
     }
   }
 
   public interface ContextMenuHandler {
-    void handleContextMenu(JComponent comp, MouseEvent evt, int index);
+    void handleContextMenu(JComponent comp, MouseEvent evt, Selection sel);
   }
 
   private ContextMenuHandler ctxmenu;
