@@ -18,36 +18,32 @@ package com.mandelsoft.mand.util;
 
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.cm.ColormapSource;
-import com.mandelsoft.mand.cm.ColormapSourceFactory;
 import com.mandelsoft.mand.scan.MandelScanner;
 
 /**
  *
  * @author Uwe Krueger
  */
-public class UpstreamColormapSourceFactory implements ColormapSourceFactory {
-  private MandelScanner       scanner;
-  private ColormapSource      defaultSource;
+public class CachedUpstreamColormapSourceFactory extends UpstreamColormapSourceFactory {
+  private MandelColormapCache cache;
 
-  public UpstreamColormapSourceFactory(MandelScanner scanner, ColormapSource defaultSource)
+  public CachedUpstreamColormapSourceFactory(MandelScanner scanner,
+                                       ColormapSource defaultSource,
+                                       MandelColormapCache cache)
   {
-    this.scanner=scanner;
-    this.defaultSource=defaultSource;
+    super(scanner,defaultSource);
+    this.cache=cache;
   }
   
+  @Override
   public ColormapSource getColormapSource(QualifiedMandelName name)
   {
-    return new UpstreamColormapSource(name.getMandelName(),getMandelScanner(),
-                                     getDefaultSource());
+    return new CachedUpstreamColormapSource(name.getMandelName(),getMandelScanner(),
+                                     getDefaultSource(),getCache());
   }
 
-  protected MandelScanner getMandelScanner()
+  protected MandelColormapCache getCache()
   {
-    return scanner;
-  }
-
-  protected ColormapSource getDefaultSource()
-  {
-    return defaultSource;
+    return cache;
   }
 }

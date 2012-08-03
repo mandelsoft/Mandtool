@@ -28,5 +28,6 @@ public interface ExecutionHandler {
   void copy(ElementHandle<?> src, AbstractFile dst);
   void backupInfoFile(AbstractFile mf);
   void backupRasterFile(AbstractFile mf);
+  void backupAreaColormapFile(AbstractFile mf);
   void finish();
 }

@@ -22,9 +22,9 @@ import java.awt.Toolkit;
 import javax.swing.JDialog;
 import javax.swing.event.TreeModelEvent;
 import com.mandelsoft.mand.image.MandelImage;
+import com.mandelsoft.mand.util.CachedUpstreamColormapSourceFactory;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
-import com.mandelsoft.mand.util.UpstreamColormapSourceFactory;
 import com.mandelsoft.swing.AbstractTreeModelListener;
 
 /**
@@ -75,8 +75,8 @@ public class MandelListGaleryDialog extends MandelDialog {
     MandelImagePanel mp=owner.getMandelImagePane();
     if (mp!=null && mp.getParentColormapModel().isSet()) {
       model.setColormapSourceFactory(
-        new UpstreamColormapSourceFactory(model.getMandelScanner(),
-                                          mp.getColormapModel(),
+        new CachedUpstreamColormapSourceFactory(model.getMandelScanner(),
+                                                mp.getColormapModel(),
                                 owner.getEnvironment().getColormapCache()));
       System.out.println("-> galery with upstream colormap");
     }

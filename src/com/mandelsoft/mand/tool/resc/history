@@ -4,6 +4,7 @@ Dev Version
    - use upstream colormap as default
    - list selection available for context menus + save images for selection
    - goto dialog support for files
+   - area colormaps
 
 Version 1.2
    - common ancestor action for mark menu

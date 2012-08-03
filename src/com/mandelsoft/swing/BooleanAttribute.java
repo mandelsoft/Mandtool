@@ -139,4 +139,9 @@ public class BooleanAttribute extends JCheckBox.ToggleButtonModel {
   {
     this.label=label;
   }
+
+  public String getPropertyName()
+  {
+    return property;
+  }
 }

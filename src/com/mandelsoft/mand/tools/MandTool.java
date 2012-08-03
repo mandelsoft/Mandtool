@@ -49,7 +49,8 @@ public class MandTool extends Command{
         g.setColor(new Color(200,200,0));
         g.drawString("Mandelbrot", 240, 170);
         g.drawString("Explorer", 260, 220);
-        g.setFont(ofont);
+        font=Font.decode("Times New Roman-16");
+        g.setFont(font==null?ofont:font);
         g.setColor(new Color(200,200,200));
         g.drawString("Mandtool, Version "+
                      bundle.getString("Application.version"), 300, 360);

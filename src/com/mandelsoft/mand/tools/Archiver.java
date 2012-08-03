@@ -112,6 +112,10 @@ public class Archiver extends Sync {
     {
     }
 
+    public void backupAreaColormapFile(AbstractFile mf)
+    {
+    }
+
     public void syncList(MandelList ml, MandelList dl, String name)
     {
       lists.put(name, ml);

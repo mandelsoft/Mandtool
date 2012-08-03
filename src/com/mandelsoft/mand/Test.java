@@ -16,6 +16,11 @@
 
 package com.mandelsoft.mand;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author Uwe Krueger
@@ -24,6 +29,12 @@ public class Test {
   public static void main(String[] args)
   {
     int failed=0;
+    try {
+      System.out.println(new File(".").getCanonicalPath());
+    }
+    catch (IOException ex) {
+      Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
+    }
     failed+=MandelName.test();
     failed+=QualifiedMandelName.test();
     failed+=MandelImageDBContext.test();

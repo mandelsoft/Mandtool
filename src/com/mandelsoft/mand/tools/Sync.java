@@ -18,7 +18,6 @@ package com.mandelsoft.mand.tools;
 import com.mandelsoft.mand.IllegalConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import com.mandelsoft.mand.Environment;
 import com.mandelsoft.mand.MandelConstants;
 import com.mandelsoft.io.AbstractFile;
@@ -47,10 +46,12 @@ public class Sync extends Copy<SyncHandler> {
   static public final int IMAGES = 1;
   static public final int REQUESTS = 2;
   static public final int VARIANTS = 4;
-  static public final int COLORMAPS = 8;
+  static public final int AREACOLMAPS = 8;
 
-  static public final int MANDEL = IMAGES|REQUESTS|VARIANTS;
-  static public final int ALL = IMAGES|REQUESTS|VARIANTS|COLORMAPS;
+  static public final int COLORMAPS = 16;
+
+  static public final int MANDEL = IMAGES|REQUESTS|VARIANTS|AREACOLMAPS;
+  static public final int ALL = MANDEL|COLORMAPS;
 
   //////////////////////////////////////////////////////////////////////
 
@@ -205,6 +206,7 @@ public class Sync extends Copy<SyncHandler> {
       this.types.add(new InfoType());
     }
     if ((types&IMAGES)!=0) {
+      this.types.add(new AreaColmapType());
       this.types.add(new RasterType());
       this.types.add(new RasterImageType());
     }

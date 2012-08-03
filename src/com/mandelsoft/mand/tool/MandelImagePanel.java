@@ -105,9 +105,9 @@ import com.mandelsoft.mand.tool.slideshow.SlideShowDestination;
 import com.mandelsoft.mand.tool.slideshow.SlideShowModel;
 import com.mandelsoft.mand.tool.slideshow.SlideShowSourceAdapter;
 import com.mandelsoft.mand.util.ArrayMandelList;
+import com.mandelsoft.mand.util.CachedUpstreamColormapSource;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MemoryMandelListFolderTree;
-import com.mandelsoft.mand.util.UpstreamColormapSource;
 import com.mandelsoft.swing.AbstractListDataListener;
 import com.mandelsoft.swing.BooleanAttribute;
 import com.mandelsoft.swing.BufferedComponent.ProportionalRectangleSelector;
@@ -668,6 +668,37 @@ public class MandelImagePanel  extends GBCPanel
     }
   }
 
+  private class ConfiguredBooleanAttribute extends BooleanAttribute {
+
+    public ConfiguredBooleanAttribute(JComponent component, String property,
+                                      String label, boolean b)
+    { super(component,property,label,b);
+      configure();
+    }
+
+    public ConfiguredBooleanAttribute(JComponent component, String property,
+                                      boolean b)
+    { super(component,property,b);
+      configure();
+    }
+
+    public ConfiguredBooleanAttribute(JComponent component, String property,
+                                      String label)
+    { super(component,property,label);
+      configure();
+    }
+
+    public ConfiguredBooleanAttribute(JComponent component, String property)
+    { super(component,property);
+      configure();
+    }
+
+    private void configure()
+    {
+      setState(getEnvironment().getToolSwitch("config."+getPropertyName(),isSet()));
+    }
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // MandelImagePanel
   /////////////////////////////////////////////////////////////////////////
@@ -728,6 +759,7 @@ public class MandelImagePanel  extends GBCPanel
   private Action cloneAction;
   private Action gotoAction;
   private Action saveAction;
+  private Action areaCMSaveAction;
   private Action showListsControlAction;
   private Action showJuliaAction;
   private Action showIterationPathAction;
@@ -771,6 +803,7 @@ public class MandelImagePanel  extends GBCPanel
   public MandelImagePanel(ToolEnvironment env,
                           MandelAreaImage img, int maxx) throws IOException
   {
+    this.env=env;
     this.maxx=maxx;
     this.subareas=new MandelListMenu(this);
     this.subareas.setSorted(true);
@@ -825,18 +858,18 @@ public class MandelImagePanel  extends GBCPanel
     this.selector=new AreaSelectionModel();
     this.proportion=new ProportionSelectionModel();
     this.tooltip=new ToolTipSelectionModel();
-    this.parentcolormap=new BooleanAttribute(this,"range colormap",
+    this.parentcolormap=new ConfiguredBooleanAttribute(this,"upstream-colormap",
                            "Use upstream colormap as default",true);
-    this.autoshow_info=new BooleanAttribute(this,"show info popup",
+    this.autoshow_info=new ConfiguredBooleanAttribute(this,"show-info-popup",
                            "Show info popup at image switch");
-    this.automark_fork=new BooleanAttribute(this,"automark_fork",
+    this.automark_fork=new ConfiguredBooleanAttribute(this,"automark-fork",
                            "Auto Mark for Fork Navigation");
-    this.automark_keyarea=new BooleanAttribute(this,"automark_keyarea",
+    this.automark_keyarea=new ConfiguredBooleanAttribute(this,"automark-keyarea",
                            "Auto Mark for Key Area Navigation",true);
-    this.automark_parent=new BooleanAttribute(this,"automark_parent",
+    this.automark_parent=new ConfiguredBooleanAttribute(this,"automark-parent",
                            "Auto Mark for Parent Navigation");
 
-    this.fullareanames=new BooleanAttribute(this,"fullareanames",
+    this.fullareanames=new ConfiguredBooleanAttribute(this,"full-areanames",
                            "Show Full Sub Area Names") {
       @Override
       protected void afterStateChange()
@@ -881,7 +914,6 @@ public class MandelImagePanel  extends GBCPanel
     add(this.scrollpane,GBC(0,0,GBC.BOTH));
     //this.setBorder(BorderFactory.createLineBorder(Color.black,5));
     this.setBorder(null);
-    this.env=env;
     this.initialImage=img;
     this.buffer.setLimitWindowSize(true);
   }
@@ -1005,7 +1037,10 @@ public class MandelImagePanel  extends GBCPanel
     zoomGaleryAction=new ZoomGaleryAction();
     cloneAction=new CloneAction();
     gotoAction=new GotoAction();
-    if (!isReadonly()) saveAction=new SaveAction();
+    if (!isReadonly()) {
+      saveAction=new SaveAction();
+      areaCMSaveAction=new AreaCMSaveAction();
+    }
 
     showListsControlAction=new ShowListsControlAction();
     showJuliaAction=new ShowJuliaAction();
@@ -1253,12 +1288,17 @@ public class MandelImagePanel  extends GBCPanel
   private class ColModelChangeListener implements ChangeListener {
     public void stateChanged(javax.swing.event.ChangeEvent e)
     {
+      boolean mod=getMandelData().isModified();
       if (colormapmodel.getColormap()!=image.getColormap()) {
         image.setColormap(colormapmodel.getResizeMode(),
                           colormapmodel.getColormap());
       }
       if (debug) System.out.println("setting default colormap to actual colormap");
       defcolormap=colormapmodel.getColormap();
+      if (!mod) { // so far there is no content related update handler
+        //image.getMandelData().setModified(true);
+        updateObjects("colormap",colormapmodel.getColormap());
+      }
     }
   }
 
@@ -1540,6 +1580,7 @@ public class MandelImagePanel  extends GBCPanel
 
     if (!isReadonly()) {
       menu.add(saveAction);
+      menu.add(new UpdatableJMenuItem(areaCMSaveAction));
     }
 
     it=new UpdatableJMenuItem(new HomeAction());
@@ -1867,19 +1908,20 @@ public class MandelImagePanel  extends GBCPanel
     }
   }
 
-  private class PanelColormapSource extends UpstreamColormapSource {
+  private class PanelColormapSource extends CachedUpstreamColormapSource {
     private Environment.FileInfo fileinfo;
 
     public PanelColormapSource(MandelName n, Environment.FileInfo fileinfo)
     {
-      super(n,getEnvironment().getImageDataScanner(),getColormapCache());
+      super(n,getEnvironment().getAreaColormapScanner(),getColormapCache());
       this.fileinfo=fileinfo;
     }
 
     @Override
     protected Colormap optimizedLoad(MandelHandle h)
     {
-      if (getMandelName()!=null&&getMandelName().isAbove(getBasename())) {
+      if (!h.getHeader().isAreaColormap() &&
+          getMandelName()!=null&&getMandelName().isAbove(getBasename())) {
         if (h.getName().getMandelName().isAbove(getMandelName())) {
           if (debug)
             System.out.println("new area is downstream");
@@ -3191,6 +3233,52 @@ public class MandelImagePanel  extends GBCPanel
       finally {
         env.finishUpdate();
       }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+
+  private class AreaCMSaveAction extends UpdatableAction {
+
+    public AreaCMSaveAction()
+    {
+      super("Save Area Colormap");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      ToolEnvironment env=getEnvironment();
+      MandelImage img=getMandelImage();
+      MandelData d=img.getMandelData();
+      AbstractFile f=d.getFile();
+      MandelData mc=new MandelData(d.getInfo());
+      mc.setColormap(ColormapModel.ResizeMode.RESIZE_LOCK_COLORS, d.getColormap());
+      String n=f.getName();
+      int ix=n.lastIndexOf('.');
+      long lm=f.getLastModified();
+      File save=env.mapToAreaColormapFile(f);
+      mc.setFile(new FileAbstractFile(save));
+
+      env.startUpdate();
+      try {
+        mc.setTemporary(false);
+        mc.write();
+        getEnvironment().getColormapCache().add(getQualifiedName(),
+                              new Colormap(mc.getColormap()));
+      }
+      catch (IOException io) {
+        mandelError("Area colormap cannot be saved",io);
+      }
+      finally {
+        env.finishUpdate();
+      }
+    }
+
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+      System.out.println(ctx.getReason().getReason()+": "+getMandelData().isModified());
+      setEnabled(getMandelData().isModified());
     }
   }
 

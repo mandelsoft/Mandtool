@@ -107,19 +107,33 @@ public class MandUtils extends MandArith {
   public static MandelHandle lookupColormap(MandelScanner scan, MandelName n)
   {
     MandelHandle cm=null;
+    MandelHandle mc=null; //always prefer explicit areacm
+    MandelHandle mb=null; //then base (non-variant) areas
 
+    System.out.println("lookup colormap for "+n);
     while (cm==null && n!=null) {
       Set<MandelHandle> set=scan.getMandelHandles(n);
       if (set!=null) {
         for (MandelHandle h:set) {
           if (h.getHeader().hasColormap()) {
+            System.out.println("---- found cm "+h.getName());
             cm=h;
-            if (h.getName().getQualifier()==null) break;
+            if (h.getHeader().isAreaColormap()) {
+              System.out.println("    ----> area cm");
+              mc=h;
+            }
+            if (h.getName().getQualifier()==null) {
+              System.out.println("    ----> base cm");
+              mb=h;
+              if (mc==h) break;
+            }
           }
         } // for set
       }
       n=n.getParentName();
     }
+    if (mc!=null) return mc;
+    if (mb!=null) return mb;
     return cm;
   }
 

@@ -40,9 +40,9 @@ import com.mandelsoft.mand.tool.MandelWindowAccess;
 import com.mandelsoft.mand.tool.ToolEnvironment;
 import com.mandelsoft.mand.tool.mapper.MapperModel;
 import com.mandelsoft.mand.util.ArrayMandelList;
+import com.mandelsoft.mand.util.CachedUpstreamColormapSourceFactory;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
-import com.mandelsoft.mand.util.UpstreamColormapSourceFactory;
 import com.mandelsoft.util.Utils;
 import java.awt.event.ActionListener;
 import javax.swing.Timer;
@@ -240,9 +240,9 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
     proxyModel.setFactory(factory);
     if (upstream) {
       proxyModel.setColormapSourceFactory(
-        new UpstreamColormapSourceFactory(model.getMandelScanner(),
-                                          env.getDefaultColormap(),
-                                          env.getColormapCache()));
+        new CachedUpstreamColormapSourceFactory(model.getMandelScanner(),
+                                                env.getDefaultColormap(),
+                                                env.getColormapCache()));
     }
     add(panel);
   }

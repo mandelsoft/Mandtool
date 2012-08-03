@@ -17,6 +17,7 @@
 package com.mandelsoft.mand.util;
 
 import com.mandelsoft.mand.MandelName;
+import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.cm.Colormap;
 import com.mandelsoft.mand.cm.ColormapSource;
 import com.mandelsoft.mand.scan.MandelHandle;
@@ -29,29 +30,11 @@ import java.io.IOException;
  */
 public class UpstreamColormapSource implements ColormapSource {
 
-  private static final boolean debug=true;
+  protected static final boolean debug=true;
   private MandelName n;
   private MandelScanner scanner;
   private ColormapSource defaultSource;
-  private MandelColormapCache cache;
-
-  public UpstreamColormapSource(MandelName n, MandelScanner scanner,
-                                MandelColormapCache cache)
-  {
-    this.n=n;
-    this.scanner=scanner;
-    this.cache=cache;
-  }
-
-  public UpstreamColormapSource(MandelName n, MandelScanner scanner,
-                                ColormapSource defaultSource,
-                                MandelColormapCache cache)
-  {
-    this.n=n;
-    this.scanner=scanner;
-    this.defaultSource=defaultSource;
-    this.cache=cache;
-  }
+  private QualifiedMandelName source;
 
   public UpstreamColormapSource(MandelName n, MandelScanner scanner,
                                 ColormapSource defaultSource)
@@ -63,8 +46,7 @@ public class UpstreamColormapSource implements ColormapSource {
 
   public UpstreamColormapSource(MandelName n, MandelScanner scanner)
   {
-    this.n=n;
-    this.scanner=scanner;
+    this(n,scanner,null);
   }
 
   public Colormap getColormap()
@@ -95,18 +77,16 @@ public class UpstreamColormapSource implements ColormapSource {
 
   protected Colormap optimizedLoad(MandelHandle h)
   {
-    if (h!=null && cache!=null) {
-      Colormap cm=cache.get(h.getName());
-      if (cm!=null && debug) {
-        System.out.println("found cached colormap for "+h.getName());
-      }
-      return cm;
-    }
     return null;
   }
 
   protected void colormapFound(MandelHandle h, Colormap cm)
   {
-    if (cache!=null) cache.add(h.getName(), cm);
+    source=h.getName();
+  }
+
+  public QualifiedMandelName getSource()
+  {
+    return source;
   }
 }

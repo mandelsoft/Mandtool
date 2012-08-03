@@ -42,8 +42,10 @@ public interface MandelConstants {
   
   public static final int C_IMAGEDATA  =C_RASTER|C_IMAGE;
   public static final int C_RASTERIMAGE=C_RASTER|C_MAPPING|C_COLMAP;
+  public static final int C_AREACOLMAP=C_INFO|C_COLMAP;
 
   public static final String COLORMAP_SUFFIX=".cm";
+  public static final String AREACOLMAP_SUFFIX=".mc";
   public static final String INFO_SUFFIX=".md";
   public static final String RASTER_SUFFIX=".mr";
   public static final String RASTERIMAGE_SUFFIX=".mi";

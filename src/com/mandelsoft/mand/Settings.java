@@ -69,6 +69,10 @@ public class Settings {
   static public final String VARIANT_SEEN_PATH="path.variant.seen";
   static public final String RASTER_SAVE_PATH="path.raster.save";
   
+  static public final String AREACOLMAP_PATH="path.areacolormap";
+  static public final String AREACOLMAP_SAVE_PATH="path.areacolormap.save";
+  static public final String AREACOLMAP_BACKUP_PATH="path.areacolormap.backup";
+
   static public final String RASTER_BACKUP_PATH="path.raster.backup";
 
   static public final String VARIANT_SAVE_PATH="path.variant.save";
@@ -297,11 +301,13 @@ public class Settings {
       raw.setProperty(RASTERIMAGE_BACKUP_PATH, "${"+BACKUP_PATH+"}");
       raw.setProperty(RASTER_BACKUP_PATH, "${"+BACKUP_PATH+"}");
       raw.setProperty(INFO_BACKUP_PATH, "${"+BACKUP_PATH+"}");
+      raw.setProperty(AREACOLMAP_BACKUP_PATH, "${"+BACKUP_PATH+"}");
       raw.setProperty(INCOMPLETE_BACKUP_PATH, "${"+BACKUP_PATH+"}");
     }
     
     raw.setProperty(IMAGE_SAVE_PATH, "${"+SAVE_PATH+"}");
     raw.setProperty(RASTER_SAVE_PATH, "${"+SAVE_PATH+"}");
+    raw.setProperty(AREACOLMAP_SAVE_PATH, "${"+SAVE_PATH+"}");
     raw.setProperty(RASTER_PATH, "${"+RASTER_SAVE_PATH+"};"+
             "${"+RASTER_SEEN_PATH+"};"+
             "${"+VARIANT_SEEN_PATH+"}");
@@ -316,6 +322,8 @@ public class Settings {
             VARIANT_SEEN_PATH+"};${"+
             RASTER_PATH+"};${"+
             ADDITIONAL_PATH+"};${"+
+            AREACOLMAP_PATH+"};${"+
+            AREACOLMAP_SAVE_PATH+"};${"+
             INFO_PRIO_PATH+"};${"+
             INFO_SAVE_PATH+"}");
 

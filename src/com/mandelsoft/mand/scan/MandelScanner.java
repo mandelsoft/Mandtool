@@ -81,6 +81,12 @@ public interface MandelScanner extends MandelConstants {
     }
   };
 
+  static public final Filter AREACOLMAP=new Filter() {
+    public boolean filter(MandelHeader h)
+    { return h.isAreaColormap();
+    }
+  };
+
   static public final Filter RASTER=new Filter() {
     public boolean filter(MandelHeader h)
     { return h.isRaster();
@@ -137,6 +143,12 @@ public interface MandelScanner extends MandelConstants {
   static public final Filter HAS_IMAGEDATA=new Filter() {
     public boolean filter(MandelHeader h)
     { return h.hasImageData();
+    }
+  };
+
+  static public final Filter HAS_AREACOLMAP=new Filter() {
+    public boolean filter(MandelHeader h)
+    { return h.hasMandelColormap();
     }
   };
 }

@@ -78,6 +78,11 @@ public class Copy<E extends ExecutionHandler> extends Command {
       System.out.println("backup raster "+mf);
     }
 
+    public void backupAreaColormapFile(AbstractFile mf)
+    {
+      System.out.println("backup area colormap "+mf);
+    }
+
     public void finish()
     {
     }
@@ -143,6 +148,13 @@ public class Copy<E extends ExecutionHandler> extends Command {
     {
       super.backupRasterFile(mf);
       Copy.this.dst.backupRasterFile(mf);
+    }
+
+    @Override
+    public void backupAreaColormapFile(AbstractFile mf)
+    {
+      super.backupAreaColormapFile(mf);
+      Copy.this.dst.backupAreaColormapFile(mf);
     }
 
     public void updateCaches()
@@ -216,6 +228,11 @@ public class Copy<E extends ExecutionHandler> extends Command {
       return filter.filter(h);
     }
 
+    public boolean match(ElementHandle<?> h)
+    {
+      return match(h.getHeader());
+    }
+
     protected void handlePath(String prop)
     {
       String d=dst.getProperty(prop);
@@ -242,7 +259,10 @@ public class Copy<E extends ExecutionHandler> extends Command {
 
       System.out.println("copying "+getName()+"...");
       for (ElementHandle<?> h:srcscan.getAllHandles()) {
-        handleFile(this,h);
+        if (match(h)) {
+          //System.out.println("  found "+h.getName()+" DOIT "+h.getHeader());
+          handleFile(this,h);
+        }
       }
     }
 
@@ -275,7 +295,11 @@ public class Copy<E extends ExecutionHandler> extends Command {
     protected boolean has(ElementHandle<?> h)
     {
       MandelHandle mh=((MandelHandle)h);
-      return !dstscan.getMandelHandles(mh.getName()).isEmpty();
+      Set<MandelHandle> set=dstscan.getMandelHandles(mh.getName());
+      for (MandelHandle dh:set) {
+        if (match(dh)) return true;
+      }
+      return false;
     }
 
     protected boolean use(ElementHandle<?> h)
@@ -307,6 +331,22 @@ public class Copy<E extends ExecutionHandler> extends Command {
     }
   }
 
+  protected class AreaColmapType extends FileType {
+    AreaColmapType()
+    {
+      super("areacolmaps", MandelScanner.AREACOLMAP,
+            src==null?null:src.getAreaColormapScanner(), dst.getAreaColormapScanner());
+      handlePath(Settings.AREACOLMAP_PATH);
+      handlePath(Settings.AREACOLMAP_SAVE_PATH);
+    }
+
+    @Override
+    protected boolean use(ElementHandle h)
+    {
+      return use((MandelHandle)h,dst.getAreaColormapScanner());
+    }
+  }
+  
   /////////////////////////////////////////////////////////////////////
   protected class RasterType extends FileType {
     RasterType()
@@ -367,6 +407,11 @@ public class Copy<E extends ExecutionHandler> extends Command {
         System.out.println("  backup raster "+m.getFile());
         exec.backupRasterFile(m.getFile());
       }
+
+      for (MandelHandle m:dst.getAreaColormapScanner().getMandelHandles(mn)) {
+        System.out.println("  backup area colormap "+m.getFile());
+        exec.backupAreaColormapFile(m.getFile());
+      }
     }
   }
 
@@ -386,6 +431,7 @@ public class Copy<E extends ExecutionHandler> extends Command {
     this.dst=dst;
     
     this.types.add(new InfoType());
+    this.types.add(new AreaColmapType());
     this.types.add(new RasterType());
     this.types.add(new RasterImageType());
   }

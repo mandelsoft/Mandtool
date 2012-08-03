@@ -156,6 +156,11 @@ public class Environment1 implements MandelConstants  {
     commonSetup();
   }
 
+  public String getTool()
+  {
+    return dbfactory.getTool();
+  }
+
   private void commonSetup() throws IllegalConfigurationException
   {
     fac=new MandelImage.Factory();
@@ -359,6 +364,17 @@ public class Environment1 implements MandelConstants  {
     return database.getProperty(name);
   }
 
+  public boolean getToolSwitch(String name, boolean def)
+  {
+    if (getTool()==null) return def;
+    return getSwitch(getTool()+"."+name,def);
+  }
+
+  public boolean getSwitch(String name, boolean def)
+  {
+    return database.getSwitch(name,def);
+  }
+
   public MandelList getMainTodos()
   {
     return database.getMainTodos();
@@ -372,6 +388,11 @@ public class Environment1 implements MandelConstants  {
   public File getInfoFolder(AbstractFile d)
   {
     return database.getInfoFolder(d);
+  }
+
+  public File getAreaColormapFolder(AbstractFile d)
+  {
+    return database.getAreaColormapFolder(d);
   }
 
   public File getImageFolder(AbstractFile d)
@@ -426,6 +447,7 @@ public class Environment1 implements MandelConstants  {
   private MandelScanner incomplete;
   private MandelScanner raster;
   private MandelScanner info;
+  private MandelScanner areacolmap;
   private MandelScanner prioinfo;
   private MandelScanner meta;
   private MandelScanner rasterimage;
@@ -502,6 +524,13 @@ public class Environment1 implements MandelConstants  {
        }
      });
 
+     areacolmap=createScanner(new DistributedMandelScanner.ScannerAccess() {
+       public MandelScanner getScanner(MandelImageDB db)
+       {
+         return db.getAreaColormapScanner();
+       }
+     });
+
      imagedata=createScanner(new DistributedMandelScanner.ScannerAccess() {
        public MandelScanner getScanner(MandelImageDB db)
        {
@@ -555,6 +584,11 @@ public class Environment1 implements MandelConstants  {
   public MandelScanner getInfoScanner()
   {
     return info;
+  }
+
+  public MandelScanner getAreaColormapScanner()
+  {
+    return areacolmap;
   }
 
   public MandelScanner getImageDataScanner()
@@ -1330,6 +1364,10 @@ public class Environment1 implements MandelConstants  {
   { return _getBackup(Settings.INFO_BACKUP_PATH);
   }
 
+  public File getAreaColormapBackup()
+  { return _getBackup(Settings.AREACOLMAP_BACKUP_PATH);
+  }
+
   public File getRasterBackup()
   { return _getBackup(Settings.RASTER_BACKUP_PATH);
   }
@@ -1365,6 +1403,10 @@ public class Environment1 implements MandelConstants  {
   { return backupFile(f,getInfoBackup());
   }
 
+  public boolean backupAreaColormapFile(AbstractFile f)
+  { return backupFile(f,getAreaColormapBackup());
+  }
+
   public boolean backupRasterFile(AbstractFile f)
   { return backupFile(f,getRasterBackup());
   }
@@ -1387,6 +1429,10 @@ public class Environment1 implements MandelConstants  {
 
   public File mapToInfoFile(AbstractFile f)
   { return MandUtils.mapFile(f,INFO_SUFFIX,getInfoFolder(f));
+  }
+
+  public File mapToAreaColormapFile(AbstractFile f)
+  { return MandUtils.mapFile(f,AREACOLMAP_SUFFIX,getAreaColormapFolder(f));
   }
 
   public File mapToRasterImageFile(AbstractFile f)

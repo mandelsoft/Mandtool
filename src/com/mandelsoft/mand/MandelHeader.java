@@ -61,6 +61,9 @@ public class MandelHeader implements MandelConstants {
     if (is(C_COLMAP)) {
       return "Colormap";
     }
+    if (is(C_AREACOLMAP)) {
+      return "Area Colormap";
+    }
     if (has(C_INFO)) {
       return "Mandel Info";
     }
@@ -89,12 +92,17 @@ public class MandelHeader implements MandelConstants {
 
   public boolean isColormap()
   {
-    return is(MandelData.C_COLMAP);
+    return is(C_COLMAP);
   }
 
   public boolean isInfo()
   {
     return is(C_INFO);
+  }
+
+  public boolean isAreaColormap()
+  {
+    return is(C_AREACOLMAP);
   }
 
   public boolean isRaster()
@@ -155,6 +163,11 @@ public class MandelHeader implements MandelConstants {
   public boolean hasMapper()
   {
     return has(C_MAPPER);
+  }
+
+  public boolean hasMandelColormap()
+  {
+    return has(C_AREACOLMAP);
   }
 
   public boolean hasImageData()

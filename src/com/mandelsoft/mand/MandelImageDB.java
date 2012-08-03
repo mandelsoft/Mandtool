@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import com.mandelsoft.io.AbstractFile;
 import com.mandelsoft.mand.scan.FilteredMandelScanner;
+import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.scan.PathMandelScanner;
 import com.mandelsoft.mand.scan.MandelScannerCache;
@@ -60,6 +61,7 @@ public class MandelImageDB implements MandelConstants  {
   private MandelScanner prioinfo;
   private MandelScanner meta;
   private MandelScanner rasterimage;
+  private MandelScanner areacolmap;
   private MandelScanner colormaps;
   private MandelScanner newraster;
   private MandelScanner incomplete;
@@ -155,6 +157,7 @@ public class MandelImageDB implements MandelConstants  {
 
     all=new PathMandelScanner(path, MandelScanner.ALL, settings.isLocal(),
                               scannercache);
+    areacolmap=new FilteredMandelScanner(all, MandelScanner.HAS_AREACOLMAP);
     imagedata=new FilteredMandelScanner(all, MandelScanner.HAS_IMAGEDATA);
     raster=new FilteredMandelScanner(all, MandelScanner.RASTER);
     info=new FilteredMandelScanner(all, MandelScanner.INFO);
@@ -206,6 +209,13 @@ public class MandelImageDB implements MandelConstants  {
 
     userlists=new ArrayList<MandelListFolderTree>();
     addUserLists(settings.getProperty(Settings.USERLIST_PATH));
+
+    System.out.println("**** lookup area colormaps: "+path);
+    for (MandelHandle h:areacolmap.getMandelHandles()) {
+      if (h.getHeader().isAreaColormap()) {
+        System.out.println("areacm: "+h.getFile());
+      }
+    }
   }
 
   private void addUserLists(String path)
@@ -401,6 +411,11 @@ public class MandelImageDB implements MandelConstants  {
     return meta;
   }
 
+  public MandelScanner getAreaColormapScanner()
+  {
+    return areacolmap;
+  }
+
   public MandelScanner getImageDataScanner()
   {
     return imagedata;
@@ -433,6 +448,11 @@ public class MandelImageDB implements MandelConstants  {
     return settings.getProperty(name);
   }
 
+  public boolean getSwitch(String name, boolean def)
+  {
+    return settings.getSwitch(name,def);
+  }
+
   public boolean isCleanupInfo()
   {
     return Utils.parseBoolean(getProperty(Settings.INFO_CLEANUP),true);
@@ -462,6 +482,11 @@ public class MandelImageDB implements MandelConstants  {
   public File getInfoFolder(AbstractFile d)
   {
     return getFolder(d, Settings.INFO_SAVE_PATH);
+  }
+
+  public File getAreaColormapFolder(AbstractFile d)
+  {
+    return getFolder(d, Settings.AREACOLMAP_SAVE_PATH);
   }
 
   public File getRasterFolder(AbstractFile d)
@@ -498,6 +523,10 @@ public class MandelImageDB implements MandelConstants  {
 
   public File mapToRasterFile(AbstractFile f)
   { return MandUtils.mapFile(f,RASTER_SUFFIX,getRasterFolder(f));
+  }
+
+  public File mapToAreaColormapFile(AbstractFile f)
+  { return MandUtils.mapFile(f,AREACOLMAP_SUFFIX,getRasterFolder(f));
   }
 
   public File mapToInfoFile(AbstractFile f)

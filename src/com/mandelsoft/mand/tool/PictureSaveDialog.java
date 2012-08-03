@@ -29,9 +29,9 @@ import com.mandelsoft.mand.image.MandelAreaImage;
 import com.mandelsoft.mand.mapping.Mapper;
 import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
+import com.mandelsoft.mand.util.CachedUpstreamColormapSourceFactory;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.SimpleColormapSourceFactory;
-import com.mandelsoft.mand.util.UpstreamColormapSourceFactory;
 import com.mandelsoft.swing.worker.CallbackWorker;
 import com.mandelsoft.swing.worker.ErrorNotification;
 import com.mandelsoft.swing.worker.WorkerProgressMonitor;
@@ -248,9 +248,9 @@ public class PictureSaveDialog extends MandelDialog {
 
       MandelImagePanel mp=acc.getMandelImagePane();
       if (mp!=null&&mp.getParentColormapModel().isSet()) {
-        cmfac=new UpstreamColormapSourceFactory(env.getImageDataScanner(),
-                                                mp.getColormapModel(),
-                                                env.getColormapCache());
+        cmfac=new CachedUpstreamColormapSourceFactory(env.getImageDataScanner(),
+                                                      mp.getColormapModel(),
+                                                      env.getColormapCache());
         System.out.println("-> save with upstream colormap");
       }
       else {
