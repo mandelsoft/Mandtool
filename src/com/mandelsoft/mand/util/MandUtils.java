@@ -403,6 +403,12 @@ public class MandUtils extends MandArith {
     return m;
   }
 
+  static public double getProportion(int rx, int ry, MandelInfo cur)
+  {
+    return div(cur.getDY(), cur.getDX()).doubleValue()*
+               cur.getRX()/cur.getRY()*rx/ry;
+  }
+  
   static public MandelInfo createRoot()
   {
     MandelInfo mi=new MandelInfo();

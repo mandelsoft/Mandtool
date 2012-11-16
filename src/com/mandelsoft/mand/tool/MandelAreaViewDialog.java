@@ -152,6 +152,11 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       label.setText(text);
     }
 
+    protected void _setRect(VisibleRect rect)
+    {
+      this.rect=rect;
+    }
+    
     public void setInfo(String name, MandelInfo info)
     {
       data=null;
@@ -704,8 +709,8 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       {
         if (rect==null) {
           String label=getRectLabel();
-          rect=getMandelWindowAccess().getMandelImagePane().getImagePane().
-                createRect(label,label);
+          _setRect(getMandelWindowAccess().getMandelImagePane().getImagePane().
+                createRect(label,label));
           rect.addRectModifiedEventListener(new ModifiedListener());
           rect.setFixed(!isChangeable());
         }

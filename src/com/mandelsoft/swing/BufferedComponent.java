@@ -756,6 +756,8 @@ public class BufferedComponent extends JComponent
     private boolean   fixed;
     private Object    owner;
 
+    private ProportionProvider proportionProvider;
+    
     private Stroke    line;
 
     private VisibleRect()
@@ -802,6 +804,16 @@ public class BufferedComponent extends JComponent
       draw();
       this.line=line;
       draw();
+    }
+
+    public ProportionProvider getProportionProvider()
+    {
+      return proportionProvider;
+    }
+
+    public void setProportionProvider(ProportionProvider proportionProvider)
+    {
+      this.proportionProvider=proportionProvider;
     }
 
     public void discard()
@@ -2051,6 +2063,11 @@ public class BufferedComponent extends JComponent
     { this.line=line;
     }
 
+    protected VisibleRect getVisibleRect()
+    {
+      return rect;
+    }
+    
     protected void select(VisibleRect rect, int action)
     {
       //System.out.println("**** rect selected "+action+": "+rect);
@@ -2231,7 +2248,7 @@ public class BufferedComponent extends JComponent
   }
 
   public static class ProportionalRectangleSelector extends RectangleSelector {
-    protected ProportionProvider proportion;
+    private ProportionProvider proportion;
 
     protected class ExtendedDimension extends Dimension {
       private Dimension adjust;
@@ -2260,7 +2277,11 @@ public class BufferedComponent extends JComponent
 
     public ProportionProvider getProportionProvider()
     {
-      return proportion;
+      ProportionProvider p=null;
+      if (getVisibleRect()!=null) {
+        p=getVisibleRect().getProportionProvider();
+      }
+      return p==null?proportion:p;
     }
 
     public void setProportionProvider(ProportionProvider proportion)
@@ -2274,7 +2295,7 @@ public class BufferedComponent extends JComponent
       double dy=d.getHeight();
       double sx=Math.abs(dx);
       double sy=Math.abs(dy);
-      double prop=this.proportion.getProportion();
+      double prop=this.getProportionProvider().getProportion();
       double ax=sy*prop;
       double ay=sx/prop;
       Dimension adjust=new Dimension(0,0);

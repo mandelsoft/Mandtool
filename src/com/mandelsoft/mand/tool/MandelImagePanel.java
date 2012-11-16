@@ -270,10 +270,8 @@ public class MandelImagePanel  extends GBCPanel
       double d=0;
       if (create!=null && create.isVisible()) {
         MandelInfo info=create.getInfo();
-        MandelInfo cur=getMandelInfo();
         if (info!=null) {
-          d=MandUtils.div(cur.getDY(), cur.getDX()).doubleValue()*
-                    cur.getRX()/cur.getRY()*info.getRX()/info.getRY();
+          d=MandUtils.getProportion(info.getRX(),info.getRY(), getMandelInfo());
         }
       }
       if (d==0.0) d=super.getProportion();
@@ -760,6 +758,7 @@ public class MandelImagePanel  extends GBCPanel
   private Action gotoAction;
   private Action saveAction;
   private Action areaCMSaveAction;
+  private Action areaCMDeleteAction;
   private Action showListsControlAction;
   private Action showJuliaAction;
   private Action showIterationPathAction;
@@ -1040,6 +1039,7 @@ public class MandelImagePanel  extends GBCPanel
     if (!isReadonly()) {
       saveAction=new SaveAction();
       areaCMSaveAction=new AreaCMSaveAction();
+      areaCMDeleteAction=new AreaCMDeleteAction();
     }
 
     showListsControlAction=new ShowListsControlAction();
@@ -1580,7 +1580,11 @@ public class MandelImagePanel  extends GBCPanel
 
     if (!isReadonly()) {
       menu.add(saveAction);
-      menu.add(new UpdatableJMenuItem(areaCMSaveAction));
+
+     JMenu submenu=new UpdatableJMenu("Area Colormap");
+     submenu.add(new UpdatableJMenuItem(areaCMSaveAction));
+     submenu.add(new UpdatableJMenuItem(areaCMDeleteAction));
+     menu.add(submenu);
     }
 
     it=new UpdatableJMenuItem(new HomeAction());
@@ -3242,7 +3246,7 @@ public class MandelImagePanel  extends GBCPanel
 
     public AreaCMSaveAction()
     {
-      super("Save Area Colormap");
+      super("Save");
     }
 
     public void actionPerformed(ActionEvent e)
@@ -3279,6 +3283,61 @@ public class MandelImagePanel  extends GBCPanel
     {
       System.out.println(ctx.getReason().getReason()+": "+getMandelData().isModified());
       setEnabled(getMandelData().isModified());
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+
+  private class AreaCMDeleteAction extends UpdatableAction {
+
+    public AreaCMDeleteAction()
+    {
+      super("Delete");
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      ToolEnvironment env=getEnvironment();
+      MandelHandle h=null;
+      Set<MandelHandle> set=env.getAreaColormapScanner().getMandelHandles(getMandelName());
+      if (set!=null)  {
+        for (MandelHandle mh:set) {
+          if (mh.getHeader().isAreaColormap()) {
+            h=mh;
+            break;
+          }
+        }
+      }
+      if (h!=null) {
+        env.startUpdate();
+        try {
+          if (h.getFile().isFile()) {
+             MandelFolder.Util.delete(h.getFile().getFile());
+             getEnvironment().getColormapCache().remove(getMandelName());
+          }
+        }
+        catch (IOException io) {
+          mandelError("Area colormap "+h.getFile()+"cannot be deleted", io);
+        }
+        finally {
+          env.finishUpdate();
+        }
+      }
+    }
+
+    @Override
+    public void updateObject(UpdateContext ctx)
+    { boolean b=false;
+      Set<MandelHandle> set=env.getAreaColormapScanner().getMandelHandles(getMandelName());
+      if (set!=null)  {
+        for (MandelHandle mh:set) {
+          if (mh.getHeader().isAreaColormap()) {
+            b=true;
+            break;
+          }
+        }
+      }
+      setEnabled(b);
     }
   }
 

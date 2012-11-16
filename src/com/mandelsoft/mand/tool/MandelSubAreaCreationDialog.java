@@ -155,6 +155,9 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
 
     public void setRectHandled()
     {
+      if (this.rect!=null) {
+        this.rect.setProportionProvider(null);
+      }
       this.rect=null;
     }
 
@@ -181,9 +184,14 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
       }
       
       if (automode && rect!=this.rect) determineFilename();
-      this.rect=rect;
+      _setRect(rect);
     }
 
+    protected void _setRect(VisibleRect rect)
+    {
+      this.rect=rect;
+    }
+    
     @Override
     protected VisibleRect getSelectedRect()
     { return rect;

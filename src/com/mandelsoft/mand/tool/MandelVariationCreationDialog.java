@@ -27,8 +27,8 @@ import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.tool.MandelAreaCreationDialog.CreationView;
 import com.mandelsoft.mand.util.MandUtils;
-import com.mandelsoft.swing.BufferedComponent.RectModifiedEvent;
-import com.mandelsoft.swing.BufferedComponent.RectModifiedEventListener;
+import com.mandelsoft.swing.BufferedComponent.VisibleRect;
+import com.mandelsoft.swing.ProportionProvider;
 
 /**
  *
@@ -62,7 +62,8 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
   // view
   ///////////////////////////////////////////////////////////////////////
 
-  protected class VariationView extends CreationView {
+  protected class VariationView extends CreationView 
+                                implements ProportionProvider {
     private JButton namebutton;
     private JButton resetbutton;
 
@@ -77,6 +78,27 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
       determineFilename();
     }
 
+    public double getProportion()
+    {
+      MandelInfo info=getInfo();
+      if (info!=null) {
+        MandelInfo cur=MandelVariationCreationDialog.this.
+                            getMandelWindowAccess().getMandelData().getInfo();
+        return MandUtils.getProportion(info.getRX(), info.getRY(), cur);
+      }
+      return 1.0;
+    }
+
+    @Override
+    protected void _setRect(VisibleRect rect)
+    {
+      super._setRect(rect);
+      if (rect!=null) {
+        rect.setProportionProvider(this);
+      }
+    }
+
+    
     @Override
     protected void setupButtons()
     {

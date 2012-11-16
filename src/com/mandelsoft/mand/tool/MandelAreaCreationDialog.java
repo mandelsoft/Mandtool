@@ -128,6 +128,7 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
                   new MandelAreaEvent(MandelAreaCreationDialog.this,
                                       MandelAreaEvent.MA_UPDATE));
         }
+        rect.setProportionProvider(null);
         rect=null;
       }
     }

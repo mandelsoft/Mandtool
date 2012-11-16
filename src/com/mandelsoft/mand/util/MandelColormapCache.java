@@ -1,5 +1,6 @@
 package com.mandelsoft.mand.util;
 
+import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.cm.Colormap;
 import java.util.ArrayList;
@@ -36,6 +37,18 @@ public class MandelColormapCache {
     list.remove(n);
     map.remove(n);
     locked.remove(n);
+  }
+
+  synchronized
+  public void remove(MandelName n)
+  {
+    List<QualifiedMandelName> del=new ArrayList<QualifiedMandelName>();
+    for (QualifiedMandelName q:list) {
+      if (q.getMandelName().equals(n)) del.add(q);
+    }
+    for (QualifiedMandelName q:list) {
+      remove(n);
+    }
   }
 
   synchronized

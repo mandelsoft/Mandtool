@@ -126,7 +126,7 @@ a set of qualified area names. It can be visualized as a text table or as a
 galery of thumbnail views and used to navigate directly to a dedicated area
 instead of diving into the tree subarea by subarea.
 
-There are several standard lists known ans exploited by the tool: favorites,
+There are several standard lists known and exploited by the tool: favorites,
 todos, key areas, tool and window memory, unseen and the window history. While
 favorites, todos, key areas and memory lists are maintained
 by the user the unseen and history lists are implicitly handled by the tool.
@@ -134,6 +134,11 @@ Additionaly there may be lists created by the user.
 
 Persistent lists are stored in list files, for example the files favorites,
 todos and seen in the root folder of an image base.
+
+Besides those explicit list, that are explicitly maintained by the user or
+automatically by the tool, there are also lists derived from the actual state
+of the area tree and/or the actually displayed area. Those lists are created
+on-demand by the tool when they are requested by the user.
 
 1.4.2 Folders
 The lists are organized by a folder tree. Every folder of this tree may
@@ -246,6 +251,97 @@ The tools stores the viewing history of a main window in the window's history
 list. The history list is indexed by a history number. It can be used
 to navigate back to ares visited in the past. Like the window memory this
 list is non-persistent and gets lost when the window is closed.
+
+1.6 Derived Lists
+
+The browsing tool is able to generate dedicated structural lists based on the
+area hierarchy and the actually displayed area. After generation the list is
+immutable and does not reflect changes in the area tree.
+
+1.6.1 Favorites
+
+This generated list shows the favorites of the sub tree below the actually
+displayed area.
+
+1.6.2 Todos
+
+This generated list shows the todos of the sub tree below the actually
+displayed area.
+
+1.6.3 Transitive Sub Areas
+
+This generated list shows all areas of the sub tree below the actually
+displayed area.
+
+1.6.4 Mandel Areas
+
+This generated list shows the areas of the sub tree below the actually
+displayed showing the typical mandelbrot set shape.
+
+1.6.5 Leaf Images
+
+This generated list shows the leafes of the image sub tree below the actually
+displayed area. A leaf image is an area available as image that does not
+contain sub areas available as image, but only calculation requests or no
+further sub areas.
+
+1.6.6 Dead Ends
+
+This generated list shows the leaf areas of the sub tree below the actually
+displayed area (including calculation requests).
+
+1.6.7 Pending Work
+
+This generated list shows the leafes of the sub tree below the actually
+displayed area not showing the typical mandelbrot set shape.
+
+1.6.8 Mandel Ends
+
+This generated list shows the leafes of the sub tree below the actually
+displayed area showing thetypical mandelbrot set shape not having further
+sub requests.
+
+1.6.9 Unseen Areas
+
+This generated list shows the unseen area images of the sub tree below the
+actually  displayed area.
+
+1.6.10 Request List
+
+This generated list shows the pending calculation requests of the sub tree below
+the actually displayed area.
+
+1.6.11 Direct Key Areas
+
+This generated list shows the next key areas below the
+actually displayed area.
+
+1.6.12 Key Areas
+
+This generated list shows the key areas of the sub tree below the actually
+displayed area.
+
+1.6.13 Direct Fork Areas
+
+This generated list shows the next fork areas below the actually
+displayed area. A fork area is an area that contains more than one sub areas.
+
+1.6.14 Fork Areas
+
+This generated list shows the fork areas of the sub tree below the actually
+displayed area.
+
+1.7 Colormaps for Displaying Area Images
+
+The browser is able to display images for areas already calculated. It is
+possible to display pure raster data by applying a colormap. If the used
+area data does not contain a colormap the colormap used for the previously
+displayed area is used.
+
+If in the setttings the 'upstream colormap' mode is enabled, the colormap
+is taken from the first area up the tree from the area designated to be
+displayed. This might be an explicitly assigned area colormap or the colormap
+stored in an image file together with the raster data.
 
 2 Mandtool Windows
 
@@ -410,6 +506,11 @@ The following menu entries can be found:
   - Save.
       In non-readonly mode save the currently displayed image as a mandel
       image file containing the raster, the colormap and the mapping.
+
+  - Area colormaps
+      In non-readonly mode this sub menu contains entries to save and delete
+      an area colormap for the actual image (using the actual colormap).
+
   - Home.
       Return to the root area image.
   - Tool Control.
@@ -629,6 +730,7 @@ The toolset uses a common file container format to store all its data files.
 Such a container may contain several kinds of data, exclusively or in
 combination.
    - Image Area Meta Data
+   - Area Colormap
    - Colormap
    - Raster Mapper Specification
    - Raster Mapping
@@ -694,6 +796,17 @@ jpeg, gif, tif and png file types should be available).
 
 Those files can only be generated by the tool for further usage by other
 tool sets but are not intended to be processed by the mandel tool set.
+
+4.6 Area Colormap
+
+An area colormap is a colormap assigned to a dedicated area. The files contains
+the colormap plus the area meta data and uses a mandel file name specifying
+the position in the area tree.
+
+It is used as a default colormap for the areas below the designated areas up to
+areas featuring an own colormap. either by havong an assigned area colormap or
+carrying the colormap together with the raster data in form of a raster image
+file.
 
 5. Configuration
 
