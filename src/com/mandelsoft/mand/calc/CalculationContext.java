@@ -119,10 +119,7 @@ public abstract class CalculationContext extends MandelSpec {
   public PixelIterator getPixelIterator()
   {
     if (iter==null) {
-      iter=MandIter.createPixelIterator(getXMin(), getYMax(),
-                                        getDX(), getDY(),
-                                        getRX(), getRY(),
-                                        getLimitIt());
+      iter=MandIter.createPixelIterator(this);
     }
     return iter;
   }

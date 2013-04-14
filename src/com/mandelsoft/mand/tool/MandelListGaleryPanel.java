@@ -136,6 +136,28 @@ public class MandelListGaleryPanel
 
   private Ticker ticker=new Ticker();
 
+  private int last;
+  
+  private void requestThumbnail(int index)
+  {
+    if (index>=0 && index<list.getModel().getSize()) {
+      System.out.println("request index "+(index));
+      getModel().requestThumbnail(index, getMaxImage());
+    }
+  }
+  
+  @Override
+  protected void requestListIndex(int index)
+  {
+    if (ticker.isRunning()) {
+      if (last!=index) {
+        last=index;
+        requestThumbnail(index);
+        requestThumbnail(index+1);
+      }
+    }
+  }
+  
   public void startTicker()
   {
     if (list.getVisibleRowCount()==1 &&

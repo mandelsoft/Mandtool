@@ -54,6 +54,8 @@ import java.awt.SplashScreen;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.DefaultListModel;
+import javax.swing.ListModel;
 
 /**
  *
@@ -437,6 +439,14 @@ public class ToolEnvironment extends Environment {
       unseenrefinements.fireTableDataChanged();
     }
   }
+  
+  private DefaultListModel frames=new DefaultListModel();
+  
+  public ListModel getMandelWindowsModel()
+  {
+    return frames;
+  }
+  
 
   private void setupFrame(JFrame frame)
   {
@@ -452,6 +462,9 @@ public class ToolEnvironment extends Environment {
     public FrameListener(JFrame frame)
     {
       this.frame=frame;
+      if (frame instanceof MandelImageFrame) {
+        frames.addElement(frame);
+      }
       frame.addWindowListener(this);
     }
 
@@ -461,6 +474,7 @@ public class ToolEnvironment extends Environment {
       decrementWindowCount();
       if (control==e.getSource()) control=null;
       frame.removeWindowListener(this);
+      frames.removeElement(e.getSource());
     }
   }
 

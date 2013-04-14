@@ -96,8 +96,6 @@ public abstract class GaleryPanel<E,M extends ThumbnailListModel<E>> extends GBC
     addComponentListener(l);
   }
 
-
-
   @Override
   protected void panelBound()
   {
@@ -137,6 +135,11 @@ public abstract class GaleryPanel<E,M extends ThumbnailListModel<E>> extends GBC
     this.maxframe=maxframe;
   }
 
+  public Dimension getMaxImage()
+  {
+    return maximage;
+  }
+  
   public M getModel()
   {
     return model;
@@ -234,6 +237,10 @@ public abstract class GaleryPanel<E,M extends ThumbnailListModel<E>> extends GBC
     }
   }
 
+  protected void requestListIndex(int index)
+  {
+  }
+  
   public class Renderer extends ItemPanel implements ListCellRenderer {
 
     Renderer()
@@ -246,6 +253,7 @@ public abstract class GaleryPanel<E,M extends ThumbnailListModel<E>> extends GBC
                                                   boolean cellHasFocus)
     {
       setData((E)value);
+      requestListIndex(index);
       if (isSelected) {
         setBackground(list.getSelectionBackground());
         setForeground(list.getSelectionForeground());

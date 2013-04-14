@@ -258,10 +258,7 @@ public class ImageHandler implements Request {
     else {
       this.file=env.mapToRasterFile(md.getFile());
     }
-    pi=MandIter.createPixelIterator(mi.getXMin(), mi.getYMax(),
-                                    mi.getDX(), mi.getDY(),
-                                    mi.getRX(), mi.getRY(),
-                                    mi.getLimitIt());
+    pi=MandIter.createPixelIterator(mi);
     System.out.println("precision set to "+pi.getPrecision()+
                                                "("+pi.getMagnification()+")");
     mi.setMinIt(limit);

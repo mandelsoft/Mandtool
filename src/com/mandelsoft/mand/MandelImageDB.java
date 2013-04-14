@@ -210,10 +210,12 @@ public class MandelImageDB implements MandelConstants  {
     userlists=new ArrayList<MandelListFolderTree>();
     addUserLists(settings.getProperty(Settings.USERLIST_PATH));
 
-    System.out.println("**** lookup area colormaps: "+path);
-    for (MandelHandle h:areacolmap.getMandelHandles()) {
-      if (h.getHeader().isAreaColormap()) {
-        System.out.println("areacm: "+h.getFile());
+    if (debug) {
+      System.out.println("**** lookup area colormaps: "+path);
+      for (MandelHandle h:areacolmap.getMandelHandles()) {
+        if (h.getHeader().isAreaColormap()) {
+          System.out.println("areacm: "+h.getFile());
+        }
       }
     }
   }

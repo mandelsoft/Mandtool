@@ -36,9 +36,9 @@ import com.mandelsoft.swing.ThumbnailListenerSupport;
  */
 public abstract class AbstractMandelListModel<E> extends AbstractListModel
                                               implements ThumbnailListModel<E> {
-  protected AsyncThumbnailFactory factory;
-  private ThumbnailListenerSupport<E> listeners;
-  private Listener listener;
+  final protected AsyncThumbnailFactory factory;
+  final private ThumbnailListenerSupport<E> listeners;
+  final private Listener listener;
   private boolean modifiable;
 
   protected AbstractMandelListModel()
@@ -143,6 +143,17 @@ public abstract class AbstractMandelListModel<E> extends AbstractListModel
     return factory.getThumbnail(getQualifiedName(element),max);
   }
 
+  public void requestThumbnail(int index, Dimension max)
+  {
+    QualifiedMandelName n=getQualifiedName((E)getElementAt(index));
+    factory.requestThumbnail(n,max);
+  }
+
+  public void requestThumbnail(E element, Dimension max)
+  {
+    factory.requestThumbnail(getQualifiedName(element),max);
+  }
+  
   protected void cleanupThumbnails()
   {
     //System.out.println("cleanup thumbs "+factory);

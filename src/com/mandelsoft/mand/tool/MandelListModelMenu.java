@@ -15,72 +15,43 @@
  */
 package com.mandelsoft.mand.tool;
 
-import java.util.ListIterator;
 import com.mandelsoft.mand.QualifiedMandelName;
-import com.mandelsoft.util.ChangeEvent;
-import java.util.ArrayList;
-import java.util.List;
+import javax.swing.JOptionPane;
 
 /**
  *
  * @author Uwe Krüger
  */
 
-public class MandelListModelMenu extends MandelListMenu {
-  private MandelListModel mlmodel;
-  private MandelListListener listener;
-
+public class MandelListModelMenu extends AbstractMandelListModelMenu {
+  // copied from MandelListMenu : found no better way
+  
   public MandelListModelMenu(MandelWindowAccess access, MandelListModel model)
   {
-    super(access);
-    setup(model);
+    this("Load", access, model);
   }
-
-  public MandelListModelMenu(String name,
-                             MandelWindowAccess access, MandelListModel model)
+  
+  public MandelListModelMenu(String name, MandelWindowAccess access, MandelListModel model)
   {
-    super(name, access);
-    setup(model);
+    super(name, access, model);
   }
 
-  private final void setup(MandelListModel model)
+  @Override
+  protected void selectArea(QualifiedMandelName sel)
   {
-    listener = new Listener();
-    setMandelListModel(model);
+    access.getMandelImagePane().setBusy(true);
+    if (access.getMandelImagePane().setImage(sel)) {
+      handleLoaded(sel);
+    }
+    else {
+      JOptionPane.showMessageDialog(access.getMandelWindow(),
+                                    "Cannot load image: "+sel,
+                                    "Mandel IO", JOptionPane.WARNING_MESSAGE);
+    }
+    access.getMandelImagePane().setBusy(false);
   }
 
-  public void setMandelListModel(MandelListModel model)
+  protected void handleLoaded(QualifiedMandelName name)
   {
-    if (this.mlmodel!=null) this.mlmodel.removeMandelListListener(listener);
-    this.mlmodel=model;
-    if (model!=null) {
-      model.addMandelListListener(listener);
-      update();
-    }
-    else clear();
-  }
-
-  private void update()
-  {
-    List<Entry> entries=new ArrayList<Entry>();
-
-    for (QualifiedMandelName n:mlmodel.getList()) {
-      Entry e=lookup(n,entries);
-      if (e==null) e=createEntry(n);
-      entries.add(e);
-    }
-
-    clear();
-    for (Entry e:entries) {
-      add(e);
-    }
-  }
-
-  private class Listener implements MandelListListener {
-
-    public void listChanged(ChangeEvent evt)
-    {
-      update();
-    }
   }
 }

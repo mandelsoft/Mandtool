@@ -51,9 +51,9 @@ public abstract class MandelGaleryPanel<E,M extends ThumbnailListModel<E>>
     }
   }
 
-   protected void handleModifiable(boolean modifiable)
-   {
-   }
+  protected void handleModifiable(boolean modifiable)
+  {
+  }
 
   ///////////////////////////////////////////////////////////////////////////
   public MandelWindowAccess getMandelWindowAccess()

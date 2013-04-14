@@ -77,6 +77,21 @@ public class AsyncThumbnailFactory extends AbstractThumbnailFactory {
   
   public BufferedImage getThumbnail(QualifiedMandelName n, Dimension max)
   {
+    BufferedImage image=requestThumbnail(n,max).getImage();
+
+    if (image!=null) {
+      lifo.remove(n);
+      lifo.add(n);
+      if (lifo.size()>maxcache) {
+        remove(lifo.get(0));
+      }
+    }
+
+    return image;
+  }
+
+  public ImageSource<QualifiedMandelName> requestThumbnail(QualifiedMandelName n, Dimension max)
+  {
     ImageSource<QualifiedMandelName> src;
     BufferedImage image;
 
@@ -96,19 +111,9 @@ public class AsyncThumbnailFactory extends AbstractThumbnailFactory {
     else {
       queue.reschedule(src);
     }
-    image=src.getImage();
-
-    if (image!=null) {
-      lifo.remove(n);
-      lifo.add(n);
-      if (lifo.size()>maxcache) {
-        remove(lifo.get(0));
-      }
-    }
-
-    return image;
+    return src;
   }
-
+  
   private class Listener implements ImageChangeListener<QualifiedMandelName> {
     public void imageChanged(ImageSource<QualifiedMandelName> c)
     {

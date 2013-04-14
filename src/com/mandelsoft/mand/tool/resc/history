@@ -1,3 +1,10 @@
+Version 1.4
+   - navigation to area colormap
+   - preload of images for galery ticker
+   - control shutdown mode by tool
+   - create area links to areas of other mandel windows
+   - direct removal of area links
+
 Version 1.3
    - button to show area on main window for area meta data window
    - pending work + mandel end derived list
@@ -12,7 +19,7 @@ Version 1.2
    - linking for entries in mandel list views
    - more click sensitive areas at sides on main view window (down to mark)
    - hand cursor for sensitive areas
-   - next fork are down to mark action
+   - next fork area down to mark action
    - refined subarea name determination considering available nested areas
    - multi-area filter for calculation daemon
    - area to list

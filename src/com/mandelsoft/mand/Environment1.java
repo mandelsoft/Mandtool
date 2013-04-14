@@ -50,6 +50,9 @@ import com.mandelsoft.mand.util.ScannerColormapList;
 import com.mandelsoft.mand.util.TagList;
 import com.mandelsoft.mand.util.UniqueArrayMandelList;
 import com.mandelsoft.util.Utils;
+import java.io.FileOutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -279,6 +282,31 @@ public class Environment1 implements MandelConstants  {
   public Colormap getDefaultColormap()
   {
     return defcolormap;
+  }
+  
+  public boolean isShutdown()
+  {
+    File f=context.getRoot().getSub("shutdown").getFile();
+    return f!=null && f.exists();
+  }
+  
+  public boolean setShutdown(boolean s)
+  {
+    File f=context.getRoot().getSub("shutdown").getFile();
+    if (f==null) return false;
+    if (s) {
+      try {
+        new FileOutputStream(f).close();
+      }
+      catch (IOException ex) {
+        System.out.println("cannot create shutdown file");
+        return false;
+      }
+    }
+    else {
+      f.delete();
+    }
+    return true;
   }
   
   public boolean isReadonly(String label)

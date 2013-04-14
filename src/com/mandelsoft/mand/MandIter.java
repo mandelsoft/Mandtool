@@ -384,11 +384,11 @@ public class MandIter extends MandArith {
   // native support
   /////////////////////////////////////////////////////////////////////////
 
-  native static private int iter(String sx, String sy, String cx, String cy,
+  native static public int iter(String sx, String sy, String cx, String cy,
           String bound, int limit);
-  native static private int iterP(String sx, String sy, String cx, String cy,
+  native static public int iterP(String sx, String sy, String cx, String cy,
           String bound, int limit, int prec);
-  private static boolean useDLL;
+  public static boolean useDLL;
 
 
   static {

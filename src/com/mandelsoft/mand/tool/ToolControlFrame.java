@@ -38,14 +38,14 @@ import javax.swing.event.ChangeListener;
 public class ToolControlFrame extends JFrame {
 
   private ToolEnvironment env;
-
+  private ToolControlPanel panel;
 
   public ToolControlFrame(ToolEnvironment env)
   {
     this.env=env;
     setTitle("Tool Control Panel");
-    JPanel p=new ToolControlPanel();
-    add(p);
+    panel=new ToolControlPanel();
+    add(panel);
     pack();
     setResizable(false);
   }
@@ -58,13 +58,20 @@ public class ToolControlFrame extends JFrame {
   { return env;
   }
 
+  @Override
+  public void setVisible(boolean b)
+  {
+    super.setVisible(b);
+    panel.update();
+  }
+
   ///////////////////////////////////////////////////////////////////////////
   // Panel
   ///////////////////////////////////////////////////////////////////////////
 
   private class ToolControlPanel extends GBCPanel {
     private JCheckBox autoRescan;
-    private JCheckBox decorateSubAreas;
+    private JCheckBox shutdownMode;
     
     ToolControlPanel()
     { JButton b;
@@ -80,7 +87,7 @@ public class ToolControlFrame extends JFrame {
       if (s==null) s="";
       addTextField(row++,"Site owner", s);
    
-      autoRescan=new JCheckBox((Icon)null,env.isAutoRescan());
+      autoRescan=new JCheckBox((Icon)null, env.isAutoRescan());
       autoRescan.addChangeListener(new ChangeListener() {
         public void stateChanged(ChangeEvent e)
         {
@@ -90,7 +97,20 @@ public class ToolControlFrame extends JFrame {
           }
         }
       });
-      addField(row++,"Auto rescan",autoRescan);
+      addField(row++, "Auto rescan", autoRescan);
+
+      if (!env.isReadonly()) {
+        shutdownMode=new JCheckBox((Icon)null, env.isShutdown());
+        shutdownMode.addChangeListener(new ChangeListener() {
+          public void stateChanged(ChangeEvent e)
+          {
+            System.out.println("shutdown mode is "+shutdownMode.isSelected());
+            env.setShutdown(shutdownMode.isSelected());
+            shutdownMode.setSelected(env.isShutdown());
+          }
+        });
+        addField(row++, "Shutdown Mode", shutdownMode);
+      }
 
       JPanel buttons=new JPanel();
       add(buttons,GBC(0,row).setSpanW(2));
@@ -101,6 +121,11 @@ public class ToolControlFrame extends JFrame {
       buttons.add(b);
     }
 
+    private void update()
+    {
+      if (shutdownMode!=null) shutdownMode.setSelected(env.isShutdown());
+    }
+    
     private JTextField addTextField(int row, String name, String value)
     {
       JTextField tf=new JTextField();
