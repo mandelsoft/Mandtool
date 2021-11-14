@@ -21,6 +21,7 @@ import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.scan.MandelScannerUtils;
 import com.mandelsoft.mand.util.ArrayMandelList;
+import com.mandelsoft.mand.util.DefaultMandelList;
 import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.mand.util.MandelList;
 import java.util.ArrayList;
@@ -85,7 +86,7 @@ public class SubAreaFactory extends ScannerBasedMandelListFactory
 
   protected MandelList filterTree()
   {
-    MandelList list=new ArrayMandelList();
+    MandelList list=new DefaultMandelList();
     List<QualifiedMandelName> dive=new ArrayList<QualifiedMandelName>();
     List<QualifiedMandelName> next=new ArrayList<QualifiedMandelName>();
     List<QualifiedMandelName> tmp;

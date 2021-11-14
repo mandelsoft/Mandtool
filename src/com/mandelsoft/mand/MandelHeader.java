@@ -170,6 +170,11 @@ public class MandelHeader implements MandelConstants {
     return has(C_AREACOLMAP);
   }
 
+  public boolean isMandelColormap()
+  {
+    return is(C_AREACOLMAP);
+  }
+  
   public boolean hasImageData()
   {
     return (flags&C_IMAGEDATA)!=0;

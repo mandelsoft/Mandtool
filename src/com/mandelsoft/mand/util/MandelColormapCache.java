@@ -46,8 +46,8 @@ public class MandelColormapCache {
     for (QualifiedMandelName q:list) {
       if (q.getMandelName().equals(n)) del.add(q);
     }
-    for (QualifiedMandelName q:list) {
-      remove(n);
+    for (QualifiedMandelName q:del) {
+      remove(q);
     }
   }
 

@@ -218,13 +218,16 @@ public class MandelImageAreaDialog extends MandelAreaViewDialog {
               if (Utils.equals(orig.getInfo().getLocation(),
                                data.getInfo().getLocation())
                       &&Utils.equals(orig.getInfo().getKeywords(),
-                                     data.getInfo().getKeywords())) {
+                                     data.getInfo().getKeywords())
+                      &&Utils.equals(orig.getInfo().getProperties(),
+                                     data.getInfo().getProperties())) {
                 mandelInfo("data not changed");
               }
               else {
                 try {
                   orig.getInfo().setLocation(data.getInfo().getLocation());
                   orig.getInfo().setKeywords(data.getInfo().getKeywords());
+                  orig.getInfo().setProperties(data.getInfo().getProperties());
                   orig.write();
                 }
                 catch (IOException ex) {

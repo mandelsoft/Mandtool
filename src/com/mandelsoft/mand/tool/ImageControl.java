@@ -92,6 +92,7 @@ public class ImageControl extends ControlDialog {
   private ImageControlPanel image;
   private MappingPanel      mapping;
   private ColormapsPanel    colormaps;
+  private ColormapsPanel    areacolormaps;
   private DisplayPanel      display;
   private PicturePanel      picture;
 
@@ -109,7 +110,7 @@ public class ImageControl extends ControlDialog {
     addTab("Image", image=new ImageControlPanel());
 
     // tab colormaps
-    colormaps=new ColormapsPanel();
+    colormaps=new NamedColormapsPanel(getEnvironment().getColormapListModel());
     addTab("Colormaps", colormaps);
 
     // tab mapper
@@ -123,6 +124,10 @@ public class ImageControl extends ControlDialog {
       addTab("Data", new DataPanel());
     }
 
+     // tab area colormaps
+    areacolormaps=new AreaColormapsPanel(getEnvironment().getAreaColormapListModel());
+    addTab("Area Colormaps", areacolormaps);
+    
     // tab mapper
     addTab("Display", display=new DisplayPanel());
 
@@ -273,7 +278,7 @@ public class ImageControl extends ControlDialog {
         mappingtype.setText("none");
       }
       scale.setValue(Math.round(acc.getMandelImagePane().
-                                    getImagePane().getScale()*100));
+                                    getImagePane().getScaleX()*100));
       scale.setEditable(editable);
       if (debug)
       {
@@ -389,7 +394,9 @@ public class ImageControl extends ControlDialog {
 
     /////////////////////////////////////////////////////////////////////////
     private class SaveImageAction implements ActionListener {
+      int inset = 100;
 
+              
       public void actionPerformed(ActionEvent e)
       {
         BufferedImage tmp=null;
@@ -399,6 +406,8 @@ public class ImageControl extends ControlDialog {
         BufferedImage im=getMandelWindowAccess().getMandelImage().getImage();
         if (im!=null) {
           String name=imagefile.getFilename();
+          int hi = h_inset.getValue().intValue();
+          int vi = v_inset.getValue().intValue();
           String fmt=(String)formats.getSelectedItem();
           int w;
           int h;
@@ -415,15 +424,62 @@ public class ImageControl extends ControlDialog {
             (g=tmp.getGraphics()).drawImage(im, 0, 0, w, h, null);
             im=tmp;
           }
-          if (decorationButton.isSelected()) {
-            if (tmp==null) {
-              tmp=new BufferedImage(im.getWidth(),im.getHeight(),BufferedImage.TYPE_INT_RGB);
-              (g=tmp.getGraphics()).drawImage(im, 0, 0, null);
-              im=tmp;
+          
+          String txt=text.getDataValue();
+          if (decorationButton.isSelected() || !Utils.isEmpty(txt) || titleButton.isSelected()) {
+            String deco = null;
+
+            if (titleButton.isSelected()) {
+              deco = getMandelWindowAccess().getMandelData().getInfo().getProperty(MandelInfo.ATTR_TITLE);
             }
-            if (g==null) g=im.getGraphics();
-            getMandelWindowAccess().getMandelImagePane().
-                    paintDecoration(g,im.getWidth(),im.getHeight());
+
+            String copyright = getMandelWindowAccess().getMandelImagePane().getCopyright((getMandelWindowAccess().getMandelData().getInfo()));
+            if (!Utils.isEmpty(copyright)) {
+              if (Utils.isEmpty(deco)) {
+                deco = copyright;
+              }
+              else {
+                deco += " " + copyright;
+              }
+            }
+            if (!Utils.isEmpty(txt)) {
+              if (Utils.isEmpty(deco)) {
+                deco = txt;
+              }
+              else {
+                deco += ", " + txt;
+              }
+            }
+
+            if (!Utils.isEmpty(deco)) {
+              if (tmp == null) {
+                tmp = new BufferedImage(im.getWidth(), im.getHeight(), BufferedImage.TYPE_INT_RGB);
+                (g = tmp.getGraphics()).drawImage(im, 0, 0, null);
+                im = tmp;
+              }
+              Decoration decoration = new Decoration(deco);
+
+              if (im.getHeight() > 1000) {
+                int size = 14 + (im.getHeight() - 1000) / 200;
+                decoration.setFontSize(size);
+                decoration.setHInset(hi + size - 14);
+                decoration.setVInset(vi + size - 14);
+              }
+              else {
+                decoration.setHInset(decoration.getHInset() + hi);
+                decoration.setVInset(decoration.getVInset() + vi);
+              }
+              decoration.setColorHandler(new DynamicColor(new DynamicColor.StaticImage(im)));
+              decoration.paintDecoration(g, im.getWidth(), im.getHeight());
+            }
+          }
+          else {
+            /*
+            if (getMandelWindowAccess().getMandelImagePane().getDecoration().showDecoration()) {
+              if (g==null) g=im.getGraphics();
+              getMandelWindowAccess().getMandelImagePane().paintDecoration(g, im.getWidth(),im.getHeight());
+            }
+            */ 
           }
           if (!name.endsWith("."+fmt)) {
             name+="."+fmt;
@@ -483,9 +539,6 @@ public class ImageControl extends ControlDialog {
         }
       }
     }
-
-    /////////////////////////////////////////////////////////////////////////
-
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -562,63 +615,33 @@ public class ImageControl extends ControlDialog {
   // colormaps tab
   /////////////////////////////////////////////////////////////////////////
   private class ColormapsPanel extends TablePanel<ColormapListModel> {
-    private FilePanel filename;
     private ColormapListModel model;
-
-    public ColormapsPanel()
+    
+    public ColormapsPanel(ColormapListModel mo)
     {
-      setModel(model=getEnvironment().getColormapListModel());
+      this(mo, "memory");
+    }
+    
+    public ColormapsPanel(ColormapListModel mo, String typeWidth)
+    {
+      setModel(model=mo);
       addActionListener(new ActivateAction());
       JComponent c=new JLabel("s");
       FontMetrics m=c.getFontMetrics(c.getFont());
 
       TableColumn col=getTable().getColumnModel().getColumn(1);
-      col.setPreferredWidth(m.charWidth('W')*10);
-      col.setMaxWidth(m.charWidth('W')*10);
-
-      col=getTable().getColumnModel().getColumn(2);
       col.setPreferredWidth(m.charWidth('W')*6);
       col.setMaxWidth(m.charWidth('W')*6);
+
+      col=getTable().getColumnModel().getColumn(2);
+      col.setPreferredWidth(m.stringWidth("W"+typeWidth));
+      col.setMaxWidth(m.stringWidth("W"+typeWidth));
       DefaultTableCellRenderer r=new DefaultTableCellRenderer();
       r.setHorizontalAlignment(DefaultTableCellRenderer.CENTER);
       col.setCellRenderer(r);
-              
-      filename=new FilePanel("Colormap File", "",
-                             new FileNameExtensionFilter("Colormaps", "cm"),
-                             getWindow());
-      filename.setEnableChooser(!getEnvironment().isReadonly());
-      addContent(filename, GBC(0, 2));
 
       addButton("Refresh", new RefreshAction());
-      addButton("Memorize", new MemorizeAction());
-      addButton("Remove", new RemoveAction());
-
-      if (!getEnvironment().isReadonly())
-        addButton("Save", new SaveAction());
-      addButton("Load", new LoadAction());
-      if (!getEnvironment().isReadonly())
-        addButton("Delete", new DeleteAction());
       addButton("Show", new ShowAction());
-    }
-
-    @Override
-    protected void setSelection(TableSelection sel)
-    {
-      try {
-        AbstractFile file=getModel().getFile(sel.getLeadSelection());
-        if (debug) {
-          System.out.println("model index: "+sel.getLeadSelection()+": "+file);
-        }
-        if (file==null) {
-          filename.setFilename(getModel().getName(sel.getLeadSelection()).getName());
-        }
-        else {
-          filename.setFilename(file.toString());
-        }
-      }
-      catch (IOException ex) {
-        if (debug) System.out.println("cannot get header: "+ex);
-      }
     }
 
     /////////////////////////////////////////////////////////////////////////
@@ -654,6 +677,143 @@ public class ImageControl extends ControlDialog {
     }
 
     /////////////////////////////////////////////////////////////////////////
+    private class ShowAction implements ActionListener {
+
+      public void actionPerformed(ActionEvent e)
+      {
+        int index=getSelectedIndex();
+        if (index<0) return;
+
+        try {
+          Colormap cm=getModel().getColormap(index);
+          if (cm!=null) {
+            showColormap(cm, getModel().getName(index).toString());
+          }
+        }
+        catch (IOException ex) {
+          if (getSelectedIndex()>=0) {
+            try {
+              Colormap cm=getModel().getColormap(getSelectedIndex());
+              showColormap(cm, getModel().getName(getSelectedIndex()).toString());
+              ex=null;
+            }
+            catch (IOException ex1) {
+              ex=ex1;
+            }
+          }
+          if (ex!=null) {
+            JOptionPane.showMessageDialog(getOwner(),
+                                          "Cannot read colormap: "+ex.toString(), //text to display
+                                          "Colormap IO", //title
+                                          JOptionPane.WARNING_MESSAGE);
+          }
+        }
+      }
+
+    }
+    
+    protected void showColormap(Colormap cm, String name)
+    {
+      ColormapDialog d=new ColormapDialog(getMandelWindowAccess(),
+                                              name,
+                                              cm, false);
+      d.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+      d.setVisible(true);
+    }
+  }
+
+  private class AreaColormapsPanel extends ColormapsPanel {
+    public AreaColormapsPanel(ColormapListModel mo)
+    {
+      super(mo, "Modifiable Mandel Image");
+      addButton("Goto", new GotoAction());
+    }
+    
+     /////////////////////////////////////////////////////////////////////////
+    private class GotoAction implements ActionListener {
+
+      public void actionPerformed(ActionEvent e)
+      {
+        int index=getSelectedIndex();
+        if (index<0) return;
+
+        QualifiedMandelName name = QualifiedMandelName.create(getModel().getName(getSelectedIndex()).toString());
+        if (name!=null) {
+          getMandelWindowAccess().getMandelImagePane().setImage(name);
+        }
+      }
+    }
+  }
+  
+  private class NamedColormapsPanel extends ColormapsPanel {
+    private FilePanel filename;
+
+    public NamedColormapsPanel(ColormapListModel mo)
+    {
+      super(mo);
+              
+      filename=new FilePanel("Colormap File", "",
+                             new FileNameExtensionFilter("Colormaps", "cm"),
+                             getWindow());
+      filename.setEnableChooser(!getEnvironment().isReadonly());
+      addContent(filename, GBC(0, 2));
+
+      addButton("Memorize", new MemorizeAction());
+      addButton("Remove", new RemoveAction());
+
+      addButton("ShowFile", new ShowFileAction());
+      addButton("Load", new LoadAction());
+      if (!getEnvironment().isReadonly()) {
+         addButton("Save", new SaveAction());
+         addButton("Delete", new DeleteAction());
+      }
+    }
+
+    @Override
+    protected void setSelection(TableSelection sel)
+    {
+      try {
+        AbstractFile file=getModel().getFile(sel.getLeadSelection());
+        if (debug) {
+          System.out.println("model index: "+sel.getLeadSelection()+": "+file);
+        }
+        if (file==null) {
+          filename.setFilename(getModel().getName(sel.getLeadSelection()).getName());
+        }
+        else {
+          filename.setFilename(file.toString());
+        }
+      }
+      catch (IOException ex) {
+        if (debug) System.out.println("cannot get header: "+ex);
+      }
+    }
+
+    /////////////////////////////////////////////////////////////////////////
+    private class LoadAction implements ActionListener {
+
+      public void actionPerformed(ActionEvent e)
+      {
+        if (Utils.isEmpty(filename.getFilename())) return;
+
+        try {
+          AbstractFile mf=getMandelWindowAccess().
+                  getEnvironment().createMandelFile(filename.getFilename());
+          MandelData md=new MandelData(mf);
+          if (md.getColormap()!=null) {
+            getMandelWindowAccess().getColormapModel().setColormap(md.getColormap());
+          }
+        }
+        catch (IOException ex) {
+          JOptionPane.showMessageDialog(getOwner(),
+                                        "Cannot read colormap: "+ex.toString(), //text to display
+                                        "Colormap IO", //title
+                                        JOptionPane.WARNING_MESSAGE);
+        }
+      }
+    }
+    
+    /////////////////////////////////////////////////////////////////////////
     private class SaveAction implements ActionListener {
 
       public void actionPerformed(ActionEvent e)
@@ -680,30 +840,6 @@ public class ImageControl extends ControlDialog {
                                           "Colormap IO", //title
                                           JOptionPane.WARNING_MESSAGE);
           }
-        }
-      }
-    }
-
-    /////////////////////////////////////////////////////////////////////////
-    private class LoadAction implements ActionListener {
-
-      public void actionPerformed(ActionEvent e)
-      {
-        if (Utils.isEmpty(filename.getFilename())) return;
-
-        try {
-          AbstractFile mf=getMandelWindowAccess().
-                  getEnvironment().createMandelFile(filename.getFilename());
-          MandelData md=new MandelData(mf);
-          if (md.getColormap()!=null) {
-            getMandelWindowAccess().getColormapModel().setColormap(md.getColormap());
-          }
-        }
-        catch (IOException ex) {
-          JOptionPane.showMessageDialog(getOwner(),
-                                        "Cannot read colormap: "+ex.toString(), //text to display
-                                        "Colormap IO", //title
-                                        JOptionPane.WARNING_MESSAGE);
         }
       }
     }
@@ -785,9 +921,9 @@ public class ImageControl extends ControlDialog {
         }
       }
     }
-
+    
     /////////////////////////////////////////////////////////////////////////
-    private class ShowAction implements ActionListener {
+    private class ShowFileAction implements ActionListener {
 
       public void actionPerformed(ActionEvent e)
       {
@@ -798,13 +934,13 @@ public class ImageControl extends ControlDialog {
                   getEnvironment().createMandelFile(filename.getFilename());
           MandelData md=new MandelData(mf);
           if (md.getColormap()!=null) {
-            show(md.getColormap());
+            showColormap(md.getColormap(), filename.getFilename());
           }
         }
         catch (IOException ex) {
           if (getSelectedIndex()>=0) {
             try {
-              show(getModel().getColormap(getSelectedIndex()));
+              showColormap(getModel().getColormap(getSelectedIndex()), filename.getFilename());
               ex=null;
             }
             catch (IOException ex1) {
@@ -819,18 +955,9 @@ public class ImageControl extends ControlDialog {
           }
         }
       }
-
-      private void show(Colormap cm)
-      {
-        ColormapDialog d=new ColormapDialog(getMandelWindowAccess(),
-                                                filename.getFilename(),
-                                                cm, false);
-            d.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            d.setVisible(true);
-      }
     }
   }
-
+    
   /////////////////////////////////////////////////////////////////////////
   // Mappings
   /////////////////////////////////////////////////////////////////////////
@@ -917,6 +1044,12 @@ public class ImageControl extends ControlDialog {
     private JCheckBox automark_keyarea;
     private JCheckBox automark_fork;
     private JCheckBox automark_parent;
+    
+    private JCheckBox show_copyright;
+    private JCheckBox show_title;
+    
+    private JCheckBox enable_refcoords;
+
 
     DisplayPanel()
     { JLabel c;
@@ -936,6 +1069,15 @@ public class ImageControl extends ControlDialog {
       automark_fork=createCheckbox(row++,mp.getAutoMarkForkModel());
       ////////////
       automark_parent=createCheckbox(row++,mp.getAutoMarkParentModel());
+      ////////////
+      show_copyright=createCheckbox(row++,mp.getShowCopyrightModel());
+      show_title=createCheckbox(row++,mp.getShowTitleModel());
+      if (getMandelWindowAccess().getEnvironment().getCopyright()!=null) {
+        show_copyright.setSelected(true);
+        show_copyright.setEnabled(false);
+        show_title.setSelected(true);
+        show_title.setEnabled(false);
+      }
       ////////////
       tooltip=createCheckbox(row++,mp.getPixelToolTipModel());
 
@@ -962,6 +1104,8 @@ public class ImageControl extends ControlDialog {
         ////////////
         proportion=createCombobox(row++,"Selection Proportion",
                                   mp.getProportionSelectionModel());
+        
+        enable_refcoords=createCheckbox(row++,mp.getEnableRefCoordsModel());
       }
     }
 

@@ -34,6 +34,8 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 /**
  *
@@ -71,9 +73,10 @@ public class TagSpec extends MandelSpecDialog<TagSpec.TagPanel> {
       tags=new JList(model);
       tags.setPrototypeCellValue("InitialTagValueForMandelArea");
       tags.setVisibleRowCount(10);
-      tags.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+      tags.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
       tags.setLayoutOrientation(JList.VERTICAL);
       tags.setFixedCellWidth(200);
+      tags.addListSelectionListener(new Listener());
       JScrollPane sp=new JScrollPane(tags);
       add(sp,new GBC(0,1));
 
@@ -95,6 +98,17 @@ public class TagSpec extends MandelSpecDialog<TagSpec.TagPanel> {
       setEditable(change);
     }
 
+    private class Listener implements ListSelectionListener {
+      @Override
+      public void valueChanged(ListSelectionEvent e)
+      {
+        String s=(String)tags.getSelectedValue();
+        if (s!=null) {
+           input.setSelectedItem(s);
+        }
+      }
+    }
+    
     @Override
     protected void panelBound()
     {

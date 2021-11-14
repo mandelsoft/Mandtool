@@ -527,7 +527,7 @@ The following menu entries can be found:
 If you move the mouse pointer to the middle of the upper window border
 an info popup appears. It show the most prominent info of the currently
 displayed area: Is it a key area and/or a favorite. How many subareas do exist.
-The magification, the minimal and maximal iteration cound and the
+The magnification, the minimal and maximal iteration bound and the
 calculation time.
 
 2.1.5 Area Mark
@@ -811,3 +811,9 @@ file.
 5. Configuration
 
 6. Toolset
+
+The calculation tool (mand) now supports the option -o to enable
+SUPERFRACTALTHING MATHS (formula 2). It replaces the options GMP based high
+precision math and is purely based on BigDecimal and double arithmetic
+(approx. 50 times faster) (http://www.science.eclipse.co.uk/sft_maths.pdf).
+It tzerefore does not require the native library anymore.

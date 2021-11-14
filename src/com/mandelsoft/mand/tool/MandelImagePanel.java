@@ -65,8 +65,10 @@ import javax.swing.event.ListDataEvent;
 import com.mandelsoft.io.FileAbstractFile;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.io.AbstractFile;
+import com.mandelsoft.mand.ColormapName;
 import com.mandelsoft.mand.Environment;
 import com.mandelsoft.mand.IllegalConfigurationException;
+import com.mandelsoft.mand.MandelHeader;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
@@ -106,6 +108,7 @@ import com.mandelsoft.mand.tool.slideshow.SlideShowModel;
 import com.mandelsoft.mand.tool.slideshow.SlideShowSourceAdapter;
 import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.CachedUpstreamColormapSource;
+import com.mandelsoft.mand.util.DefaultMandelList;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MemoryMandelListFolderTree;
 import com.mandelsoft.swing.AbstractListDataListener;
@@ -139,12 +142,13 @@ import com.mandelsoft.util.upd.UpdateReason;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.image.ColorModel;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.ListIterator;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
@@ -166,13 +170,13 @@ public class MandelImagePanel  extends GBCPanel
                                           UpdateSource {
   static public boolean debug=false;
   static public boolean debugHL=false;
-  static public boolean iterPathActive=false;
+  static public boolean iterPathActive=true;
   
   static private BasicStroke dashed=new BasicStroke(1, BasicStroke.CAP_ROUND,
                              BasicStroke.JOIN_ROUND, 10, new float[]{4, 4}, 0);
   static private BasicStroke favorite=new BasicStroke(2, BasicStroke.CAP_ROUND,
                              BasicStroke.JOIN_ROUND);
-
+      
   /////////////////////////////////////////////////////////////////////////
   // Area Selection Model
   /////////////////////////////////////////////////////////////////////////
@@ -334,6 +338,8 @@ public class MandelImagePanel  extends GBCPanel
               new ProportionProvider.Proportion(4.0/3.0)));
       addElement(new Proportion("1:1",
               new ProportionProvider.Proportion(1.0/1.0)));
+      addElement(new Proportion("Screen",
+              new ProportionProvider.Screen()));
       addElement(new Proportion("Creation Dialog Proportion",
               creatpropprov));
 
@@ -369,11 +375,15 @@ public class MandelImagePanel  extends GBCPanel
     public String getToolTipText(MouseEvent event)
     {
       MandelRaster r;
-      Point p=new Point((int)(event.getY()/filterscale),
-                        (int)(event.getX()/filterscale));
+      ColorModel m;
+      Point p=new Point((int)(event.getX()/filterscale),
+                        (int)(event.getY()/filterscale));
       r=image.getRasterData();
-      int d=(r.getRaster())[(int)p.getX()][(int)p.getY()];
-      return "("+event.getX()+","+event.getY()+"): "+d;
+      m=image.getImage().getColorModel();
+      int rgb=image.getImage().getRGB(event.getX(), event.getY());
+      int d=(r.getRaster())[(int)p.getY()][(int)p.getX()];
+      return "("+event.getX()+","+event.getY()+"): "+d+
+              " ("+m.getRed(rgb)+","+m.getGreen(rgb)+","+m.getBlue(rgb)+")";
     }
   }
 
@@ -647,7 +657,10 @@ public class MandelImagePanel  extends GBCPanel
   ///////////////////////////////////////////
   public class Mark extends ExplicitHighlight {
     private DefaultMandelListListModel previous;
-
+     private DefaultMandelListListModel all;
+    private MandelInfo info;
+    private VisibleRect rect;
+            
     public Mark(Environment env)
     {
       super("marked",true);
@@ -655,6 +668,9 @@ public class MandelImagePanel  extends GBCPanel
                                               env.getAllScanner());
       previous.setModifiable(true);
       previous.setDuplicates(true);
+      all=new DefaultMandelListListModel(new ArrayMandelList(),
+                                         env.getAllScanner());
+      all.setModifiable(true);
     }
 
     @Override
@@ -663,10 +679,79 @@ public class MandelImagePanel  extends GBCPanel
       QualifiedMandelName mn=name.getBaseName();
       int size=previous.getSize();
       super.setQualifiedName(name);
+      all.add(name);
       if (size==0 || !previous.getElementAt(0).equals(mn)) {
         previous.add(0, mn);
         if (size>=20) {
           previous.remove(20);
+        }
+      }
+      info=null;
+      try {
+        MandelHandle h=env.getAllScanner().getMandelInfo(getQualifiedName());
+        if (h!=null) info=h.getInfo().getInfo();
+      }
+      catch (IOException ex) {
+      }
+      update();
+    }
+    
+    @Override
+    protected boolean _isActive()
+    {
+      if (super._isActive()) {
+        return true;
+      }
+      if (info == null) {
+        return false;
+      }
+      MandelInfo cur = MandelImagePanel.this.getMandelData().getInfo();
+      BigDecimal x0 = cur.getXMin();
+      BigDecimal y0 = cur.getYMin();
+      BigDecimal x = info.getXMin();
+      BigDecimal y = info.getYMin();
+      return (x.compareTo(x0) >= 0
+              && y.compareTo(y0) >= 0
+              && x.add(info.getDX()).compareTo(x0.add(cur.getDX())) <= 0
+              && y.add(info.getDY()).compareTo(y0.add(cur.getDY())) <= 0);
+
+    }
+
+    public void show()
+    {
+      if (getQualifiedName()!=null) {
+        if (rect==null) {
+          String label=marked.getMandelName().getName();
+       
+          rect=getImagePane().createRect(label,label);
+          rect.setFixed(true);
+        }
+        rect.activate(!rect.isActive());
+        rect.setVisible(rect.isActive());
+        update();
+      }
+    }
+    
+    @Override
+    public void clear()
+    {
+      super.clear();
+      if (rect!=null) {
+        rect.discard();
+        rect=null;
+      }
+      info=null;
+    }
+    
+    public void update()
+    {
+      if (rect!=null && isActive()) {
+        if (info!=null) {
+          rect.activate();
+          updateRect(rect,info);
+        }
+        else {
+          rect.setVisible(false);
         }
       }
     }
@@ -794,6 +879,10 @@ public class MandelImagePanel  extends GBCPanel
   private BooleanAttribute automark_keyarea;
   private BooleanAttribute automark_fork;
   private BooleanAttribute autoshow_info;
+  private BooleanAttribute show_copyright;
+  private BooleanAttribute show_title;
+  private BooleanAttribute enable_refcoords;
+
 
   private MandelWindowsMenuListener mandelwindowslistener;
   
@@ -851,7 +940,7 @@ public class MandelImagePanel  extends GBCPanel
     };
     this.removelinks.setSorted(true);
     
-    this.keyareas=new DefaultMandelListListModel(new ArrayMandelList(),
+    this.keyareas=new DefaultMandelListListModel(new DefaultMandelList(),
                                                  env.getAllScanner());
     this.keyareas.setModifiable(true);
     this.highlighted=new ExplicitHighlight("highlighted", true);
@@ -904,7 +993,14 @@ public class MandelImagePanel  extends GBCPanel
                            "Auto Mark for Key Area Navigation",true);
     this.automark_parent=new ConfiguredBooleanAttribute(this,"automark-parent",
                            "Auto Mark for Parent Navigation");
-
+    this.show_copyright=new ConfiguredBooleanAttribute(this,"show-copyright",
+                           "Show Copyright");
+    this.show_copyright.setState(env.getCopyright()!=null);
+    this.show_title=new ConfiguredBooleanAttribute(this,"show-title",
+                           "Show Title");
+    this.show_title.setState(env.getCopyright()!=null);
+    this.enable_refcoords=new ConfiguredBooleanAttribute(this,"enable-refcoords",
+                           "Enable Reference Coordinates");
     this.fullareanames=new ConfiguredBooleanAttribute(this,"full-areanames",
                            "Show Full Sub Area Names") {
       @Override
@@ -921,8 +1017,8 @@ public class MandelImagePanel  extends GBCPanel
     };
 
     this.buffer=new Buffer(filter(img.getImage()));
-    this.buffer.setShowDecoration(env.getCopyright()!=null);
-    this.buffer.setDecoration(env.getCopyright(img.getInfo())); 
+    this.buffer.setShowDecoration(show_copyright.isSet() || show_title.isSet());
+    this.setImageDecoration(img.getInfo()); 
     //this.buffer.setBorder(BorderFactory.createLineBorder(Color.blue,5));
     this.buffer.setBorder(null);
     this.buffer.getDecorationModel().setLabel("Show Subarea Names");
@@ -945,13 +1041,14 @@ public class MandelImagePanel  extends GBCPanel
           partial=!buffer.getPreferredSize().equals(vp.getExtentSize());
         }
         else partial=false;
+        buffer.setLimitWindowSize(true);
       }
     });
     add(this.scrollpane,GBC(0,0,GBC.BOTH));
     //this.setBorder(BorderFactory.createLineBorder(Color.black,5));
     this.setBorder(null);
     this.initialImage=img;
-    this.buffer.setLimitWindowSize(true);
+    this.buffer.setLimitWindowSize(true);    
   }
 
   private class Buffer extends BufferedComponent {
@@ -961,6 +1058,7 @@ public class MandelImagePanel  extends GBCPanel
     {
       super(image);
       decoration=new Decoration();
+      decoration.setColorHandler(getColorHandler());
     }
 
     public void setDecoration(String s)
@@ -990,7 +1088,7 @@ public class MandelImagePanel  extends GBCPanel
 
   
   //////////////////////////////////////////////////////////////////////
-
+  
   @Override
   protected void panelBound()
   {
@@ -1207,9 +1305,59 @@ public class MandelImagePanel  extends GBCPanel
     if (rotator!=null) rotator.cancel();
   }
 
+  public String getDecorationText(MandelInfo info)
+  {
+    String deco=null;
+    
+    if (show_title.isSet()) {
+      deco=info.getProperty(MandelInfo.ATTR_TITLE);
+    }
+    if (show_copyright.isSet()) {
+      String copyright=getCopyright(info);
+      if (!Utils.isEmpty(copyright)) {
+        if (Utils.isEmpty(deco)) deco=copyright;
+        else deco=deco+" "+copyright;
+      }
+    }
+    return deco;
+  }
+          
+  public String getCopyright(MandelInfo info)
+  {
+    String c = this.env.getCopyright(info);
+    if (c == null || c.isEmpty()) {
+      c = env.getCopyright(this.env.getProperty(Settings.USER),
+              this.env.getProperty(Settings.SITE));
+    }
+    if (c != null && !c.isEmpty()) {
+      if (info.getCreationTime() != 0) {
+        Date date = new Date(info.getCreationTime());
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        int year = cal.get(Calendar.YEAR);
+        c += ", " + year;
+      }
+      return c;
+    }
+    return null;
+  }
+      
   public void setImageDecoration(String s)
   {
     buffer.setDecoration(s);
+  }
+
+  public void setImageDecoration(MandelInfo info)
+  {
+    String c = getDecorationText(info);
+    if (!Utils.isEmpty(c)) {
+      this.buffer.setDecoration(c);
+      this.buffer.setShowDecoration(true);
+    }
+    else {
+      this.buffer.setDecoration("");
+      this.buffer.setShowDecoration(false);
+    }
   }
 
   public BooleanAttribute getSelectInvisibleModel()
@@ -1255,6 +1403,22 @@ public class MandelImagePanel  extends GBCPanel
   public BooleanAttribute getAutoMarkParentModel()
   {
     return automark_parent;
+  }
+  
+  public BooleanAttribute getShowCopyrightModel()
+  {
+    return show_copyright;
+  }
+  
+  public BooleanAttribute getShowTitleModel()
+  {
+    return show_title;
+  }
+  
+  
+  public BooleanAttribute getEnableRefCoordsModel()
+  {
+    return enable_refcoords;
   }
 
 
@@ -1567,6 +1731,7 @@ public class MandelImagePanel  extends GBCPanel
     
     addMarkAction(mark,new GotoMarkAction());
     mark.add(new JMenuItem(new SetMarkAction()));
+    addMarkAction(mark,new ShowMarkAction());
     addMarkAction(mark,new CloneAction("Show Image") {
       @Override
       protected QualifiedMandelName getQualifiedMandelName()
@@ -1795,6 +1960,10 @@ public class MandelImagePanel  extends GBCPanel
       local.addFolderTreeModel(browserModel, "general");
       local.addListModel(getHistory(), "history", false);
       local.addFolderTreeModel(memoryModel, "window memory");
+      MandelListTableModel marks = new MandelListTableProxyModelForListModel(marked.all);
+      marks.setModifiable(false);
+      local.addListModel(marks, "marks");
+      
       browserModel=local;
     }
     return browserModel;
@@ -1853,8 +2022,8 @@ public class MandelImagePanel  extends GBCPanel
   private void setTitle()
   { String scale="";
     //System.out.println("Image scale="+getImagePane().getScale());
-    if (Math.round(getImagePane().getScale()*100)!=100.0) {
-      scale=" ["+Math.round(getImagePane().getScale()*100)+"%]";
+    if (Math.round(getImagePane().getScaleX()*100)!=100.0) {
+      scale=" ["+Math.round(getImagePane().getScaleX()*100)+"%]";
     }
     Window w=getWindow();
     if (w instanceof Frame) {
@@ -1973,7 +2142,7 @@ public class MandelImagePanel  extends GBCPanel
         System.out.println("*** no raster file found for "+name+" after relocate");
       }
     }
-    buffer.setDecoration(env.getCopyright(img.getInfo()));
+    setImageDecoration(img.getInfo());
     setTitle();
     fireRenewState();
     fireChangeEvent();
@@ -2149,6 +2318,11 @@ public class MandelImagePanel  extends GBCPanel
     }
   }
 
+  public MandelHeader getOrigMandelHeader()
+  {
+    return image.getMandelData().getOrigHeader();
+  }
+  
   //////////////////////////////////////////////////////////////////////////
   // Image setter
   //////////////////////////////////////////////////////////////////////////
@@ -2319,10 +2493,14 @@ public class MandelImagePanel  extends GBCPanel
 
     public boolean isActive()
     {
-      return enabled && name!=null &&
-             MandelImagePanel.this.getMandelName().isHigher(getMandelName());
+      return enabled && name!=null && _isActive();
     }
 
+    protected boolean _isActive()
+    {
+      return MandelImagePanel.this.getMandelName().isHigher(getMandelName());
+    }
+    
     public void setEnabled(boolean enabled)
     {
       this.enabled=enabled;
@@ -2482,7 +2660,7 @@ public class MandelImagePanel  extends GBCPanel
   { Set<MandelName> subs;
     MandelScanner scanner=env.getAutoMetaScanner();
     ExplicitHighlights.Handler highlights=explicitHighlights.createHandler();
-
+    highlights.handleAlreadyShown(name);
     if (rescan) scanner.rescan(false);
     subs=MandUtils.getSubNames(name, scanner);
     if (debug) System.out.println("**** found "+subs.size()+" sub areas");
@@ -2825,7 +3003,7 @@ public class MandelImagePanel  extends GBCPanel
   }
 
 
-   private class UnlinkFromMarkAction extends MarkActionBase {
+  private class UnlinkFromMarkAction extends MarkActionBase {
 
     public UnlinkFromMarkAction()
     { super("Unlink from");
@@ -2834,6 +3012,21 @@ public class MandelImagePanel  extends GBCPanel
     protected void markActionPerformed(ActionEvent e)
     {
       getEnvironment().removeLink(marked.getMandelName(), getMandelName());
+    }
+  }
+
+  private class ShowMarkAction extends MarkActionBase {
+
+    public ShowMarkAction()
+    {
+      super("Toggle Show Area");
+    }
+
+    protected void markActionPerformed(ActionEvent e)
+    {
+      if (marked != null) {
+        marked.show();
+      }
     }
   }
 
@@ -3049,7 +3242,7 @@ public class MandelImagePanel  extends GBCPanel
     {
       if (isPossible()) {
         MandelListModel m=getListModel();
-        MandelList ml=new ArrayMandelList(m.getList());
+        MandelList ml=new DefaultMandelList(m.getList());
         String title="Links Galery for "+getMandelName()+
                      " ("+Utils.sizeString(ml.size(), "entry")+")";
         System.out.println(title);
@@ -3069,7 +3262,7 @@ public class MandelImagePanel  extends GBCPanel
     {
       MandelListModel m=keyareas;
       if (m!=null && !m.getList().isEmpty()) {
-        MandelList ml=new ArrayMandelList(m.getList());
+        MandelList ml=new DefaultMandelList(m.getList());
         String title="Key Areas Galery for "+getMandelName()+
                      " ("+Utils.sizeString(ml.size(), "entry")+")";
         System.out.println(title);
@@ -3087,7 +3280,7 @@ public class MandelImagePanel  extends GBCPanel
 
     public void actionPerformed(ActionEvent e)
     {
-      MandelList ml=new ArrayMandelList();
+      MandelList ml=new DefaultMandelList();
       MandelName n=getMandelName();
       ml.add(getQualifiedName());
       while (!n.isRoot()) {
@@ -3297,7 +3490,8 @@ public class MandelImagePanel  extends GBCPanel
     {
       if (!iterDialog.isVisible()) {
        iterDialog.setVisible(true);
-       iterDialog.update(getMandelInfo().getLimitIt(),1, 1);
+       MandelInfo info=getMandelData().getInfo();
+       iterDialog.update(getMandelInfo().getLimitIt(),info.getXM(), info.getYM());
        setEnabled(false);
       }
     }
@@ -3437,8 +3631,10 @@ public class MandelImagePanel  extends GBCPanel
       try {
         mc.setTemporary(false);
         mc.write();
-        getEnvironment().getColormapCache().add(getQualifiedName(),
-                              new Colormap(mc.getColormap()));
+        MandelFolder.Util.add(save);
+        Colormap cm = new Colormap(mc.getColormap());
+        getEnvironment().getColormapCache().add(getQualifiedName(), cm);
+        getEnvironment().getAreaColormapListModel().add(new ColormapName(getQualifiedName().toString()), cm);
         updateObjects("areacm",getMandelName());
       }
       catch (IOException io) {
@@ -3485,6 +3681,14 @@ public class MandelImagePanel  extends GBCPanel
           if (h.getFile().isFile()) {
              MandelFolder.Util.delete(h.getFile().getFile());
              getEnvironment().getColormapCache().remove(getMandelName());
+             
+             if (getOrigMandelHeader().hasColormap()) {
+               Colormap cm = new Colormap(getMandelData().getColormap());
+               getEnvironment().getColormapCache().add(getQualifiedName(), cm);
+               getEnvironment().getAreaColormapListModel().add(new ColormapName(getQualifiedName().toString()), cm);
+             } else {
+                getEnvironment().getAreaColormapListModel().remove(new ColormapName(getQualifiedName().toString()));
+             }
              updateObjects("areacm",getMandelName());
           }
         }
@@ -3884,9 +4088,14 @@ public class MandelImagePanel  extends GBCPanel
   synchronized
   public void updateInfo(MandelInfo info, Rectangle rect)
   {
-    if (getMandelInfo()==null) return;
+    if (getMandelData()==null) return;
     //System.out.println("parent is "+getMandelInfo());
-    ToolUtils.updateInfo(info, rect, getMandelInfo(),filterscale);
+    if (enable_refcoords.isSet()) {
+      ToolUtils.updateInfo(info, rect, getMandelData(),filterscale);
+    }
+    else {
+      ToolUtils.updateInfo(info, rect, getMandelInfo(),filterscale);
+    }
   }
 
   synchronized
@@ -3953,9 +4162,12 @@ public class MandelImagePanel  extends GBCPanel
     private JTextField min;
     private JTextField max;
     private JTextField time;
+    private JTextField area;
+
     private Timer timer;
     private QualifiedMandelName name;
-
+    private String location;
+            
     public InfoPopup()
     {
       timer=new Timer(2000,new HideHandler());
@@ -3974,6 +4186,8 @@ public class MandelImagePanel  extends GBCPanel
       effective.add(max=createField());
       effective.add(new JLabel("Time: "));
       effective.add(time=createField());
+      effective.add(new JLabel("Areas: "));
+      effective.add(area=createField());
       effective.validate();
 
       setEffectiveComponent(effective);
@@ -4003,6 +4217,9 @@ public class MandelImagePanel  extends GBCPanel
       setMin(i.getMinIt());
       setMax(i.getMaxIt());
       setTime(i.getTime());
+      String l=i.getLocation();
+      if (!l.isEmpty()) location=" ("+l+")";
+      else location="";
     }
 
     public void setInfo(QualifiedMandelName name)
@@ -4015,11 +4232,8 @@ public class MandelImagePanel  extends GBCPanel
     {
       String info=MandelAreaViewDialog.getInfoString(getEnvironment(),name);
       int ic=count(name.getMandelName(), getEnvironment().getImageDataScanner());
-      if (!info.isEmpty()) info+=", ";
-      if (ic==1) info=info+""+ic+" sub area";
-      else info=info+""+ic+" sub areas";
-
-      setInfo(info);
+      setInfo(info+location);
+      setAreas(""+ic);
       validate();
     }
 
@@ -4029,6 +4243,12 @@ public class MandelImagePanel  extends GBCPanel
       info.setText(v);
     }
 
+    public void setAreas(String v)
+    {
+      if (v==null || v.length()==0) v="     ";
+      area.setText(v);
+    }
+    
      public void setMagnification(int v)
     {
       magn.setText("1e"+v);
@@ -4165,7 +4385,7 @@ public class MandelImagePanel  extends GBCPanel
           if (juliaDialog.isVisible())
             juliaDialog.update(jx.doubleValue(), jy.doubleValue());
           if (iterDialog.isVisible())
-            iterDialog.update(parent.getLimitIt(),jx.doubleValue(), jy.doubleValue());
+            iterDialog.update(parent.getLimitIt(),jx, jy);
         }
       }
       try {
@@ -4444,5 +4664,4 @@ public class MandelImagePanel  extends GBCPanel
       }
     });
   }
-  
 }

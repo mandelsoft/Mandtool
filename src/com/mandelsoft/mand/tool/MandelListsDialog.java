@@ -22,12 +22,11 @@ import javax.swing.JOptionPane;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.tool.ctx.MandelListContextMenuHandler;
 import com.mandelsoft.mand.util.MandelList;
-import com.mandelsoft.swing.Selection;
 import com.mandelsoft.swing.TableSelection;
 import com.mandelsoft.swing.TablePanel;
 import java.awt.Dimension;
-import java.awt.event.MouseEvent;
-import javax.swing.JComponent;
+import javax.swing.JButton;
+import javax.swing.SortOrder;
 
 /**
  *
@@ -76,6 +75,10 @@ public class MandelListsDialog extends ControlDialog {
     if (getEnvironment().getRefinementRequestsModel()!=null) {
       addTab("RefineReq", new RefinementRequestsPanel(),
                        "Refinement requests");
+    }
+    if (getEnvironment().getRequestsModel()!=null) {
+      addTab("Requests", new RequestsPanel(),
+                       "Requests");
     }
   }
 
@@ -150,7 +153,7 @@ public class MandelListsDialog extends ControlDialog {
       }
     }
   }
-
+  
   /////////////////////////////////////////////////////////////////////////
   // variants tab
   /////////////////////////////////////////////////////////////////////////
@@ -194,13 +197,21 @@ public class MandelListsDialog extends ControlDialog {
                              implements MandelListModelSource {
     private History             history;
     private QualifiedMandelName mandelname;
+    private int                 index;
+
+    private JButton back;
+    private JButton forth;
 
     public HistoryPanel()
     {
       super(null,MandelListsDialog.this.getMandelWindowAccess().getHistory(),
             null);
+      this.setSortOrder(0, SortOrder.DESCENDING);
       LoadAction load=new LoadAction();
       addActionListener(load);
+      back=addButton("Back", new BackAction());
+      forth=addButton("Forth", new ForthAction());
+
       addButton("Load", load);
       addButton("Clear", new ClearAction());
       history=MandelListsDialog.this.getMandelWindowAccess().getHistory();
@@ -210,12 +221,24 @@ public class MandelListsDialog extends ControlDialog {
     @Override
     protected void setSelection(TableSelection sel)
     {
-      mandelname=getModel().getQualifiedName(sel.getLeadSelection());
-      System.out.println("model index: "+sel.getLeadSelection()+
+      index=sel.getLeadSelection();
+      mandelname=getModel().getQualifiedName(index);
+      System.out.println("model index: "+index+
          "("+getTable().getSelectionModel().getMaxSelectionIndex()+"): "+
          mandelname);
     }
-
+    
+    @Override
+    protected void modelUpdated()
+    {
+      super.modelUpdated();
+      int cur=history.getCurrent();
+      back.setEnabled(cur>0);
+      forth.setEnabled(cur<history.getList().size()-1);
+      //System.out.printf("********** current %d\n",history.getCurrent() );
+      this.setSelectedRow(cur);
+    }
+    
     /////////////////////////////////////////////////////////////////////////
     private class LoadAction implements ActionListener {
 
@@ -224,7 +247,9 @@ public class MandelListsDialog extends ControlDialog {
         System.out.println("*** load history entry "+mandelname);
         if (mandelname==null) return;
         setBusy(true);
+        int cur=history.setCurrent(index);
         if (!getMandelWindowAccess().getMandelImagePane().setImage(mandelname)) {
+          history.setCurrent(cur);
           JOptionPane.showMessageDialog(getOwner(),
                                         "Cannot load image: "+mandelname, //text to display
                                         "Mandel IO", //title
@@ -235,10 +260,38 @@ public class MandelListsDialog extends ControlDialog {
     }
     
     /////////////////////////////////////////////////////////////////////////
+    private class BackAction extends LoadAction {
+
+      public void actionPerformed(ActionEvent e)
+      {
+        if (history.getCurrent() <= 0) {
+          return;
+        }
+        index = history.getCurrent() - 1;
+        mandelname = history.getQualifiedName(index);
+        super.actionPerformed(e);
+      }
+    }
+
+    private class ForthAction extends LoadAction {
+
+      public void actionPerformed(ActionEvent e)
+      {
+        if (history.getCurrent() >= history.getList().size()) {
+          return;
+        }
+        index = history.getCurrent() + 1;
+        mandelname = history.getQualifiedName(index);
+        super.actionPerformed(e);
+      }
+    }
+
+    /////////////////////////////////////////////////////////////////////////
     private class ClearAction implements ActionListener {
 
       public void actionPerformed(ActionEvent e)
       {
+        mandelname=null;
         getModel().clear();
       }
     }
@@ -312,6 +365,18 @@ public class MandelListsDialog extends ControlDialog {
     public RefinementRequestsPanel()
     {
       super(null,getEnvironment().getRefinementRequestsModel(),null);
+    }
+  }
+  
+  /////////////////////////////////////////////////////////////////////////
+  // requests tab
+  /////////////////////////////////////////////////////////////////////////
+  private class RequestsPanel extends MandelListPanel {
+    public RequestsPanel()
+    {
+      super(null,getEnvironment().getRequestsModel(),null);
+      enableGalery(false);
+      enableSlideShow(false);
     }
   }
 }

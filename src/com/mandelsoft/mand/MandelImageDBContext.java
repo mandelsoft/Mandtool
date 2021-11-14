@@ -332,6 +332,11 @@ public class MandelImageDBContext {
     return root;
   }
 
+  public Set<String> getContextLabels()
+  {
+    return remote.keySet();
+  }
+  
   public MandelImageDBContext getContext(String label)
   {
     ContextMapping m=getContextMapping(label);

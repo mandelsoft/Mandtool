@@ -16,6 +16,7 @@
 package com.mandelsoft.mand.meth;
 
 import com.mandelsoft.mand.MandelSpec;
+import com.mandelsoft.mand.util.MandArith;
 import java.math.BigDecimal;
 
 /**
@@ -65,12 +66,12 @@ public abstract class AbstractBigDecimalPixelIterator extends AbstractPixelItera
 
   public void setX(int x)
   {
-    cx=add(x0, div(mul(dx, x), drx));
+    cx=MandArith.add(x0, MandArith.div(MandArith.mul(dx, x), drx));
   }
 
   public void setY(int y)
   {
-    cy=sub(y0, div(mul(dy, y), dry));
+    cy=MandArith.sub(y0, MandArith.div(MandArith.mul(dy, y), dry));
   }
 
   public BigDecimal getCX()
@@ -85,11 +86,11 @@ public abstract class AbstractBigDecimalPixelIterator extends AbstractPixelItera
 
   public double getX(BigDecimal x)
   {
-    return div(mul(sub(x, x0), drx), dx).doubleValue();
+    return MandArith.div(MandArith.mul(MandArith.sub(x, x0), drx), dx).doubleValue();
   }
 
   public double getY(BigDecimal y)
   {
-    return div(mul(sub(y0, y), dry), dy).doubleValue();
+    return MandArith.div(MandArith.mul(MandArith.sub(y0, y), dry), dy).doubleValue();
   }
 }

@@ -16,6 +16,7 @@
 package com.mandelsoft.swing;
 
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 
 /**
@@ -50,5 +51,17 @@ public interface ProportionProvider {
       return proportion;
     }
   }
+  
+  static public class Screen implements ProportionProvider {
 
+    public Screen()
+    {
+    }
+
+    public double getProportion()
+    {
+      Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+      return d.getWidth()/d.getHeight();
+    }
+  }
 }

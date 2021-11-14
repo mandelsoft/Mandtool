@@ -22,10 +22,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -80,7 +84,7 @@ public class TablePanel<T extends TableModel>
       this.model.removeTableModelListener(modellistener);
     }
     this.model=model;
-    if (this.model!=null && label!=null) {
+    if (this.model!=null) {
       if (modellistener==null) modellistener=new ModelListener();
       this.model.addTableModelListener(modellistener);
     }
@@ -88,10 +92,17 @@ public class TablePanel<T extends TableModel>
     table.getRowSorter().toggleSortOrder(0);
   }
 
+  public void setSortOrder(int column, SortOrder order)
+  {
+    List<RowSorter.SortKey> sortKeys = new ArrayList<>(1);
+    sortKeys.add(new RowSorter.SortKey(column, order));
+    table.getRowSorter().setSortKeys(sortKeys);
+  }
+   
   public void setTitle(String name)
   {
     title=name;
-    updateTitle();
+    modelUpdated();
   }
 
   public String getTitle()
@@ -99,7 +110,7 @@ public class TablePanel<T extends TableModel>
     return title;
   }
 
-  protected void updateTitle()
+  protected void modelUpdated()
   {
     if (label!=null) {
       if (showsize) {
@@ -133,7 +144,7 @@ public class TablePanel<T extends TableModel>
       }
       modellistener=null;
     }
-    updateTitle();
+    modelUpdated();
   }
 
   public void setFillsViewportHeight(boolean fillsViewportHeight)
@@ -283,6 +294,13 @@ public class TablePanel<T extends TableModel>
     return table.convertColumnIndexToModel(index);
   }
 
+  public void setSelectedRow(int index)
+  {
+    table.clearSelection();
+    index=table.convertRowIndexToView(index);
+    table.addRowSelectionInterval(index, index);
+  }
+  
   public int getSelectedIndex()
   {
     int index=table.getSelectedRow();
@@ -328,7 +346,7 @@ public class TablePanel<T extends TableModel>
   private class ModelListener implements TableModelListener {
     public void tableChanged(TableModelEvent e)
     {
-      updateTitle();
+      modelUpdated();
     }
   }
 

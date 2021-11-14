@@ -23,7 +23,7 @@ import com.mandelsoft.mand.MandelHeader;
  *
  * @author Uwe Krüger
  */
-public abstract class MandelScannerListenerSupport implements MandelScanner {
+public abstract class MandelScannerListenerSupport implements MandelScanner, MandelScannerTree {
 
   static public boolean debug=false;
 
@@ -132,7 +132,7 @@ public abstract class MandelScannerListenerSupport implements MandelScanner {
   private int inupdate=0;
   private boolean updatePending;
 
-  protected void startUpdate()
+  public void startUpdate()
   {
     startUpdate(false);
   }
@@ -151,15 +151,15 @@ public abstract class MandelScannerListenerSupport implements MandelScanner {
   protected void startUpdate(boolean force)
   {
     inupdate++;
-    if (force) updatePending=force;
+    if (force && !updatePending) updatePending=force;
   }
 
-  protected boolean isInUpdate()
+  public boolean isInUpdate()
   {
     return inupdate!=0;
   }
 
-  protected void finishUpdate()
+  public void finishUpdate()
   {
     if (inupdate==0) return;
     if (--inupdate==0) {

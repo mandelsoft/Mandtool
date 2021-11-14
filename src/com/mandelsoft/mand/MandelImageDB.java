@@ -31,6 +31,7 @@ import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.scan.PathMandelScanner;
 import com.mandelsoft.mand.scan.MandelScannerCache;
+import com.mandelsoft.mand.util.ArrayTagList;
 import com.mandelsoft.mand.util.ColorList;
 import com.mandelsoft.mand.util.FileColorList;
 import com.mandelsoft.mand.util.FileMandelList;
@@ -68,6 +69,7 @@ public class MandelImageDB implements MandelConstants  {
 
   private ColorList  colors;
   private TagList    tags;
+  private TagList    attrs;
   private MandelListFolderTree tfavorites;
   private MandelListFolderTree ttodos;
   private MandelListFolderTree tlinks;
@@ -191,6 +193,7 @@ public class MandelImageDB implements MandelConstants  {
 
     colors=createColorList(Settings.COLORS);
     tags=createTagList(Settings.TAGS);
+    attrs=createTagList(Settings.ATTRS);
    
     tfavorites=createMandelListFolderTree(Settings.FAVORITES);
     favorites=tfavorites.getRoot().getMandelList();
@@ -215,6 +218,8 @@ public class MandelImageDB implements MandelConstants  {
       for (MandelHandle h:areacolmap.getMandelHandles()) {
         if (h.getHeader().isAreaColormap()) {
           System.out.println("areacm: "+h.getFile());
+        } else {
+          System.out.println("image:  "+h.getFile());
         }
       }
     }
@@ -273,7 +278,6 @@ public class MandelImageDB implements MandelConstants  {
 
   public final ColorList createColorList(String prop)
   { String path=settings.getProperty(prop);
-    ColorList list=null;
     if (Utils.isEmpty(path)) return null;
   
     AbstractFile f=AbstractFile.Factory.create(path, proxy, settings.isLocal());
@@ -282,8 +286,7 @@ public class MandelImageDB implements MandelConstants  {
 
   public final TagList createTagList(String prop)
   { String path=settings.getProperty(prop);
-    ColorList list=null;
-    if (Utils.isEmpty(path)) return null;
+    if (Utils.isEmpty(path)) return new ArrayTagList();
 
     AbstractFile f=AbstractFile.Factory.create(path, proxy, settings.isLocal());
     return new FileTagList(f);
@@ -341,7 +344,12 @@ public class MandelImageDB implements MandelConstants  {
   {
     return tags;
   }
-
+  
+  public TagList getAttrs()
+  {
+    return attrs;
+  }
+  
   //////////////////////////////////////////////////////////////////////////
 
   public MandelListFolderTree getFavorites()

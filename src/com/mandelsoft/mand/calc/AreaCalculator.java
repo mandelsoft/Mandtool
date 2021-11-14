@@ -22,7 +22,7 @@ import com.mandelsoft.mand.*;
  * @author Uwe Krueger
  */
 public abstract class AreaCalculator {
-
+  int kept=0;
   
   ///////////////////////////////////////////////////////////////
   // calculation
@@ -44,9 +44,14 @@ public abstract class AreaCalculator {
   { int it=c.getDataRel(x,y);
 
     if (it==0) {
+      if (kept>0) {
+        System.out.printf("kept %d points\n", kept);
+        kept=0;
+      }
       it=c.incorporateIteration(x, y, pi.iter());
     }
     else { // keep old iteration value for refinement mode
+      kept++;
       c.addNumIt(it);
     }
     return it;

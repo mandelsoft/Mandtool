@@ -155,8 +155,11 @@ public class DefaultColormapListModel extends AbstractTableModel
       case 2:
         try {
           ColormapHandle h=getColormapHandle(rowIndex);
+          if (h==null) return "<none>";
           if (h.getFile()==null) return "memory";
-          return "file";
+          if (h.getHeader().isColormap())
+            return "file";
+          return h.getHeader().getTypeDesc();
         }
         catch (IOException ex) {
         }

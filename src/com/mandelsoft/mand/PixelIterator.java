@@ -17,6 +17,7 @@
 package com.mandelsoft.mand;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 /**
  *
@@ -36,4 +37,31 @@ public interface PixelIterator {
 
   double getX(BigDecimal x);
   double getY(BigDecimal y);
+  
+  public interface Setup {
+    void setup();
+  }
+
+  public static void setup(PixelIterator pi)
+  {
+    if (pi instanceof PixelIterator.Setup) {
+      ((PixelIterator.Setup)pi).setup();
+    }
+  }
+  
+  public interface PropertySource {
+    void setPropertyHandler(PropertyHandler h);
+
+    public interface PropertyHandler {
+      void updateProperties(Map<String, String> props);
+    }
+  }
+  
+  public static void setPropertyHandler(PixelIterator pi, PropertySource.PropertyHandler h)
+  {
+    if (pi instanceof PixelIterator.PropertySource) {
+      ((PixelIterator.PropertySource)pi).setPropertyHandler(h);
+    }
+  }
+  
 }

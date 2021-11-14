@@ -78,8 +78,9 @@ public class MandelFolderCache extends MandelInventory {
 
   private void read(AbstractFile f) throws IOException
   {
+    long ts=f.getLastModified();
     read(f.getInputStream(), f.toString());
-    timestamp=f.getLastModified();
+    timestamp = ts;
   }
 
   public void write() throws IOException
@@ -138,7 +139,8 @@ public class MandelFolderCache extends MandelInventory {
 
   public boolean update() throws IOException
   {
-    if (file.getLastModified()!=timestamp) {
+    long cur = file.getLastModified();
+    if (cur!=timestamp) {
       read(file);
       return true;
     }

@@ -37,6 +37,7 @@ import com.mandelsoft.mand.cm.ColormapModel;
 import com.mandelsoft.mand.cm.ColormapModel.ResizeMode;
 import com.mandelsoft.mand.scan.MandelFolder;
 import com.mandelsoft.mand.util.MandUtils;
+import java.util.Map;
 
 /**
  *
@@ -716,25 +717,35 @@ public class MandelData extends Command implements MandelConstants {
   // main
   ///////////////////////////////////////////////////////////////
  
-  static void print(File f)
+  static public void print(String name, MandelData md)
+  {
+    System.out.println(md.getTypeDesc()+": "+name);
+    MandelInfo mi = md.getInfo();
+    System.out.println("xm    = " + mi.getXM());
+    System.out.println("ym    = " + mi.getYM());
+    System.out.println("dx    = " + mi.getDX());
+    System.out.println("dy    = " + mi.getDY());
+    System.out.println("limit = " + mi.getLimitIt());
+    System.out.println("rx    = " + mi.getRX());
+    System.out.println("ry    = " + mi.getRY());
+    if (mi.getMaxIt() > 0) {
+      System.out.println("max it= " + mi.getMaxIt());
+      System.out.println("min it= " + mi.getMinIt());
+      System.out.println("num it= " + mi.getNumIt());
+      System.out.println("time  = " + mi.getTime());
+    }
+    if (mi.getProperties()!=null) {
+      for (Map.Entry<String,String> e : mi.getProperties().entrySet()) {
+        System.out.println(e.getKey()+" = " + e.getValue());
+      }
+    }
+  }
+  
+  static public void print(File f)
   { 
     try {
       MandelData md=new MandelData(new FileAbstractFile(f));
-      System.out.println(md.getTypeDesc()+": "+f);
-      MandelInfo mi=md.getInfo();
-      System.out.println("xm    = "+mi.getXM());
-      System.out.println("ym    = "+mi.getYM());
-      System.out.println("dx    = "+mi.getDX());
-      System.out.println("dy    = "+mi.getDY());
-      System.out.println("limit = "+mi.getLimitIt());
-      System.out.println("rx    = "+mi.getRX());
-      System.out.println("ry    = "+mi.getRY());
-      if (mi.getMaxIt()>0) {
-        System.out.println("max it= "+mi.getMaxIt());
-        System.out.println("min it= "+mi.getMinIt());
-        System.out.println("num it= "+mi.getNumIt());
-        System.out.println("time  = "+mi.getTime());
-      }
+      print(f.toString(), md);
     }
     catch (IOException io) {
       io.printStackTrace(System.err);
@@ -742,7 +753,7 @@ public class MandelData extends Command implements MandelConstants {
     }
   }
 
-  static void print(String s)
+  static public void print(String s)
   {
     File f=new File(s);
     print(f);

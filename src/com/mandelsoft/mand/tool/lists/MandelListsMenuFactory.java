@@ -56,6 +56,7 @@ public class MandelListsMenuFactory extends MandelContextMenuFactory {
     
     add(new DirectForkListAction());
     add(new ForkListAction());
+    add(new AreaColormapListAction());
   }
 
   protected void add(MandelListViewAction action)

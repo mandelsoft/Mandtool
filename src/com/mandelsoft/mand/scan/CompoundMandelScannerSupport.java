@@ -38,6 +38,28 @@ public abstract class CompoundMandelScannerSupport extends MandelScannerSupport 
   {
   }
 
+  synchronized
+  public void startUpdate()
+  {
+    super.startUpdate();
+    for (MandelScanner s : list) {
+      if ( s instanceof MandelScannerTree) {
+        ((MandelScannerTree)s).startUpdate();
+      }
+    }
+  }
+  
+  synchronized
+  public void finishUpdate()
+  {
+    for (MandelScanner s : list) {
+      if ( s instanceof MandelScannerTree) {
+        ((MandelScannerTree)s).finishUpdate();
+      }
+    }
+    super.finishUpdate();
+  }
+  
   protected void addScanner(MandelScanner s)
   { 
     if (!list.contains(s)) {
@@ -335,7 +357,7 @@ public abstract class CompoundMandelScannerSupport extends MandelScannerSupport 
   // utilitiies
   /////////////////////////////////////////////////////////////////////////
 
-  private void add(Set<MandelHandle> set, Set<MandelHandle> a)
+  protected void add(Set<MandelHandle> set, Set<MandelHandle> a)
   {
     if (isFiltered()) {
       for (MandelHandle h:a) {

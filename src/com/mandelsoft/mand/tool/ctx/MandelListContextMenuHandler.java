@@ -45,6 +45,7 @@ import com.mandelsoft.mand.tool.MandelListModelSource;
 import com.mandelsoft.mand.tool.MandelWindowAccess;
 import com.mandelsoft.mand.tool.PictureSaveDialog;
 import com.mandelsoft.mand.util.ArrayMandelList;
+import com.mandelsoft.mand.util.DefaultMandelList;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.Selection;
 import com.mandelsoft.util.Utils;
@@ -94,7 +95,7 @@ public abstract class MandelListContextMenuHandler
   {
     if (!getSelectionSpec().isEmpty()) {
       List<Integer> indices=getSelectionSpec().getSelectedIndices();
-      MandelList list=new ArrayMandelList();
+      MandelList list=new DefaultMandelList();
       MandelListModel model=getModel();
       for (Integer i:indices) {
         list.add(model.getQualifiedName(i));
@@ -555,9 +556,13 @@ public abstract class MandelListContextMenuHandler
     }
     
     if (mp!=null) {
-      if (sep) menu.addSeparator();
-      menu.add(mp.getSlideShowModel().
-              createMenu(comp, sel));
+      if (access!=null) {
+        MandelHandle h=access.getEnvironment().getImageDataScanner().getMandelData(sel);
+        if (h!=null) {
+           if (sep) menu.addSeparator();
+           menu.add(mp.getSlideShowModel().createMenu(comp, sel));
+        }
+      }
     }
     
     return menu;

@@ -54,7 +54,7 @@ public class MandTool extends Command{
         g.setColor(new Color(200,200,200));
         g.drawString("Mandtool, Version "+
                      bundle.getString("Application.version"), 300, 360);
-        g.drawString("by Uwe Krüger, 2009-2013",40,360);
+        g.drawString("by Uwe Krüger, 2009-2021",40,360);
         sp.update();
 //        try {
 //          Thread.sleep(10000);

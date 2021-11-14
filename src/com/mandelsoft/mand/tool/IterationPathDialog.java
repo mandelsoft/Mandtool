@@ -15,21 +15,24 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.MandIter;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
 import com.mandelsoft.mand.cm.Colormap;
+import com.mandelsoft.mand.tools.Mand;
 import com.mandelsoft.swing.BufferedComponent;
 import java.awt.Color;
+import java.math.BigDecimal;
 
 /**
  *
  * @author Uwe Krüger
  */
 
-public class IterationPathDialog extends MandelDialog {
+public class IterationPathDialog extends MandelDialog implements MandIter.IterationSink {
   private BufferedComponent bc;
   private BufferedImage image;
   private JPanel panel;
@@ -37,7 +40,7 @@ public class IterationPathDialog extends MandelDialog {
 
   public IterationPathDialog(MandelWindowAccess frame, int w, int h)
   { super(frame);
-    setTitle("Julia Test");
+    setTitle("Iteration Path");
     panel=new IterationPathPanel();
     image=new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);
     panel.setPreferredSize(new Dimension(image.getWidth(),image.getHeight()));
@@ -63,7 +66,17 @@ public class IterationPathDialog extends MandelDialog {
 
   }
 
-  public void update(int limit, double x, double y)
+  public void setValue(int it, MandIter.Coord c)
+  {
+    int x = (int) ((c.getX() - x0) * rx / dx);
+    int y = (int) ((y0 - c.getY()) * ry / dy);
+
+    if (x >= 0 && x < rx && y >= 0 && y < ry) {
+      image.setRGB(x, y, colormap.getColor(map(it)).getRGB());
+    }
+  }
+  
+  public void update(int limit, BigDecimal x, BigDecimal y)
   {
     colormap=getMandelWindowAccess().getMandelImage().getColormap();
     this.jx=x;
@@ -74,7 +87,7 @@ public class IterationPathDialog extends MandelDialog {
 
   private void updateImage()
   {
-    System.out.println("update image x="+jx+", y="+jy);
+    System.out.println("update path image x="+jx+", y="+jy);
     setupContext();
     Graphics g=image.createGraphics();
     g.setColor(Color.BLACK);
@@ -87,10 +100,10 @@ public class IterationPathDialog extends MandelDialog {
   // calculation
   ////////////////////////////////////////////////////////////////////////
 
-  private double BOUND=10;
+  private BigDecimal BOUND=new BigDecimal(Mand.BOUND);
 
-  private double jx;
-  private double jy;
+  private BigDecimal jx;
+  private BigDecimal jy;
 
   private double xm;
   private double ym;
@@ -123,7 +136,9 @@ public class IterationPathDialog extends MandelDialog {
 
   private void calc()
   {
-     int i=iter(0, 0, jx, jy);
+    int i=MandIter.buildref(this, new MandIter.Coord(jx,jy), limit, BOUND);
+    System.out.println("it="+i);
+    // int i=iter(0, 0, jx, jy);
   }
 
   private int map(int i)
@@ -131,6 +146,7 @@ public class IterationPathDialog extends MandelDialog {
     return 1+i%(colormap.getSize()-1);
   }
 
+ /*
   private int iter(double x, double y, double px, double py)
   {
     double x2=x*x;
@@ -153,6 +169,8 @@ public class IterationPathDialog extends MandelDialog {
         image.setRGB(ix, iy, colormap.getColor(map(it)).getRGB());
       }
     }
+    System.out.println("it="+it);
     return it;
   }
+*/
 }

@@ -571,7 +571,11 @@ public class HSBChooserPanel extends AbstractColorChooserPanel implements
 
   public String getDisplayName()
   {
-    return UIManager.getString("ColorChooser.hsbNameText");
+    String s=UIManager.getString("ColorChooser.hsbNameText");
+    if (s==null || s.isEmpty()) {
+      s="HSB";
+    }
+    return s;
   }
 
   /**

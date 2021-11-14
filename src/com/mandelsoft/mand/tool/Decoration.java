@@ -60,6 +60,24 @@ public class Decoration {
     }
     return font;
   }
+  
+  public interface ColorHandler {
+    public Color getColor(int x, int y, int w, int h);
+  }
+  
+  public static class StaticColor implements ColorHandler {
+    private Color color;
+    
+    public StaticColor(Color color)
+    {
+      this.color=color;
+    }
+    
+    public Color getColor(int x, int y, int w, int h)
+    {
+      return color;
+    }
+  }
 
   //////////////////////////////////////////////////////////////////////////
   protected int h_inset=DEFAULT_INSET;
@@ -72,7 +90,8 @@ public class Decoration {
   protected  int dw, dh;
   private Font font;
   private float size;
-  private Color color=Color.WHITE;
+  private ColorHandler color=new StaticColor(Color.WHITE);
+  private int alpha=255;
   private boolean showDecoration;
 
   public Decoration()
@@ -133,6 +152,7 @@ public class Decoration {
   {
     if (s==null||decoration==null||!s.equals(decoration)) {
       decoration=s;
+      System.out.println("decoration is "+decoration);
       reset();
     }
   }
@@ -144,17 +164,20 @@ public class Decoration {
 
   public void setShowDecoration(boolean showDecoration)
   {
+    System.out.println("decoration enabled "+showDecoration);
     this.showDecoration=showDecoration;
   }
 
   public boolean showDecoration()
   {
-    return showDecoration && color.getTransparency()!=0;
+    boolean enabled=showDecoration && decoration!="" && alpha!=0;
+    System.out.println("decoration is "+(enabled?"enabled":"disabled"));
+    return enabled;
   }
 
   public void setAlpha(int a)
   {
-    color=new Color(color.getRed(),color.getGreen(),color.getBlue(),a);
+    alpha=a;
   }
 
   public void setFontSize(float s)
@@ -166,14 +189,23 @@ public class Decoration {
     reset();
   }
 
-  public void setColor(Color color)
+  public void setColorHandler(ColorHandler color)
   {
     this.color=color;
   }
-
-  public Color getColor()
+  
+  public void setColor(Color color)
   {
-    return color;
+    this.color=new StaticColor(color);
+  }
+
+  protected Color getColor(int w, int h)
+  {
+    int dx=getX(w,h,dw,dh);
+    int dy=getY(w,h,dw,dh);
+    System.out.printf("decoration dimension (%d,%d)@(%d,%d) in (%d,%d)\n", dw, dh, dx,dy, w,h);
+    Color c=color.getColor(dx,dy,dw,dh);
+    return new Color(c.getRed(),c.getGreen(),c.getBlue(),alpha);
   }
 
   public void setFont(Font f)
@@ -229,18 +261,18 @@ public class Decoration {
   public void paintDecoration(Graphics g, int w, int h)
   {
     if (decoration!=null) {
-      prepare(g);
-      setup(g);
+      setup(g, w, h);
       draw(g,w,h, dw,dh);
 //        System.out.println("decoration bounds "+g.getClipBounds().getWidth()
 //                                           +","+g.getClipBounds().getHeight());
     }
   }
 
-  public void setup(Graphics g)
+  public void setup(Graphics g, int w, int h)
   {
     prepare(g);
-    g.setColor(color);
+    System.out.printf("****** deco for area (%d,%d)\n", w, h);
+    g.setColor(getColor(w,h));
     g.setFont(font);
   }
 

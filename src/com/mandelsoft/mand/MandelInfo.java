@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 import com.mandelsoft.util.Utils;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -30,8 +32,14 @@ import com.mandelsoft.util.Utils;
  */
 public class MandelInfo extends MandelSpec
                         implements MandelData.Part {
-  static private final int VERSION=4;
+  static private final int VERSION=5;
 
+  static public final String ATTR_TITLE = "title";
+  public static final String ATTR_REFCOORD = "reference-coordinates";
+  public static final String ATTR_REFPIXEL = "reference-pixel";
+  public static final String ATTR_REFCNT = "reference-count";
+  public static final String ATTR_ITERATONMETHOD = "pixel-iteration-method";
+  
   private int version; // found version
   private boolean hidden;  // hidden area: hint for ui
 
@@ -57,6 +65,7 @@ public class MandelInfo extends MandelSpec
   private String site;     // creation site
 
   private Set<String> keywords; // keywords for classification
+  private Map<String,String> attributes; // dynamic attributes
   
   public MandelInfo()
   { super();
@@ -239,6 +248,7 @@ public class MandelInfo extends MandelSpec
     setCreator(i.getCreator());
     setSite(i.getSite());
     setKeywords(i.getKeywords());
+    setProperties(i.getProperties());
     version=i.version;
   }
 
@@ -335,7 +345,75 @@ public class MandelInfo extends MandelSpec
       keywords.addAll(k);
     }
   }
+  
+  public void setProperty(String key, String value)
+  {
+    if (value==null) {
+      removeProperty(key);
+    }
+    else {
+      if (attributes==null) attributes=new HashMap<String,String>();
+      //System.out.printf("set attribute '%s' = '%s'\n", key, value);
+      attributes.put(key,value);
+      version=VERSION;
+    }
+  }
+  
+  public void removeProperty(String key)
+  {
+    if (attributes!=null) {
+      //System.out.printf("remove attribute '%s''\n", key);
+      attributes.remove(key);
+      if (attributes.size()==0) attributes=null;
+    }
+  }
 
+  public String getProperty(String key)
+  {
+    if (attributes!=null) {
+      return attributes.get(key);
+    }
+    return null;
+  }
+  
+  public boolean hasProperty(String key)
+  {
+    if (attributes!=null) {
+      return attributes.containsKey(key);
+    }
+    return false;
+  }
+  
+  public Map<String,String> getProperties()
+  {
+    if (attributes==null) return null;
+    Map<String,String> attrs=new HashMap<>();
+    for (Map.Entry<String,String> e : attributes.entrySet()) {
+      attrs.put(e.getKey(),e.getValue());
+    }
+    return attrs;
+  }
+  
+  public void setProperties(Map<String,String> props)
+  {
+    if (props==null || props.size()==0) {
+      attributes=null;
+      return;
+    }
+    Map<String,String> attrs=new HashMap<>();
+    for (Map.Entry<String,String> e : props.entrySet()) {
+      attrs.put(e.getKey(),e.getValue());
+    }
+    version=VERSION;
+    attributes=attrs;
+  }
+
+  public void clearProperties()
+  {
+    attributes=null;
+  }
+  
+  
   public boolean hasMandelCount()
   {
     if (version>=2) return true;
@@ -371,6 +449,9 @@ public class MandelInfo extends MandelSpec
   public boolean needsVersionUpdate()
   {
     //System.out.println("version is "+version);
+    if (VERSION==5 && attributes==null) {
+      return version<4;
+    }
     return version!=VERSION;
   }
 
@@ -392,6 +473,7 @@ public class MandelInfo extends MandelSpec
   public void write(DataOutputStream dos, int v, boolean verbose)
               throws IOException
   {
+    if (v==5 && attributes==null) v=4;
     if (verbose) System.out.println("  writing info ("+v+") ...");
     switch (v) {
        case 1: dos.writeInt(v);
@@ -405,6 +487,9 @@ public class MandelInfo extends MandelSpec
                break;
        case 4: dos.writeInt(v);
                writeV4(dos);
+               break;
+       case 5: dos.writeInt(v);
+               writeV5(dos);
                break;
       default: throw new IOException("unknown mandel info version "+v);
     }
@@ -482,6 +567,22 @@ public class MandelInfo extends MandelSpec
     dos.writeUTF(sb.toString());
   }
 
+  private void writeV5(DataOutputStream dos) throws IOException
+  {
+    writeV4(dos);
+    if (attributes==null || attributes.size()==0) {
+      dos.writeInt(0);
+    }
+    else {
+      dos.writeInt(attributes.size());
+      for (String key : attributes.keySet()) {
+        String value = attributes.get(key);
+        dos.writeUTF(key);
+        dos.writeUTF(value);
+      }
+    }
+  }
+  
   public void read(DataInputStream dis) throws IOException
   {
     read(dis,true);
@@ -499,6 +600,8 @@ public class MandelInfo extends MandelSpec
       case 3: readV3(dis);
               break;
       case 4: readV4(dis);
+              break;
+      case 5: readV5(dis);
               break;
       default: throw new IOException("unknown mandel info version "+version);
     }
@@ -573,6 +676,19 @@ public class MandelInfo extends MandelSpec
       keywords.add(t.nextToken());
     }
   }
+  
+  private void readV5(DataInputStream dis) throws IOException
+  {
+    attributes=null;
+    readV4(dis);
+    int n=dis.readInt();
+  
+    for (int i = 0; i < n; i++) {
+      String key = dis.readUTF();
+      String value = dis.readUTF();
+      setProperty(key, value);
+    }
+  }
 
   private String mapRead(String s)
   { return Utils.isEmpty(s)?null:s;
@@ -619,6 +735,8 @@ public class MandelInfo extends MandelSpec
       return _false("site");
     if (this.keywords!=other.keywords&&(this.keywords==null||!this.keywords.equals(other.keywords)))
       return _false("keywords");
+    if (this.attributes!=other.attributes&&(this.attributes==null||!this.attributes.equals(other.attributes)))
+      return _false("attributes");
     return true;
   }
 
@@ -643,6 +761,7 @@ public class MandelInfo extends MandelSpec
     hash=89*hash+(this.creator!=null?this.creator.hashCode():0);
     hash=89*hash+(this.site!=null?this.site.hashCode():0);
     hash=89*hash+(this.keywords!=null?this.keywords.hashCode():0);
+    hash=89*hash+(this.attributes!=null?this.attributes.hashCode():0);
     return hash;
   }
 }

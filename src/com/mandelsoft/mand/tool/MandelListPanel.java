@@ -61,9 +61,13 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
   //private MandelListTransferHandler transfer;
   private JButton removeButton;
   private JButton addButton;
+  private JButton galeryButton;
+
   private GaleryAction galery;
   private Set<JButton> buttons;
 
+  private boolean slideShow;
+          
   public MandelListPanel()
   {
     super();
@@ -115,7 +119,15 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
     handleModifiable(modifiable);
   }
 
-
+  public void enableGalery(boolean active)
+  {
+    galeryButton.setEnabled(active);
+  }
+  
+  public void enableSlideShow(boolean active)
+  {
+    slideShow=active;
+  }
 
   public MandelWindowAccess getMandelWindowAccess()
   {
@@ -133,6 +145,7 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
     if (action==null) {
       action=new LoadAction();
     }
+    slideShow=true;
     addActionListener(action);
     addButton("Refresh", new RefreshAction());
     addButton("Load", action);
@@ -140,7 +153,7 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
     addButton("Next", new NextAction(action));
     removeButton=addButton("Remove", new RemoveAction());
     addButton=addButton("Add", new AddAction());
-    addButton("Galery", galery=new GaleryAction());
+    galeryButton=addButton("Galery", galery=new GaleryAction());
     setupActions();
     setContextMenuHandler(new ContextHandler());
   }
@@ -155,7 +168,7 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
 //    addButton(mp.getSlideShowModel().getZoomInAction());
 //    addButton(mp.getSlideShowModel().getStopAction());
 
-    if (mp!=null) {
+    if (mp!=null && slideShow) {
       JPopupMenu showmenu=mp.getSlideShowModel().
               createPopupMenu(this, true);
       JButton show=new MenuButton(showmenu);

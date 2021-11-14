@@ -16,6 +16,8 @@
 
 package com.mandelsoft.swing;
 
+import com.mandelsoft.mand.tool.Decoration.ColorHandler;
+import com.mandelsoft.mand.tool.DynamicColor;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -69,7 +71,7 @@ import javax.swing.border.EmptyBorder;
  * @author Uwe Krueger
  */
 public class BufferedComponent extends JComponent
-                               implements ProportionProvider {
+                               implements ProportionProvider, DynamicColor.ImageSource {
   static public final int TEXT_INSETS=2;
   static public final int SELECT_INSETS=1;
   static public final int CORNER_RECT=20;
@@ -121,8 +123,8 @@ public class BufferedComponent extends JComponent
       Insets o=getInsets();
       //System.out.println("paint with "+o+": "+this.getBounds());
       if (image!=null) g.drawImage(image, o.left, o.top,
-                        toInt(image.getWidth()*scaleX),
-                        toInt(image.getHeight()*scaleY),null);
+                        toInt(image.getWidth()*scale.getX()),
+                        toInt(image.getHeight()*scale.getY()),null);
       for (PaintHandler h:painthandlers) {
         h.paintComponent(g.create());
       }
@@ -167,6 +169,8 @@ public class BufferedComponent extends JComponent
 
   private boolean          limitPending;
 
+  private ColorHandler     colorHandler;
+  
   public BufferedComponent()
   { this(1,1);
   }
@@ -177,8 +181,9 @@ public class BufferedComponent extends JComponent
 
   public BufferedComponent(BufferedImage image)
   {
+    colorHandler=new DynamicColor(this);
     setupLocalModels();
-
+    
     setLayout(new BorderLayout());
     content=new ContentPane();
     content.setDoubleBuffered(false);
@@ -261,6 +266,11 @@ public class BufferedComponent extends JComponent
     };
   }
 
+  public ColorHandler getColorHandler()
+  {
+    return colorHandler;
+  }
+  
   public BooleanAttribute getDecorationModel()
   {
     return showdecoration;
@@ -305,10 +315,10 @@ public class BufferedComponent extends JComponent
   {
     //new Throwable().printStackTrace(System.out);
     Insets o=getInsets();
-    Dimension d=new Dimension(toInt(image.getWidth()*scaleX)+o.left+o.right,
-                         toInt(image.getHeight()*scaleY)+o.top+o.bottom);
-    if (debug) System.out.println("update size: image "+image.getWidth()*scaleX+","+
-                                image.getHeight()*scaleY+" "+o);
+    Dimension d=new Dimension(toInt(image.getWidth()*scale.getX())+o.left+o.right,
+                         toInt(image.getHeight()*scale.getY())+o.top+o.bottom);
+    if (debug) System.out.println("update size: image "+image.getWidth()*scale.getX()+","+
+                                image.getHeight()*scale.getY()+" "+o);
     setPreferredSize(d);
     setMaximumSize(d);
   }
@@ -321,8 +331,8 @@ public class BufferedComponent extends JComponent
   {
     this.image=image;
     //System.out.println("setup image "+image.getWidth()+"x"+image.getHeight());
-    this.fullviewrect=new Rectangle(0,0,toInt(image.getWidth()/scaleX),
-                                        toInt(image.getHeight()/scaleY));
+    this.fullviewrect=new Rectangle(0,0,toInt(image.getWidth()/scale.getX()),
+                                        toInt(image.getHeight()/scale.getY()));
     this.drawer=null;
     updatePreferredSize();
   }
@@ -471,6 +481,10 @@ public class BufferedComponent extends JComponent
 
   public BufferedImage getImage()
   { return image;
+  }
+  
+  public Scale getScale()
+  { return scale;
   }
   
   //////////////////////////////////////////////////////////////////////
@@ -1604,11 +1618,22 @@ public class BufferedComponent extends JComponent
   ///////////////////////////////////////////////////////////////////////////
   // scaling
 
-  private double scaleX=1.0;
-  private double scaleY=1.0;
+  private Scale scale=Scale.One;
   private RectangleSelector selector=null;
   private Insets insets=new Insets(0,0,0,0); // not used anymore, always 0
 
+  public boolean setScale(Scale s)
+  {
+     JViewport vp=getViewPort();
+    if (vp!=null) {
+      Rectangle r=vp.getViewRect();
+      return setScale(s.getX(), s.getY(),new Point2D.Double(r.getCenterX(), r.getCenterY()));
+    }
+    else {
+      return setScale(s.getX(), s.getY(),null);
+    }
+  }
+  
   public boolean setScale(double s)
   {
     JViewport vp=getViewPort();
@@ -1646,11 +1671,11 @@ public class BufferedComponent extends JComponent
   }
 
   public boolean setScaleX(double s, Point2D p)
-  { return setScale(s,scaleY,p);
+  { return setScale(s,scale.getY(),p);
   }
 
   public boolean setScaleY(double s, Point2D p)
-  { return setScale(scaleX,s,p);
+  { return setScale(scale.getX(),s,p);
   }
 
   public boolean setScale(double s, Point2D p)
@@ -1658,25 +1683,28 @@ public class BufferedComponent extends JComponent
   }
 
   public boolean setScale(double sx, double sy, Point2D p)
+  {
+    return setScale(new Scale(sx,sy), p);
+  }
+  
+  public boolean setScale(Scale s, Point2D p)
   { Point n=null;
 
-    if (sx<=0) throw new IllegalArgumentException("scale "+sx+" must be larger than 0);");
-    if (sy<=0) throw new IllegalArgumentException("scale "+sy+" must be larger than 0);");
     //System.out.println("call set scale to "+sx+"/"+sy+"/"+p);
-    if (sx!=scaleX || sy!=scaleY) {
-      double oldX=scaleX;
-      double oldY=scaleY;
-      ScaleEvent e=new ScaleEvent(this,sx,sy,oldX,oldY);
+    if (!s.equals(scale)) {
+      double scaleX=scale.getX();
+      double scaleY=scale.getY();
+      Scale old=scale;
+      ScaleEvent e=new ScaleEvent(this, s, old);
       for (ScaleEventListener h:slisteners) {
         if (!h.succeedScale(e)) return false;
       }
-      scaleX=sx;
-      scaleY=sy;
+      scale=s;
       JViewport vp=getViewPort();
       if (vp!=null && p!=null) {
         Rectangle r=vp.getViewRect();
-        double fX=scaleX/oldX;
-        double fY=scaleX/oldY;
+        double fX=scaleX/old.getX();
+        double fY=scaleX/old.getY();
         double x=p.getX()*fX-(p.getX()-r.getX());
         double y=p.getY()*fY-(p.getY()-r.getY());
         if (x+r.getWidth()>=image.getWidth()*scaleX) {
@@ -1696,7 +1724,7 @@ public class BufferedComponent extends JComponent
 //                           " new origin: "+n.getX()+","+n.getY());
 //        System.out.println(""+vp.getViewPosition());
       }
-      if (debug) System.out.println("*** set scale "+sx+"/"+sy);
+      if (debug) System.out.println("*** set scale "+s);
       updatePreferredSize();
       limitWindowSize();
       repaint();
@@ -1710,15 +1738,11 @@ public class BufferedComponent extends JComponent
   }
 
   public double getScaleX()
-  { return scaleX;
+  { return scale.getX();
   }
 
   public double getScaleY()
-  { return scaleY;
-  }
-
-  public double getScale()
-  { return scaleX==scaleY?scaleX:(scaleX+scaleY)/2;
+  { return scale.getY();
   }
 
   private Set<ScaleEventListener> slisteners=new HashSet<ScaleEventListener>();
@@ -1755,7 +1779,7 @@ public class BufferedComponent extends JComponent
 
   public int translateX(int x)
   {
-    x=(int)((x-insets.left)/scaleX);
+    x=(int)((x-insets.left)/scale.getX());
     if (x<0) x=0;
     if (x>=image.getWidth()) x=image.getWidth()-1;
     return x;
@@ -1763,7 +1787,7 @@ public class BufferedComponent extends JComponent
 
   public int translateY(int y)
   {
-    y=(int)((y-insets.top)/scaleY);
+    y=(int)((y-insets.top)/scale.getY());
     if (y<0) y=0;
     if (y>=image.getHeight()) y=image.getHeight()-1;
     return y;
@@ -1781,28 +1805,28 @@ public class BufferedComponent extends JComponent
 
   public int translateToComponentX(int x)
   {
-    return toInt(x*scaleX+insets.left);
+    return toInt(x*scale.getX()+insets.left);
   }
 
   public int translateToComponentY(int y)
   {
-    return toInt(y*scaleY+insets.top);
+    return toInt(y*scale.getY()+insets.top);
   }
 
   public int componentMiddleX(int x)
   {
-    return translateToComponentX(x)+((int)getScaleX())/2;
+    return translateToComponentX(x)+((int)scale.getX())/2;
   }
   
   public int componentMiddleY(int y)
   {
-    return translateToComponentY(y)+((int)getScaleY())/2;
+    return translateToComponentY(y)+((int)scale.getY())/2;
   }
   
   public MouseEvent translate(MouseEvent e)
   {
     //getInsets(insets);
-    if (scaleX==1 && scaleY==1 && insets.left==0 && insets.top==0) return e;
+    if (scale.isOne() && insets.left==0 && insets.top==0) return e;
 
     int x=translateX(e);
     int y=translateY(e);
@@ -1936,10 +1960,10 @@ public class BufferedComponent extends JComponent
             break;
           default:
             if (diff>0) {
-              setScale(getScale()*1.1, e.getPoint());
+              setScale(scale.scale(1.1), e.getPoint());
             }
             else {
-              setScale(getScale()/1.1, e.getPoint());
+              setScale(scale.scale(1.0/1.1), e.getPoint());
             }
         }
         //System.out.println("diff="+diff);

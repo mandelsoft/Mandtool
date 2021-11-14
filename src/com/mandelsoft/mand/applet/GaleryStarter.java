@@ -41,6 +41,7 @@ import com.mandelsoft.mand.tool.ToolEnvironment;
 import com.mandelsoft.mand.tool.mapper.MapperModel;
 import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.CachedUpstreamColormapSourceFactory;
+import com.mandelsoft.mand.util.DefaultMandelList;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
 import com.mandelsoft.util.Utils;
@@ -159,7 +160,7 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
       if (f==null) {
         GaleryStarter.this.showStatus("path not found");
         System.out.println("path not found");
-        MandelList l=new ArrayMandelList();
+        MandelList l=new DefaultMandelList();
         model=new DefaultMandelListTableModel(l,env.getAllScanner());
       }
       else {

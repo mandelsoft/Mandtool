@@ -34,6 +34,7 @@ import javax.swing.SwingUtilities;
 import com.mandelsoft.mand.Environment;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.io.AbstractFile;
+import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.Settings;
@@ -70,6 +71,7 @@ public class ToolEnvironment extends Environment {
 
   private ColorListModel colors;
   private TagListModel   tags;
+  private TagListModel   attrs;
   private MandelListFolderTreeModel tfavorites;
   private MandelListFolderTreeModel memory;
   private MandelListTableModel favorites;
@@ -84,9 +86,11 @@ public class ToolEnvironment extends Environment {
   private MandelListTableModel pending;
   private MandelListTableModel unseenrefinements;
   private MandelListTableModel refinerequests;
+  private MandelListTableModel requests;
 
   private ComposedMandelListFolderTreeModel lists;
   private ColormapListModel colormaps;
+  private ColormapListModel areacolormaps;
 
   private MandelListsMenuFactory listactions;
 
@@ -168,6 +172,14 @@ public class ToolEnvironment extends Environment {
       tags=new TagListModel(getTags());
       tags.setAutosave(!isReadonly());
     }
+    if (getAttrs()!=null) {
+      attrs=new TagListModel(getAttrs());
+      attrs.addUniqueElement(MandelInfo.ATTR_TITLE);
+      attrs.addUniqueElement(MandelInfo.ATTR_ITERATONMETHOD);
+      attrs.addUniqueElement(MandelInfo.ATTR_REFCOORD);
+      attrs.addUniqueElement(MandelInfo.ATTR_REFPIXEL);
+      attrs.setAutosave(!isReadonly());
+    }
     if (getAreas()!=null) {
       areas=new AreasModel();
     }
@@ -192,6 +204,8 @@ public class ToolEnvironment extends Environment {
     // refresh order of listeners is important
     if (getRefinementRequests()!=null) refinerequests=new RefinementRequestsModel();
     if (getUnseenRefinements()!=null) unseenrefinements=new UnseenRefinementModel();
+    if (getRequests()!=null) requests=new RequestsModel();
+
 
     lists=new ComposedMandelListFolderTreeModel("lists",getAllScanner());
     lists.setModifiable(!isReadonly());
@@ -221,6 +235,7 @@ public class ToolEnvironment extends Environment {
     }
 
     colormaps=new ExtendedColormapListModel(getColormaps());
+    areacolormaps=new DefaultColormapListModel(getAreaColormaps());
 
     imagebase_model=new ImageBaseModel(this);
   }
@@ -356,6 +371,12 @@ public class ToolEnvironment extends Environment {
   {
     return tags;
   }
+  
+  public TagListModel getAttributeModel()
+  {
+    return attrs;
+  }
+  
 
   public MandelListTableModel getFavoritesModel()
   { return favorites;
@@ -396,11 +417,19 @@ public class ToolEnvironment extends Environment {
   public MandelListTableModel getRefinementRequestsModel()
   { return refinerequests;
   }
+  
+  public MandelListTableModel getRequestsModel()
+  { return requests;
+  }
 
   public ColormapListModel getColormapListModel()
   { return colormaps;
   }
-
+  
+   public ColormapListModel getAreaColormapListModel()
+  { return areacolormaps;
+  }
+  
   @Override
   public boolean handleRasterSeen(AbstractFile f)
   {
@@ -607,7 +636,7 @@ public class ToolEnvironment extends Environment {
             createMandelImageFrame(getInitialFile());
           }
           catch (IOException io) {
-            System.err.println("cannot load "+getInitialFile()+": "+io);
+            System.err.println("cannot load file "+getInitialFile()+": "+io);
             System.exit(1);
           }
         }
@@ -885,6 +914,15 @@ public class ToolEnvironment extends Environment {
       super(getRefinementRequests(),getInfoScanner());
     }
   }
+  
+  private class RequestsModel extends AutoRefreshMandelListTableModel {
+
+    public RequestsModel()
+    {
+      super(getRequests() ,getInfoScanner(), getAllScanner());
+    }
+  }
+  
   
   /////////////////////////////////////////////////////////////////////////
 

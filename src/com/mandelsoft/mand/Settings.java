@@ -42,6 +42,7 @@ public class Settings {
 
   static public final String MANDEL_HOME="home";
   static public final String MANDEL_DIR="dir";
+  static public final String MANDEL_LISTS="standardlists.dir";
   static public final String BASE="base";
   static public final String PATH="path";
   static public final String ADDITIONAL_PATH="path.additional";
@@ -96,6 +97,7 @@ public class Settings {
   static public final String LINKS="links";
   static public final String COLORS="colors";
   static public final String TAGS="tags";
+  static public final String ATTRS="attributes";
 
   static public final String USERLIST_PATH="path.lists";
   static public final String LIST_SHORTCUTS="shortcuts.lists";
@@ -284,17 +286,19 @@ public class Settings {
     catch (UnknownHostException ex) {
     }
 
-    raw.setProperty(FAVORITES, "${dir}/favorites");
-    raw.setProperty(COLORS, "${dir}/colors");
-    raw.setProperty(TAGS, "${dir}/tags");
-    raw.setProperty(AREAS, "${dir}/areas");
-    raw.setProperty(REFINEMENTS, "${dir}/refine");
+    raw.setProperty(MANDEL_LISTS, "${dir}");
+
+    raw.setProperty(FAVORITES, "${standardlists.dir}/favorites");
+    raw.setProperty(COLORS, "${standardlists.dir}/colors");
+    raw.setProperty(TAGS, "${standardlists.dir}/tags");
+    raw.setProperty(AREAS, "${standardlists.dir}/areas");
+    raw.setProperty(REFINEMENTS, "${standardlists.dir}/refine");
 
     if (local) {
-      raw.setProperty(TODO, "${dir}/todo");
-      raw.setProperty(LINKS, "${dir}/links");
+      raw.setProperty(TODO, "${standardlists.dir}/todo");
+      raw.setProperty(LINKS, "${standardlists.dir}/links");
 
-      raw.setProperty(SEEN, "${dir}/seen");
+      raw.setProperty(SEEN, "${standardlists.dir}/seen");
       raw.setProperty(BITMAP_SAVE_PATH, "${dir}/bitmaps");
       raw.setProperty(INCOMPLETE_SAVE_PATH, "${dir}/incomplete");
 

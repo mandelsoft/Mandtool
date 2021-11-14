@@ -36,6 +36,7 @@ public class MandelFolder extends FolderLock  {
   public static MandelFolder getMandelFolder(File f) throws IOException
   {
     f=f.getCanonicalFile();
+    if (!f.isDirectory()) f=f.getParentFile();
     if (debug) System.out.println("%%% get mandel folder "+f);
     MandelFolder m=map.get(f);
     if (m==null) {

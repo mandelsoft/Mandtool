@@ -92,7 +92,15 @@ public class DistributedMandelScanner extends CompoundMandelScannerSupport
   protected Set<MandelHandle> _getMandelHandles(MandelName name)
   {
     String label=name.getLabel();
-    if (label==null) return scanner.getMandelHandles(name);
+    if (label==null) {
+      Set<MandelHandle> set=scanner.getMandelHandles(name);
+      if (name.isRoot()) {
+        for (String l: scanners.keySet()) {
+          add(set, _getMandelHandles(scanners.get(l),MandelName.ROOT));
+        }
+      }
+      return set;
+    }
     return _getMandelHandles(scanners.get(label),name);
   }
 
@@ -116,7 +124,18 @@ public class DistributedMandelScanner extends CompoundMandelScannerSupport
   public MandelHandle getMandelData(MandelName name)
   {
     String label=name.getLabel();
-    if (label==null) return scanner.getMandelData(name);
+    if (label==null) {
+      MandelHandle h=scanner.getMandelData(name);
+      if (h==null && name.isRoot()) {
+        for (String l: scanners.keySet()) {
+          h=_getMandelData(scanners.get(l),MandelName.ROOT);
+          if (h!=null) {
+            break;
+          }
+        }
+      }
+      return h;
+    }
     return _getMandelData(scanners.get(label),name);
   }
 
@@ -124,7 +143,18 @@ public class DistributedMandelScanner extends CompoundMandelScannerSupport
   public MandelHandle getMandelData(QualifiedMandelName name)
   {
     String label=name.getLabel();
-    if (label==null) return scanner.getMandelData(name);
+    if (label==null) {
+      MandelHandle h=scanner.getMandelData(name);
+      if (h==null && name.isRoot()) {
+        for (String l: scanners.keySet()) {
+          h=_getMandelData(scanners.get(l),QualifiedMandelName.ROOT);
+          if (h!=null) {
+            break;
+          }
+        }
+      }
+      return h;
+    }
     return _getMandelData(scanners.get(label),name);
   }
 
@@ -132,16 +162,25 @@ public class DistributedMandelScanner extends CompoundMandelScannerSupport
   public MandelHandle getMandelHandle(QualifiedMandelName name)
   {
     String label=name.getLabel();
-    if (label==null) return scanner.getMandelHandle(name);
+    if (label==null) {
+      MandelHandle h=scanner.getMandelHandle(name);
+      if (h==null && name.isRoot()) {
+        for (String l: scanners.keySet()) {
+          h=_getMandelHandle(scanners.get(l),QualifiedMandelName.ROOT);
+          if (h!=null) {
+            break;
+          }
+        }
+      }
+      return h;
+    }
     return _getMandelHandle(scanners.get(label),name);
   }
 
   @Override
   public synchronized Set<MandelHandle> getMandelHandles(MandelName name)
   {
-    String label=name.getLabel();
-    if (label==null) return scanner.getMandelHandles(name);
-    return _getMandelHandles(scanners.get(label),name);
+    return _getMandelHandles(name);
   }
 
   @Override
@@ -154,7 +193,18 @@ public class DistributedMandelScanner extends CompoundMandelScannerSupport
   public MandelHandle getMandelInfo(MandelName name)
   {
     String label=name.getLabel();
-    if (label==null) return scanner.getMandelInfo(name);
+    if (label==null) {
+      MandelHandle h=scanner.getMandelInfo(name);
+      if (h==null && name.isRoot()) {
+        for (String l: scanners.keySet()) {
+          h=_getMandelInfo(scanners.get(l),MandelName.ROOT);
+          if (h!=null) {
+            break;
+          }
+        }
+      }
+      return h;
+    }
     return _getMandelInfo(scanners.get(label),name);
   }
 
@@ -162,7 +212,18 @@ public class DistributedMandelScanner extends CompoundMandelScannerSupport
   public MandelHandle getMandelInfo(QualifiedMandelName name)
   {
     String label=name.getLabel();
-    if (label==null) return scanner.getMandelInfo(name);
+    if (label==null) {
+      MandelHandle h=scanner.getMandelInfo(name);
+      if (h==null && name.isRoot()) {
+        for (String l: scanners.keySet()) {
+          h=_getMandelInfo(scanners.get(l),QualifiedMandelName.ROOT);
+          if (h!=null) {
+            break;
+          }
+        }
+      }
+      return h;
+    }
     return _getMandelInfo(scanners.get(label),name);
   }
 

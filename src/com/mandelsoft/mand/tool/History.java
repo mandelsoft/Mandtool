@@ -16,6 +16,7 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.QualifiedMandelName;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.ListSelectionModel;
 import com.mandelsoft.mand.scan.MandelScanner;
@@ -28,6 +29,7 @@ import com.mandelsoft.mand.util.ArrayMandelList;
 
 public class History extends IndexedMandelListModel {
   private ListSelectionModel selmodel;
+  private int                current;
 
   public History(MandelScanner scanner)
   {
@@ -43,4 +45,52 @@ public class History extends IndexedMandelListModel {
     return selmodel;
   }
 
+  public int getCurrent()
+  {
+    return current;
+  }
+  
+  public int setCurrent(int index)
+  {
+    try {
+      return current;
+    }
+    finally {
+      current=index;
+    }
+  }
+  
+  public void add(QualifiedMandelName name)
+  {
+    try {
+      QualifiedMandelName cur=this.getList().get(current);
+      if (debug) {
+        System.out.printf("*************** add %d %s from (%d %s)\n", 
+                this.getList().size(), name, current, cur );
+      }
+      if (this.getList().get(current).equals(name)) {
+        super.add(name);
+        return;
+      }
+    }
+    catch (IndexOutOfBoundsException ex) {
+    }
+    current = this.getList().size();
+    super.add(name);
+  }
+  
+  @Override
+  public void clear()
+  {
+    QualifiedMandelName cur=null;
+    try {
+      cur=getList().get(current);
+    }
+    catch (IndexOutOfBoundsException ex) {
+    }
+    getList().clear();
+    if (cur!=null) getList().add(cur);
+    current=0;
+    fireTableDataChanged();
+  }
 }

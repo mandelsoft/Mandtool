@@ -149,6 +149,7 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       if (altspec!=null) altspec.setName(text);
       if (modtimes!=null) modtimes.setName(text);
       if (tags!=null) tags.setName(text);
+      if (attrs!=null) attrs.setName(text);
       label.setText(text);
     }
 
@@ -468,6 +469,7 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       setAltSpec();
       setModTimes();
       setTags();
+      setAttrs();
       for (DataField f:fields.keySet()) {
         ValueAccess acc=fields.get(f);
         f.setDataValue(acc.getValue());
@@ -512,6 +514,10 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       tags=new TagsAction();
       b=tags_button=new JButton(tags);
       b.setToolTipText("Show area tags");
+      buttons.add(b);
+      attrs=new AttrsAction();
+      b=attrs_button=new JButton(attrs);
+      b.setToolTipText("Show area attributes");
       buttons.add(b);
       
       modtimes_button.setVisible(data!=null);
@@ -646,6 +652,40 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       }
     }
 
+    ////////////////////////////////////////////////////////////////////////
+    // attribute sub window
+
+    private AttrsAction attrs;
+    private JButton    attrs_button;
+
+    private void setAttrs()
+    {
+      if (attrs!=null) {
+        if (getInfo()!=null) {
+          attrs.setInfo(getInfo());
+          attrs_button.setVisible(true);
+        }
+        else {
+          attrs.setEnabled(true);         // close window and
+          attrs_button.setVisible(false); // hide active button
+        }
+      }
+    }
+
+    private class AttrsAction extends SubSpecAction {
+      public AttrsAction()
+      {
+        super("Attributes");
+      }
+
+      @Override
+      protected MandelSpecDialog createDialog(Window owner, String name,
+                                              boolean change)
+      {
+        return new AttrSpec(owner,name,!readonlyMode);
+      }
+    }
+    
     ////////////////////////////////////////////////////////////////////////
     // alternate specification sub window
 

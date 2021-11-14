@@ -47,12 +47,16 @@ import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.mand.util.MandelListFolderTree;
 import com.mandelsoft.mand.util.MemoryMandelListFolderTree;
 import com.mandelsoft.mand.util.ScannerColormapList;
+import com.mandelsoft.mand.util.ScannerMandelColormapList;
 import com.mandelsoft.mand.util.TagList;
 import com.mandelsoft.mand.util.UniqueArrayMandelList;
 import com.mandelsoft.util.Utils;
 import java.io.FileOutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static java.lang.Integer.parseInt;
+import java.net.MalformedURLException;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -90,6 +94,7 @@ public class Environment1 implements MandelConstants  {
   
   private MandelList unseenrasters;
   private ColormapList colormaplist;
+  private ColormapList areacolormaplist;
   private Colormap defcolormap;
   
   private boolean autoRescan=true;
@@ -102,12 +107,8 @@ public class Environment1 implements MandelConstants  {
     memory=new MemoryMandelListFolderTree("memory");
   }
 
-  public Environment1(String tool, String[] args) throws IllegalConfigurationException
-  { this(tool,args,new File("."));
-  }
-
   public Environment1(String[] args) throws IllegalConfigurationException
-  { this(args,new File("."));
+  { this(null, args);
   }
 
   public Environment1(String[] args, File dir) throws IllegalConfigurationException
@@ -115,10 +116,53 @@ public class Environment1 implements MandelConstants  {
     this(null,args,dir);
   }
 
+  public Environment1(String tool, String[] args) throws IllegalConfigurationException
+  { this(tool);
+    
+    URL url=null;
+    File dir=new File(".");
+    QualifiedMandelName name=null;
+    int arg=0;
+    
+    if (args!=null && args.length>arg) {
+      File f=new File(args[0]);
+      if (f.exists() && f.isDirectory()) {
+          dir=f;
+          arg++;
+      }
+      else {
+        name=QualifiedMandelName.create(args[0]);
+        if (name==null) {
+          try {
+            url = new URL(args[0]);
+            arg++;
+          }
+          catch (MalformedURLException ex) {
+          }
+        }
+      }
+    }
+    if (url!=null) {
+      _new( Arrays.copyOfRange(args, arg, args.length), url);
+    }
+    else {
+      if (arg>0) {
+        _new( Arrays.copyOfRange(args, arg, args.length), dir);
+      }
+      else {
+        _new( args, dir);
+      }
+    }
+  }
+  
   public Environment1(String tool, String[] args, File dir) throws IllegalConfigurationException
   {
     this(tool);
-    
+    _new(args,dir);
+  }
+   
+  private void _new(String[] args, File dir) throws IllegalConfigurationException
+  {
     if (args==null || args.length<1) {
       initialName=new QualifiedMandelName(MandelName.ROOT);
     }
@@ -132,6 +176,9 @@ public class Environment1 implements MandelConstants  {
         }
         else {
           initialName=QualifiedMandelName.create(f);
+          if (initialName==null) {
+            throw new IllegalConfigurationException("not a mandel name or file: "+f);
+          }
         }
       }
     }
@@ -146,7 +193,11 @@ public class Environment1 implements MandelConstants  {
   public Environment1(String tool, String[] args, URL dir) throws IllegalConfigurationException
   {
     this(tool);
-
+    _new(args,dir);
+  }
+  
+  private void _new(String[] args, URL dir) throws IllegalConfigurationException
+  {
     if (args==null || args.length<1) {
       initialName=new QualifiedMandelName(MandelName.ROOT);
     }
@@ -159,6 +210,11 @@ public class Environment1 implements MandelConstants  {
     commonSetup();
   }
 
+  public Set<String> getNestedLabels()
+  {
+    return context.getContextLabels();
+  }
+  
   public String getTool()
   {
     return dbfactory.getTool();
@@ -185,6 +241,14 @@ public class Environment1 implements MandelConstants  {
     setupDerivedLists();
 
     colormaplist=new ScannerColormapList(getColormapScanner());
+    areacolormaplist=new ScannerMandelColormapList(getAreaColormapScanner());
+    
+    if (debug) {
+      System.out.println("**** area colormaps");
+      for (ColormapName n:areacolormaplist) { 
+          System.out.println("areacm: "+n);
+      }
+    }
     String cmname=database.getProperty(Settings.DEFCOLORMAP);
     if (debug) System.out.println("default colormap property: "+cmname);
     if (cmname!=null && colormaplist!=null) {
@@ -279,6 +343,11 @@ public class Environment1 implements MandelConstants  {
     return colormaplist;
   }
 
+  public ColormapList getAreaColormaps()
+  {
+    return areacolormaplist;
+  }
+  
   public Colormap getDefaultColormap()
   {
     return defcolormap;
@@ -356,6 +425,12 @@ public class Environment1 implements MandelConstants  {
   {
     return database.getTags();
   }
+  
+  public TagList getAttrs()
+  {
+    return database.getAttrs();
+  }
+  
 
   public MandelList getSeenRasters()
   {
@@ -559,6 +634,16 @@ public class Environment1 implements MandelConstants  {
        }
      });
 
+     if (debug) {
+      System.out.println("**** lookup area colormaps in env");
+      for (MandelHandle h:areacolmap.getMandelHandles()) {
+        if (h.getHeader().isAreaColormap()) {
+          System.out.println("areacm: "+h.getFile());
+        } else {
+          System.out.println("image:  "+h.getFile());
+        }
+      }
+    }
      imagedata=createScanner(new DistributedMandelScanner.ScannerAccess() {
        public MandelScanner getScanner(MandelImageDB db)
        {
@@ -639,6 +724,7 @@ public class Environment1 implements MandelConstants  {
   private MandelList pending;
   private UnseenRefinementList unseenrefinements;
   private MandelList refinerequests;
+  private MandelList requests;
 
   public MandelList getNewRasters()
   { return newrasters;
@@ -663,6 +749,10 @@ public class Environment1 implements MandelConstants  {
   public MandelList getRefinementRequests()
   { return refinerequests;
   }
+  
+  public MandelList getRequests()
+  { return requests;
+  }
 
   private void setupDerivedLists()
   {
@@ -681,6 +771,7 @@ public class Environment1 implements MandelConstants  {
     if (!isReadonly()) {
       refinerequests=new RefinementRequestList();
       unseenrefinements=new UnseenRefinementList();
+      requests=new RequestList();
     }
   }
 
@@ -917,6 +1008,33 @@ public class Environment1 implements MandelConstants  {
 
   ///////////////////////////////////////////////////////////////////////////
 
+  private class RequestList extends ScannerBasedList {
+    protected MandelScanner getScanner()
+    {
+      return getInfoScanner();
+    }
+
+    @Override
+    protected void _addAll(Set<QualifiedMandelName> set)
+    {
+      MandelScanner s = getInfoScanner();
+      for (QualifiedMandelName n: set) {
+        boolean info=false;
+        boolean image=false;
+        for (MandelHandle h: s.getMandelHandles(n)) {
+          info|=h.getHeader().isInfo();
+          image|=h.getHeader().hasImageData();
+          if (info && image) {
+            break;
+          }
+        }
+        if (!image && info) {
+          add(n);
+        }
+      }
+    }
+  }
+  
   private class VariantImageList extends ScannerBasedList {
     protected MandelScanner getScanner()
     {
@@ -1029,12 +1147,39 @@ public class Environment1 implements MandelConstants  {
 
  ///////////////////////////////////////////////////////////////////////////
 
+ static Pattern vers = Pattern.compile("^v[0-9]*$");
+  
  public MandelHandle getMandelImageData(MandelName name)
   {
-    QualifiedMandelName qn=new QualifiedMandelName(name);
-    MandelHandle h=getImageDataScanner().getMandelData(qn);
-    if (h==null)  h=getImageDataScanner().getMandelData(name);
-    return h;
+    
+    Set<MandelHandle> set = getImageDataScanner().getMandelHandles(name);
+    if (set == null || set.isEmpty()) return null;
+    MandelHandle found=null;
+    int found_vers = -1;
+    for ( MandelHandle h : set) {
+      String q = h.getQualifier();
+      if (q==null || q.isEmpty()) {
+        if (found_vers < 0 ) {
+          found = h;
+        }
+      }
+      else {
+        Matcher m = vers.matcher(q);
+        if (m.matches()) {
+          int no = parseInt(q.substring(1));
+          if ( no > found_vers) {
+            found=h;
+            found_vers = no;
+          }
+        } else {
+          if (found==null) {
+            found=h;
+          }
+        }
+      }
+    }
+  
+    return found;
   }
 
   public MandelHandle getMandelImageData(QualifiedMandelName name)
@@ -1278,11 +1423,13 @@ public class Environment1 implements MandelConstants  {
           return false;
         }
 
-        StringTokenizer t=new StringTokenizer(n, ";:");
+        StringTokenizer t=new StringTokenizer(n, File.pathSeparator);
+        //System.out.printf("  test save path %s\n", n);
         boolean found=false;
         while (t.hasMoreTokens()) {
           try {
             File save=new File(t.nextToken()).getCanonicalFile();
+            //System.out.printf("  test save path %s == %s\n", save, root);
             if (save.equals(root)) {
               found=true;
               break;

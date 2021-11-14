@@ -35,6 +35,7 @@ import com.mandelsoft.mand.util.SimpleColormapSourceFactory;
 import com.mandelsoft.swing.worker.CallbackWorker;
 import com.mandelsoft.swing.worker.ErrorNotification;
 import com.mandelsoft.swing.worker.WorkerProgressMonitor;
+import com.mandelsoft.util.Utils;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -266,10 +267,21 @@ public class PictureSaveDialog extends MandelDialog {
 
     public Decoration getDecoration(MandelInfo info)
     {
-      Decoration decoration=new Decoration();
+      String deco = info.getProperty(MandelInfo.ATTR_TITLE);
+      String copyright = env.getCopyright(info);
+      if (!Utils.isEmpty(copyright)) {
+        if (Utils.isEmpty(deco)) {
+          deco = copyright;
+        }
+        else {
+          deco += " " + copyright;
+        }
+      }
+
+      Decoration decoration = new Decoration();
       decoration.setShowDecoration(showDecoration);
-      decoration.setDecoration(env.getCopyright(info));
-      System.out.println("*** decoration is "+decoration);
+      decoration.setDecoration(deco);
+      System.out.println("*** decoration is " + decoration);
       return decoration;
     }
 
@@ -337,6 +349,7 @@ public class PictureSaveDialog extends MandelDialog {
               (g=tmp.getGraphics()).drawImage(im, 0, 0, null);
               im=tmp;
             }
+            decoration.setColorHandler(new DynamicColor(new DynamicColor.StaticImage(im)));
             if (g==null) g=im.getGraphics();
             decoration.paintDecoration(g, im.getWidth(), im.getHeight());
           }

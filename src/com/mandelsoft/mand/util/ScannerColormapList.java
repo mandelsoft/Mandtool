@@ -22,6 +22,7 @@ import com.mandelsoft.mand.cm.Colormap;
 import com.mandelsoft.mand.scan.ColormapHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.scan.MandelScannerUtils;
+import java.util.Set;
 
 /**
  *
@@ -30,7 +31,7 @@ import com.mandelsoft.mand.scan.MandelScannerUtils;
 
 public class ScannerColormapList extends AbstractColormapList {
 
-  private MandelScanner scanner;
+  protected MandelScanner scanner;
 
   public ScannerColormapList(MandelScanner scanner)
   {
@@ -42,10 +43,15 @@ public class ScannerColormapList extends AbstractColormapList {
   {
     System.out.println("setting colormaps...");
     list.clear();
-    list.addAll(scanner.getColormapNames());
+    list.addAll(getColormapNames());
     System.out.println("found "+size()+" colormaps");
   }
 
+  protected Set<ColormapName> getColormapNames()
+  {
+    return scanner.getColormapNames();
+  }
+  
   public void refresh()
   {
     scanner.rescan(false);
@@ -58,7 +64,7 @@ public class ScannerColormapList extends AbstractColormapList {
 
   public Colormap get(ColormapName name) throws IOException
   {
-    return MandelScannerUtils.getColormap(scanner,name);
+    return MandelScannerUtils.getColormap(getColormapHandle(name));
   }
 
   public ColormapHandle getColormapHandle(ColormapName name) throws IOException
@@ -72,12 +78,12 @@ public class ScannerColormapList extends AbstractColormapList {
   @Override
   protected boolean _add(ColormapName name, Colormap cm, ColormapHandle h)
   {
-    throw new UnsupportedOperationException("Not supported.");
+    return true;
   }
 
   @Override
   protected boolean _remove(ColormapName name)
   {
-    throw new UnsupportedOperationException("Not supported.");
+    return true;
   }
 }

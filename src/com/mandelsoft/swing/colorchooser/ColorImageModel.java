@@ -119,4 +119,9 @@ public class ColorImageModel  {
   {
     listeners.addPropertyChangeListener(listener);
   }
+  
+  public static void main(String argv[])
+  {
+    System.out.println("Hello!");
+  }
 }

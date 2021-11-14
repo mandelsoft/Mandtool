@@ -65,27 +65,27 @@ public class ActionPanel extends GBCSupportPanel {
     if (content!=null) container.add(c, GBC(0, 0,GBC.BOTH).setInsets(5));
   }
 
-  public JButton addButton(String txt, ActionListener l, String tooltip)
+  public final JButton addButton(String txt, ActionListener l, String tooltip)
   {
     JButton b=addButton(txt,l);
     b.setToolTipText(tooltip);
     return b;
   }
 
-  public JButton addButton(String txt, ActionListener l)
+  public final JButton addButton(String txt, ActionListener l)
   {
     JButton b=new JButton(txt);
     b.addActionListener(l);
     return addButton(b);
   }
 
-  public JButton addButton(Action action)
+  public final JButton addButton(Action action)
   {
     JButton b=new JButton(action);
     return addButton(b);
   }
 
-  public JButton addButton(JButton b)
+  public final JButton addButton(JButton b)
   {
     buttons.add(b);
     //System.out.println("add button");
@@ -93,7 +93,7 @@ public class ActionPanel extends GBCSupportPanel {
     return b;
   }
 
-  public void addButton(JComponent m)
+  public final void addButton(JComponent m)
   {
     buttons.add(m);
     //System.out.println("add button");

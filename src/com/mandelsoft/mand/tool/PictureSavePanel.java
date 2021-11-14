@@ -21,6 +21,7 @@ import com.mandelsoft.swing.ActionPanel;
 import com.mandelsoft.swing.FilePanel;
 import com.mandelsoft.swing.GBC;
 import com.mandelsoft.swing.IntegerField;
+import com.mandelsoft.swing.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.imageio.ImageIO;
@@ -39,7 +40,11 @@ public abstract class PictureSavePanel extends ActionPanel
 
     protected JComboBox formats;
     protected JCheckBox decorationButton;
+    protected JCheckBox titleButton;
     protected IntegerField width;
+    protected IntegerField h_inset;
+    protected IntegerField v_inset;
+    protected TextField text;
     protected FilePanel imagefile;
 
     public PictureSavePanel()
@@ -54,34 +59,74 @@ public abstract class PictureSavePanel extends ActionPanel
     }
 
     public PictureSavePanel(String fileLabel)
-    {
+    { int row=0;
       JComponent c=new JLabel("Image Format");
-      addContent(c, GBC(0, 0).setRightInset(10).setAnchor(GBC.EAST).setWeight(
+      addContent(c, GBC(0, row).setRightInset(10).setAnchor(GBC.EAST).setWeight(
               100, 100));
       String[] fmts=ImageIO.getReaderFileSuffixes();
       formats=new JComboBox(fmts);
-      addContent(formats, GBC(1, 0).setAnchor(GBC.WEST).setWeight(
+      addContent(formats, GBC(1, row).setAnchor(GBC.WEST).setWeight(
               100, 100));
 
+      row++;
       c=new JLabel("Modified Width");
-      addContent(c, GBC(0, 1).setRightInset(10).setAnchor(GBC.EAST).setWeight(
+      addContent(c, GBC(0, row).setRightInset(10).setAnchor(GBC.EAST).setWeight(
               100, 100));
       width=new IntegerField(0);
       width.setColumns(10);
-      addContent(width, GBC(1, 1).setAnchor(GBC.WEST).setWeight(
+      addContent(width, GBC(1, row).setAnchor(GBC.WEST).setWeight(
+              100, 100));
+      
+      row++;
+      c=new JLabel("Horizontal Inset");
+      addContent(c, GBC(0, row).setRightInset(10).setAnchor(GBC.EAST).setWeight(
+              100, 100));
+      h_inset=new IntegerField(0);
+      h_inset.setColumns(10);
+      addContent(h_inset, GBC(1, row).setAnchor(GBC.WEST).setWeight(
+              100, 100));
+      row++;
+      c=new JLabel("Vertical Inset");
+      addContent(c, GBC(0, row).setRightInset(10).setAnchor(GBC.EAST).setWeight(
+              100, 100));
+      v_inset=new IntegerField(0);
+      v_inset.setColumns(10);
+      addContent(v_inset, GBC(1, row).setAnchor(GBC.WEST).setWeight(
+              100, 100));
+      
+      row++;
+      c=new JLabel("Picture Text");
+      addContent(c, GBC(0, row).setRightInset(10).setAnchor(GBC.EAST).setWeight(
+              100, 100));
+      text=new TextField();
+      text.setColumns(40);
+      addContent(text, GBC(1, row).setAnchor(GBC.WEST).setWeight(
               100, 100));
 
+      row++;
       c=new JLabel("Show Creator");
-      addContent(c, GBC(0, 2).setRightInset(10).setAnchor(GBC.EAST).setWeight(
+      addContent(c, GBC(0, row).setRightInset(10).setAnchor(GBC.EAST).setWeight(
               100, 100));
       decorationButton=new JCheckBox();
       decorationButton.setSelected(getEnvironment().getCopyright()!=null);
       decorationButton.setEnabled(!decorationButton.isSelected());
-      addContent(decorationButton, GBC(1, 2).setAnchor(GBC.WEST).setWeight(
+      addContent(decorationButton, GBC(1, row).setAnchor(GBC.WEST).setWeight(
               100, 100));
+      
+      row++;
+      c=new JLabel("Show Title");
+      addContent(c, GBC(0, row).setRightInset(10).setAnchor(GBC.EAST).setWeight(
+              100, 100));
+      titleButton=new JCheckBox();
+      titleButton.setSelected(getEnvironment().getCopyright()!=null);
+      titleButton.setEnabled(!decorationButton.isSelected());
+      addContent(titleButton, GBC(1, row).setAnchor(GBC.WEST).setWeight(
+              100, 100));
+      
 
+      row++;
       imagefile=new FilePanel(fileLabel, "", (JFrame)getOwner());
-      addContent(imagefile, GBC(0, 3, 2, 1).setLayout(GBC.BOTH, GBC.NORTH).setWeight(
+      addContent(imagefile, GBC(0, row, 2, 1).setLayout(GBC.BOTH, GBC.NORTH).setWeight(
               100, 100).
               setInsets(10, 10, 10, 10));
     }

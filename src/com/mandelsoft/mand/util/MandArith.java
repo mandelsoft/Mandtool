@@ -29,7 +29,7 @@ public class MandArith implements MandelConstants {
   static public final BigDecimal b2=new BigDecimal(2);
   static public final BigDecimal b0=new BigDecimal(0);
   static public final BigDecimal b10=new BigDecimal(10);
-
+  
   static public BigDecimal mul(BigDecimal a, BigDecimal b)
   { return a.multiply(b,MC);
   }

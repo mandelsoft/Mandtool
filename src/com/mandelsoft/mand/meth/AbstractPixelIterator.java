@@ -16,29 +16,32 @@
 
 package com.mandelsoft.mand.meth;
 
-import com.mandelsoft.mand.MandelInfo;
+import com.mandelsoft.mand.MandelSpec;
 import com.mandelsoft.mand.PixelIterator;
 import com.mandelsoft.mand.util.MandArith;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import static java.math.RoundingMode.HALF_EVEN;
 
 /**
  *
  * @author Uwe Krueger
  */
-abstract class AbstractPixelIterator extends MandArith implements PixelIterator {
+abstract public class AbstractPixelIterator extends MandArith implements PixelIterator {
   protected int limit;
   protected int rx;
   protected int ry;
+  protected MathContext ctx;
   protected int precision;
   protected int magnification;
 
-  public AbstractPixelIterator(MandelInfo mi)
+  public AbstractPixelIterator(MandelSpec mi)
   {
     this(mi.getRX(), mi.getRY(), mi.getLimitIt(), mi.getDX(), mi.getDY());
   }
 
-  public AbstractPixelIterator(int rx, int ry, int limit, BigDecimal dx,
-                           BigDecimal dy)
+  public AbstractPixelIterator(int rx, int ry, int limit,
+                           BigDecimal dx, BigDecimal dy)
   {
     this.limit=limit;
     this.rx=rx;
@@ -57,8 +60,9 @@ abstract class AbstractPixelIterator extends MandArith implements PixelIterator 
       p++;
       d=mul(d, BigDecimal.TEN);
     }
-    int prec=((p+2)/3)*10;
+    ctx=new MathContext(p+2, HALF_EVEN);
     precision=(int)((p+2)/Math.log10(2));
+
     d=dx;
     if (dx.compareTo(dy)>0) d=dy;
     p=0;
@@ -78,5 +82,4 @@ abstract class AbstractPixelIterator extends MandArith implements PixelIterator 
   {
     return magnification;
   }
-
 }

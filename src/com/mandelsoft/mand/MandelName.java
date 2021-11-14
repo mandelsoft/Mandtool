@@ -204,6 +204,35 @@ public class MandelName extends DefaultElementName<MandelName> {
                           label);
   }
   
+  public boolean isChildOf(MandelName name)
+  {
+    if (isRoot()) return false;
+    String e=effective;
+    String nlabel=label;
+    int l=e.length()-1;
+    if (l==0) {
+      e=ROOT_NAME;
+      nlabel=null;
+    }
+    else {
+      e=e.substring(0,l);
+      if (e.charAt(l-1)==LABEL_END) {
+        int ix=e.lastIndexOf(LABEL_START);
+        nlabel=e.substring(ix+1,l-1);
+        e=e.substring(0,ix);
+      }
+    }
+    return e.equals(name.effective) && sameLabel(name.label, nlabel);
+  }
+  
+  
+  static private boolean sameLabel(String l1, String l2)
+  {
+    if (l1==l2) return true;
+    if (l1==null || l2 == null) return false;
+    return l1.equals(l2);
+  }
+  
   public MandelName getParentName()
   { 
     if (isRoot()) return null;
@@ -495,6 +524,10 @@ public class MandelName extends DefaultElementName<MandelName> {
     String getOp();
   }
 
+  private interface BinaryOperation extends Operation {
+    void setBase(String base);
+  }
+  
   private static class Compress implements Operation {
     public String op(String a)
     {
@@ -534,7 +567,7 @@ public class MandelName extends DefaultElementName<MandelName> {
     }
   }
 
-  private static class Above implements Operation {
+  private static class Above implements BinaryOperation {
     MandelName base;
 
     public void setBase(String base)
@@ -554,7 +587,7 @@ public class MandelName extends DefaultElementName<MandelName> {
     }
   }
 
-  private static class Down implements Operation {
+  private static class Down implements BinaryOperation {
     MandelName base;
 
     public void setBase(String base)
@@ -574,6 +607,26 @@ public class MandelName extends DefaultElementName<MandelName> {
     }
   }
 
+   private static class IsChild implements BinaryOperation {
+    MandelName base;
+
+    public void setBase(String base)
+    {
+      this.base=new MandelName(base);
+    }
+
+    public String op(String a)
+    {
+      MandelName mn=new MandelName(a);
+      return mn.isChildOf(base)?"true":"false";
+    }
+
+    public String getOp()
+    {
+      return "isChildOf("+base+")";
+    }
+  }
+   
   private static class Parent implements Operation {
     public String op(String a)
     {
@@ -589,12 +642,19 @@ public class MandelName extends DefaultElementName<MandelName> {
 
   static Operation compress=new Compress();
   static Operation uncompress=new UnCompress();
-  static SubAt       sub=new SubAt();
+  static SubAt     sub=new SubAt();
   static Above     above=new Above();
   static Down      down=new Down();
   static Parent    parent=new Parent();
+  static IsChild   ischild=new IsChild();
   static int failed=0;
 
+  private static boolean check(BinaryOperation op, String arg, String base, String exp)
+  {
+    op.setBase(base);
+    return check(op, arg, exp);
+  }
+  
   private static boolean check(Operation op, String arg, String exp)
   {
     try {
@@ -771,6 +831,18 @@ public class MandelName extends DefaultElementName<MandelName> {
     check(parent,"ab@laber~ab@other","ab@laber~a@other");
     check(parent,"ab@laber~a@other","ab@laber");
 
+    check(ischild, "a", "0", "true");
+    check(ischild, "a", "a", "false");
+    check(ischild, "a", "b", "false");
+    check(ischild, "2a", "a", "true");
+    check(ischild, "3a", "a", "false");
+    check(ischild, "a@test", "a", "false");
+    check(ischild, "a@test~a", "a@test", "true");
+    check(ischild, "ab@test", "a@test", "true");
+    check(ischild, "ab@test", "a@other", "false");
+    check(ischild, "ab@test~ab@other", "ab@test~a", "false");
+    check(ischild, "ab@test~ab@other", "ab@test~a@other", "true");
+     
     System.out.println("failed: "+failed);
     return failed;
   }

@@ -15,9 +15,12 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.MandIter;
+import com.mandelsoft.mand.MandelData;
 import java.awt.Rectangle;
 import java.math.BigDecimal;
 import com.mandelsoft.mand.MandelInfo;
+import com.mandelsoft.mand.MandelRaster;
 import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.swing.BufferedComponent.VisibleRect;
 
@@ -56,6 +59,61 @@ public class ToolUtils extends MandUtils {
       System.out.println("child:");
       System.out.println("   center: "+info.getXM()+","+info.getYM());
       System.out.println("   size  : "+info.getDX()+","+info.getDY());
+    }
+  }
+  
+  static public void updateInfo(MandelInfo info, Rectangle rect,
+                                MandelData parent, double scale)
+  {
+    updateInfo(info, rect, parent.getInfo(), scale);
+    MandelRaster raster =parent.getRaster();
+    if (raster!=null) {
+       int x0=(int)(rect.getX()/scale);
+       int y0=(int)(rect.getY()/scale);
+       int rx=(int)(rect.getWidth()/scale);
+       int ry=(int)(rect.getHeight()/scale);
+       System.out.printf("sub range: (%d,%d)[%d,%d]\n", x0,y0, rx, ry);
+       
+       for (int y=y0; y < y0 +ry; y ++) {
+         int[] line=raster.getRaster()[y];
+         int start=-1;
+         int end=-1;
+         for (int x=x0; x<x0+rx; x++) {
+           if (line[x]==0) {
+             if (start<0) start=x;
+           }
+           else {
+             if (start>=0 && end<0) {
+               end=x-1;
+               break;
+             }
+           }
+         }
+         
+         if (start>=0) {
+           if (end<0) end=x0+rx-1;
+           int x=(start+end)/2;
+           start=y;
+           end=-1;
+           for (;y<y0+ry;y++) {
+             if (raster.getRaster()[y][x]!=0) {
+               end=y-1;
+               break;
+             }
+           }
+           if (end<0) end=y0+ry-1;
+           y=(start+end)/2;
+           
+           MandelInfo p=parent.getInfo();
+         
+           MandIter.Coord c=new MandIter.Coord(
+                   add(p.getXMin(), div(mul(p.getDX(),x),p.getRX())),
+                   add(p.getYMin(), div(mul(p.getDY(),y),p.getRY())));
+           System.out.printf("black at (%d,%d)=%s\n", x, y, c);
+           info.setProperty(MandIter.ATTR_REFCOORD, c.toString());
+           break;
+         }
+       }
     }
   }
 

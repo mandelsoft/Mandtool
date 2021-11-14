@@ -30,3 +30,14 @@ Native GMP Support:
   - You can verify, whether the DLL works correctly with the command
        bin\mand -c com.mandelsoft.mand.MandIter
     It should not provide an error and notify, that the DLL is used.
+
+NEW: Support of superfractalthing maths
+  - The calculation tool (mand) now supports the option `-o` to enable
+    the superfractalthing maths pixel iterator.
+  - it replaces the GMP iterator (if present)
+  - it completely based on double arithmetik plus some reference point
+    iteration based on BigDecimals
+  - it therefore runs on all platforms and does not require a native 
+    library
+  - it requires a huge amount of memory for large iteration depths,
+    therefore the use of the 64 bit version of Java is strongly recommended.

@@ -306,8 +306,8 @@ public class ImageChooserPanel extends AbstractColorChooserPanel {
 
     private Color getColor(MouseEvent e)
     {
-      int x=(int)Math.round(e.getX()/buffer.getScale());
-      int y=(int)Math.round(e.getY()/buffer.getScale());
+      int x=(int)Math.round(e.getX()/buffer.getScaleX());
+      int y=(int)Math.round(e.getY()/buffer.getScaleY());
       BufferedImage im=buffer.getImage();
       //System.out.println("color at "+x+","+y+": "+im.getRGB(x, y));
       return new Color(im.getRGB(x, y));
@@ -315,8 +315,8 @@ public class ImageChooserPanel extends AbstractColorChooserPanel {
 
     private void handle(MouseEvent e)
     {
-      int x=(int)Math.round((e.getX()-buffer.getScale()/2)/buffer.getScale());
-      int y=(int)Math.round((e.getY()-buffer.getScale()/2)/buffer.getScale());
+      int x=(int)Math.round((e.getX()-buffer.getScaleX()/2)/buffer.getScaleX());
+      int y=(int)Math.round((e.getY()-buffer.getScaleY()/2)/buffer.getScaleY());
       BufferedImage im=buffer.getImage();
       if (im==null || im.getWidth()<=x || im.getHeight()<=y) return;
       //System.out.println("color at "+x+","+y+": "+im.getRGB(x, y));

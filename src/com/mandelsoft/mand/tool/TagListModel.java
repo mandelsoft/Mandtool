@@ -198,4 +198,13 @@ public class TagListModel extends AbstractListModel
       System.err.println("cannot save tag list "+ex);
     }
   }
+
+  public boolean addUniqueElement(String a)
+  {
+    if (getIndexOf(a)<0) {
+      addElement(a);
+      return true;
+    }
+    return false;
+  }
 }

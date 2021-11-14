@@ -33,6 +33,7 @@ public interface ColormapListModel extends TableModel {
 
   boolean add(ColormapName name, Colormap cm);
   boolean remove(int index);
+  boolean remove(ColormapName name);
 
   Colormap getColormap(int index) throws IOException;
   AbstractFile getFile(int index) throws IOException;

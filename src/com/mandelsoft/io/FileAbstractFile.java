@@ -19,6 +19,7 @@ package com.mandelsoft.io;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,9 +71,14 @@ public class FileAbstractFile extends AbstractFileSupport {
 
   public InputStream getInputStream() throws IOException
   {
-    return new FileInputStream(file);
+    return new BufferedInputStream(new FileInputStream(file));
   }
 
+  public long getLastModified()
+  {
+    return _getLastModified();
+  }
+  
   protected long _getLastModified()
   {
     return file.lastModified();

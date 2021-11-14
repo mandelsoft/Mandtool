@@ -16,6 +16,7 @@
 package com.mandelsoft.mand;
 
 import com.mandelsoft.io.AbstractFile;
+import static com.mandelsoft.mand.Settings.ENV_MANDEL_HOME;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.FileMandelList;
 import com.mandelsoft.mand.util.UniqueArrayMandelList;
@@ -64,6 +65,15 @@ import com.mandelsoft.util.Utils;
 public class Environment0 implements MandelConstants  {
   static public boolean debug=false;
 
+  static File basedir() 
+  {
+    String base=System.getenv(ENV_MANDEL_HOME);
+    if (base!=null) {
+      return new File(base);
+    }
+    return new File(".");
+  }
+  
   public static class FileInfo {
     private Colormap cm;
 
@@ -129,11 +139,11 @@ public class Environment0 implements MandelConstants  {
   private MandelScannerCache scannercache;
 
   public Environment0(String tool, String[] args)
-  { this(tool,args,new File("."));
+  { this(tool,args,basedir());
   }
 
   public Environment0(String[] args)
-  { this(args,new File("."));
+  { this(args,basedir());
   }
 
   public Environment0(String[] args, File dir)

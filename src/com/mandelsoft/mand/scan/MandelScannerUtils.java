@@ -86,6 +86,12 @@ public class MandelScannerUtils {
       return false;
     }
 
+    static public boolean isAreaColormap(Set<MandelHandle> set)
+    {
+      for (MandelHandle h:set) if (h.getHeader().isAreaColormap()) return true;
+      return false;
+    }
+    
     static public boolean hasNone(Set<MandelHandle> set, Filter f)
     {
       for (MandelHandle h:set) if (f.filter(h.getHeader())) return false;
@@ -125,6 +131,7 @@ public class MandelScannerUtils {
                                   String label, MandelName n,
                                   MandelScanner scan, MandelScanner.Filter f)
   {
+   
     Set<MandelHandle> subs;
     MandelName s=n.subAt(label);
     while (s!=null) {
@@ -136,6 +143,17 @@ public class MandelScannerUtils {
         }
         s=s.next();
       }
+    
+    /*
+       Set<MandelName> subs;
+       if (!(subs=scan.getMandelNames()).isEmpty()) {
+         for (MandelName s: subs) {
+           if (s.isChildOf(n)) {
+              set.add(s);
+           }
+         }
+       }
+     */
   }
 
   static public Set<MandelName> getSubNames(MandelName n,

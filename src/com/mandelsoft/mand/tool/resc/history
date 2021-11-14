@@ -1,3 +1,23 @@
+Version 1.5-rc1
+   - area list with colormaps
+   - complete list of all area colormaps (mandel image + area cm)
+   - direct data reference via first command line argument
+   - show marked area if applicable (not only up the name tree)
+   - improved area info hover panel 
+   - history back and forth
+   - mand calc tool filter for max parent time
+   - improved pixel tooltip
+   - dynamic enable copyright display
+   - dynamic copyright color and additional text
+   - regular backup of intermediate calculation state
+   - improved setup for resuming calculation
+   - global list of pending requests
+   - screen proportion support for sub area creation
+   - complete list of previous marks in list browser
+   - dynamic attribues for mandel data
+   - support of SUPERFRACTALTHING MATHS (http://www.science.eclipse.co.uk/sft_maths.pdf)
+   - formal title attribute 
+
 Version 1.4
    - navigation to area colormap
    - preload of images for galery ticker

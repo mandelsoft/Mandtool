@@ -14,5 +14,5 @@ if [ -z "$*" ]; then
   SPLASH="-splash:$MANDEL_HOME/bin/images/plash.png"
 fi
 
-"$JAVA_HOME/bin/java" $SPLASH -Djava.library.path="$MANDEL_HOME/lib/linux" -Xmx1024M -classpath "$MANDEL_HOME/lib/Mandelbrot.jar" com.mandelsoft.mand.tools.Cmd "$@"
+"$JAVA_HOME/bin/java" $SPLASH -Djava.library.path="$MANDEL_HOME/lib/linux" -Xmx3024M -classpath "$MANDEL_HOME/lib/Mandelbrot.jar" com.mandelsoft.mand.tools.Cmd "$@"
  

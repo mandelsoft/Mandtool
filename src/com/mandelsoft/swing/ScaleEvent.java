@@ -24,38 +24,49 @@ import java.util.EventObject;
  */
 
 public class ScaleEvent extends EventObject {
-  private double scalex;
-  private double scaley;
-  private double oldx;
-  private double oldy;
+  private Scale newScale;
+  private Scale oldScale;
 
+  public ScaleEvent(Object source, Scale newScale, Scale oldScale)
+  {
+    super(source);
+    this.newScale=newScale;
+    this.oldScale=oldScale;
+  }
+   
   public ScaleEvent(Object source, double scalex, double scaley,
                                    double oldx, double oldy)
   {
-    super(source);
-    this.scalex=scalex;
-    this.scaley=scaley;
-    this.oldx=oldx;
-    this.oldy=oldy;
+    this(source, new Scale(scalex,scaley), new Scale(oldx,oldy));
   }
 
+  public Scale getOld()
+  {
+    return oldScale;
+  }
+  
+  public Scale getNew()
+  {
+    return newScale;
+  }
+  
   public double getOldX()
   {
-    return oldx;
+    return oldScale.getX();
   }
 
   public double getOldY()
   {
-    return oldy;
+    return oldScale.getY();
   }
 
   public double getScaleX()
   {
-    return scalex;
+    return newScale.getX();
   }
 
   public double getScaleY()
   {
-    return scaley;
+    return newScale.getY();
   }
 }

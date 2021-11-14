@@ -25,6 +25,11 @@ public class Command {
   { System.err.println("Error: "+txt);
     System.exit(1);
   }
+  
+  static public void Error(String msg, Object...args)
+  { System.err.printf("Error: "+msg+"\n", args);
+    System.exit(1);
+  }
 
   static public void Warning(String txt)
   { System.err.println("Warning: "+txt);

@@ -205,7 +205,8 @@ public class MandUtils extends MandArith {
   static public boolean hasSubNames(MandelName n, Set<MandelName> set)
   {
     for (MandelName s:set) {
-      if (n.equals(s.getParentName())) return true;
+      if (s.isChildOf(n)) return true;
+      // if (n.equals(s.getParentName())) return true;
     }
     return false;
   }

@@ -28,7 +28,7 @@ import com.mandelsoft.mand.scan.ColormapHandle;
  * @author Uwe Krüger
  */
 
-public interface ColormapList {
+public interface ColormapList extends Iterable<ColormapName>{
   void refresh();
   void save() throws IOException;
   void clear();
@@ -51,5 +51,4 @@ public interface ColormapList {
   boolean add(int index, ColormapName name, Colormap cm, ColormapHandle h);
   boolean remove(ColormapName name);
   ColormapName remove(int index);
-  Iterator<ColormapName> iterator();
 }

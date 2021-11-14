@@ -21,7 +21,7 @@ import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
-import com.mandelsoft.mand.util.ArrayMandelList;
+import com.mandelsoft.mand.util.DefaultMandelList;
 import com.mandelsoft.mand.util.MandelList;
 import java.io.IOException;
 
@@ -49,7 +49,7 @@ public abstract class ScannerBasedMandelListFactory implements MandelListFactory
 
   public MandelList getList()
   {
-     MandelList list=new ArrayMandelList();
+     MandelList list=new DefaultMandelList();
      for (QualifiedMandelName n:scanner.getQualifiedMandelNames()) {
        if (acceptType(n) && accept(n)) list.add(n);
      }

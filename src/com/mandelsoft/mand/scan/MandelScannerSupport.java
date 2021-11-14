@@ -207,9 +207,11 @@ public abstract class MandelScannerSupport extends MandelScannerListenerSupport 
   public Set<QualifiedMandelName> getQualifiedMandelNames(MandelName name)
   {
     Set<QualifiedMandelName> set=new HashSet<QualifiedMandelName>();
-
-    for (MandelHandle h:_getMandelHandles(name)) {
-      set.add(h.getName());
+    Set<MandelHandle> orig = _getMandelHandles(name);
+    if (orig!=null) {
+      for (MandelHandle h : orig) {
+        set.add(h.getName());
+      }
     }
     return set;
   }
@@ -217,10 +219,13 @@ public abstract class MandelScannerSupport extends MandelScannerListenerSupport 
   public Set<MandelHandle> getMandelHandles(QualifiedMandelName name)
   {
     Set<MandelHandle> set=new HashSet<MandelHandle>();
-
-    for (MandelHandle h:_getMandelHandles(name.getMandelName())) {
-      if (Utils.equals(h.getQualifier(), name.getQualifier()))
-        set.add(h);
+    Set<MandelHandle> orig = _getMandelHandles(name.getMandelName());
+    if (orig != null) {
+      for (MandelHandle h : orig) {
+        if (Utils.equals(h.getQualifier(), name.getQualifier())) {
+          set.add(h);
+        }
+      }
     }
     return set;
   }

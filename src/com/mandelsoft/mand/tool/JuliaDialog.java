@@ -106,7 +106,7 @@ public class JuliaDialog extends MandelDialog {
     ym=0;
     dx=4.5;
    
-    limit=3000;
+    limit=30000;
     rx=image.getWidth();
     ry=image.getHeight();
     dy=dx*ry/rx;
