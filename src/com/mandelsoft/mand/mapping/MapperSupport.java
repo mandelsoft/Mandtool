@@ -54,17 +54,17 @@ public abstract class MapperSupport implements Mapper {
     }
 
     protected void analyseRaster(MandelRaster r)
-    { int[][] raster=r.getRaster();
-      minIt=0;
+    { minIt=0;
       maxIt=0;
       for (int y=0; y<r.getRY(); y++) {
         for (int x=0; x<r.getRX(); x++) {
-          if (raster[y][x]>maxIt) {
-            maxIt=raster[y][x];
+          int it =r.getData(x, y);
+          if (it>maxIt) {
+            maxIt=it;
             if (minIt==0) minIt=maxIt;
           }
-          if (raster[y][x]<minIt && raster[y][x]>0) {
-            minIt=raster[y][x];
+          if (it<minIt && it>0) {
+            minIt=it;
           }
         }
       }

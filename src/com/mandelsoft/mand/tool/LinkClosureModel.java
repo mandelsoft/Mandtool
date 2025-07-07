@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 D021770.
+ * Copyright 2021 Uwe Krueger.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * TODO: not yet implemented
- * @author D021770
+ * @author Uwe Krueger
  */
 public class LinkClosureModel extends DefaultMandelListTableModel {
   private MandelListFolderTreeModel links;

@@ -1,1 +1,18 @@
-mand -c com.mandelsoft.mand.scan.MandelFolderCache "$@"
+#!/bin/sh
+
+LIB="$(dirname "$0")/../lib"
+
+if [ ! -f "$LIB/Mandelbrot.jar" ]; then
+  if [ -n "$MANDEL_HOME" ]; then
+    if [ -f "$MANDEL_HOME/lib/Mandelbrot.jar" ]; then
+      LIB="$MANDEL_HOME/lib"
+    fi
+  fi
+fi
+
+if [ -z "$JAVA_HOME" ]; then
+  echo "Error: JAVA_HOME not set"
+  exit 1
+fi
+
+"$JAVA_HOME/bin/java" -classpath "$LIB/Mandelbrot.jar" com.mandelsoft.mand.scan.MandelFolderCache "$@"

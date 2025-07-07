@@ -31,10 +31,17 @@ public class ListSubsetFactory extends SubAreaFactory {
   public ListSubsetFactory(MandelScanner scanner, MandelName basename,
                            MandelList baselist, String title)
   {
-    super(scanner,basename,title);
-    this.baselist=baselist;
+    this(scanner, basename, baselist, title, true, false);
   }
 
+  public ListSubsetFactory(MandelScanner scanner, MandelName basename,
+                           MandelList baselist, String title,
+                           boolean uniqueNames, boolean projectMandelNames)
+  {
+    super(scanner,basename,title, uniqueNames, projectMandelNames);
+    this.baselist=baselist;
+  }
+  
   @Override
   protected boolean accept(QualifiedMandelName name)
   {

@@ -1,5 +1,23 @@
 #!/bin/sh
 
+BIN="$(dirname "$0")"
+LIB="$BIN/../lib"
+MEM=4096M
+if [ "${1#-M}" != "$1" ]; then
+  MEM="${1#-M}M"
+  shift
+fi
+if [ ! -f "$LIB/Mandelbrot.jar" ]; then
+  if [ -n "$MANDEL_HOME" ]; then
+    if [ -f "$MANDEL_HOME/lib/Mandelbrot.jar" ]; then
+      LIB="$MANDEL_HOME/lib"
+    fi
+    if [ -d "$MANDEL_HOME/bin" ]; then
+      BIN="$MANDEL_HOME/bin"
+    fi
+  fi
+fi
+
 if [ -z "$MANDEL_HOME" ]; then
   echo "Error: MANDEL_HOME not set"
   exit 1
@@ -11,8 +29,8 @@ if [ -z "$JAVA_HOME" ]; then
 fi
  
 if [ -z "$*" ]; then
-  SPLASH="-splash:$MANDEL_HOME/bin/images/plash.png"
+  SPLASH="-splash:$BIN/images/plash.png"
 fi
 
-"$JAVA_HOME/bin/java" $SPLASH -Djava.library.path="$MANDEL_HOME/lib/linux" -Xmx3024M -classpath "$MANDEL_HOME/lib/Mandelbrot.jar" com.mandelsoft.mand.tools.Cmd "$@"
+"$JAVA_HOME/bin/java" $SPLASH -Djava.library.path="$LIB/linux" -Xmx$MEM -classpath "$LIB/Mandelbrot.jar" com.mandelsoft.mand.tools.Cmd "$@"
  

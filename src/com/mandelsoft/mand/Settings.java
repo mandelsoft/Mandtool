@@ -109,6 +109,10 @@ public class Settings {
 
   static public final String COLORMAP_CACHE_SIZE="cache.colormaps";
   
+  static public final String HIRES="default.highres";
+  static public final String CLEAN_BLACK_LIMIT="default.cleanblacklimit";
+  static public final String DETECTION_NEIGHBORHOOD="default.detectionneighborhood";
+  
   ////////////////////////////////////////////////////////////////////////
   // factory
   ////////////////////////////////////////////////////////////////////////
@@ -293,10 +297,10 @@ public class Settings {
     raw.setProperty(TAGS, "${standardlists.dir}/tags");
     raw.setProperty(AREAS, "${standardlists.dir}/areas");
     raw.setProperty(REFINEMENTS, "${standardlists.dir}/refine");
+    raw.setProperty(LINKS, "${standardlists.dir}/links");
 
     if (local) {
       raw.setProperty(TODO, "${standardlists.dir}/todo");
-      raw.setProperty(LINKS, "${standardlists.dir}/links");
 
       raw.setProperty(SEEN, "${standardlists.dir}/seen");
       raw.setProperty(BITMAP_SAVE_PATH, "${dir}/bitmaps");
@@ -334,6 +338,8 @@ public class Settings {
     raw.setProperty(COLORMAP_SAVE_PATH, "${"+SAVE_PATH+"}");
     raw.setProperty(COLORMAP_PATH, "${"+COLORMAP_SAVE_PATH+"}");
 
+    raw.setProperty(CLEAN_BLACK_LIMIT,"40");
+    raw.setProperty(DETECTION_NEIGHBORHOOD,"1");
     try {
       process();
     }

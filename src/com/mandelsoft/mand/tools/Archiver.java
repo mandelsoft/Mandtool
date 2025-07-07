@@ -452,6 +452,7 @@ public class Archiver extends Sync {
     boolean wflag=false;
     boolean rflag=false;
     boolean cflag=false;
+    boolean mainVariants=false;
     File src=new File("C:/work/AccuRev/test/Mandel");
     File dst=new File("C:/Tomcat/apache-tomcat-6.0.29/webapps/mandel/mandel");
     File arch=new File("mandel.zip");
@@ -464,7 +465,8 @@ public class Archiver extends Sync {
       System.out.println("    -a <achivename>  set the name of the used archive");
       System.out.println("    -v               show wht would be done");
       System.out.println("  Archive Writer:  <cmd> -w <options> <src> <dst>");
-      System.out.println("    -w               write an archive");
+      System.out.println("    -lw               write an archive");
+      System.out.println("    -m               main variants only");
       System.out.println("  Archive Reader:  <cmd> -r <options> <dst>");
       System.out.println("    -r               read an archive");
       System.out.println("    -c               copy mandel list instead of add content");
@@ -477,6 +479,9 @@ public class Archiver extends Sync {
         char opt=arg.charAt(i);
         //System.out.println("option: "+opt);
         switch (opt) {
+          case 'm':
+            mainVariants=true;
+            break;
           case 'v':
             vflag=true;
             break;
@@ -529,6 +534,7 @@ public class Archiver extends Sync {
         else {
           a.setExecutionHandler(a.new ArchiveWriter(arch));
         }
+        a.setMainVariants(mainVariants);
         a.execute();
         System.out.println(""+a.count+" copied");
       }

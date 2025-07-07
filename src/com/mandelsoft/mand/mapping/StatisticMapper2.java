@@ -82,11 +82,9 @@ public class StatisticMapper2 extends MapperSupport {
       super.analyseRaster(r);
       histogram=new int[getSize()];
 
-      int[][] raster=r.getRaster();
-
       for (int y=0; y<r.getRY(); y++) {
         for (int x=0; x<r.getRX(); x++) {
-          int i=raster[y][x];
+          int i=r.getData(x, y);
           if (i>0) {
             histogram[i-minIt]++;
           }

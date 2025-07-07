@@ -20,12 +20,15 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import javax.swing.JButton;
 import com.mandelsoft.mand.MandelConstants;
+import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.mand.MandelFileName;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.swing.BufferedComponent.VisibleRect;
+import com.mandelsoft.util.Utils;
+import java.io.IOException;
 
 /**
  *
@@ -69,6 +72,7 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
   protected class SubAreaView extends CreationView {
     private JButton namebutton;
     private JButton nextnamebutton;
+    private JButton registerrangebutton;
 
     public SubAreaView(QualifiedMandelName name, MandelInfo info)
     {
@@ -83,6 +87,8 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
                    new NameAction());
       nextnamebutton=createButton("Next", "Determine next free area name for given name",
                    new NextNameAction());
+      registerrangebutton=createButton("Set Range", "Register effective range at actual image",
+                   new RegisterRangeAction());
       addShowButton("Show sub area", true);
     }
 
@@ -195,6 +201,44 @@ public class MandelSubAreaCreationDialog extends MandelAreaCreationDialog {
     @Override
     protected VisibleRect getSelectedRect()
     { return rect;
+    }
+ 
+ 
+    private class RegisterRangeAction implements ActionListener {
+
+      public void actionPerformed(ActionEvent e)
+      {
+
+        MandelInfo info = getInfo();
+
+        //MandelData md = getMandelWindowAccess().getMandelData()
+        
+        String range = String.format("[x=%d,y=%d,w=%d,h=%d]", rect.getCenterX(), rect.getCenterY(),rect.getWidth(),rect.getHeight());
+        System.out.printf("selected range %s\n", range);
+       
+        MandelData data = getMandelWindowAccess().getMandelData();
+
+        try {
+          MandelData orig = new MandelData(data.getFile());
+          String cur = data.getInfo().getProperty(MandelInfo.ATTR_RANGE);
+          if (cur != null && cur.equals(range)) {
+            mandelInfo("data not changed");
+          }
+          else {
+            try {
+              orig.getInfo().setProperty(MandelInfo.ATTR_RANGE, range);
+              orig.write();
+            }
+            catch (IOException ex) {
+              mandelError("cannot write " + data.getFile() + ": " + ex);
+            }
+          }
+        }
+        catch (IOException ex) {
+          mandelError("cannot read " + data.getFile() + ": " + ex);
+        }
+
+      }
     }
   }
 }

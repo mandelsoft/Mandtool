@@ -32,7 +32,7 @@ import com.mandelsoft.util.ChangeListener;
  *
  * @author Uwe Krueger
  */
-public class RasterImage extends BufferedImage implements MandelImage {
+public class RasterImage extends BufferedImage implements MandelImage,  MandelImage.Updatable {
   public static boolean debug=false;
 
   private WritableRaster     raster;
@@ -64,6 +64,11 @@ public class RasterImage extends BufferedImage implements MandelImage {
     updateImage();
   }
 
+  public MandelImage getMandelImage()
+  {
+    return this;
+  }
+   
   public void removeChangeListener(ChangeListener h)
   {
     listeners.removeChangeListener(h);
@@ -159,6 +164,12 @@ public class RasterImage extends BufferedImage implements MandelImage {
     colormapper.setData(data.getColormap(),data.getMapping());
   }
 
+  public void updateRaster()
+  {
+    // resize mode should not be used because colmap size is not changed
+    setMapper(ResizeMode.RESIZE_LOCK_IPS, getMapper());
+  }
+  
   private void updateImage()
   {
     if (data.getColormap()!=null && data.getMapping()!=null) {

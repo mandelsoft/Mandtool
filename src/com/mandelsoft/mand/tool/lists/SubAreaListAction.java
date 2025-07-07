@@ -34,6 +34,6 @@ public class SubAreaListAction extends MandelListViewAction {
   @Override
   protected MandelListFactory createFactory(QualifiedMandelName n)
   {
-    return new SubAreaFactory(getMandelScanner(),n.getMandelName(),getName());
+    return new SubAreaFactory(getMandelScanner(),n.getMandelName(),getName(), true, true);
   }
 }

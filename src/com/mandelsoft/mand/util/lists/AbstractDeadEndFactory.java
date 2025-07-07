@@ -29,7 +29,7 @@ public class AbstractDeadEndFactory extends SubAreaFactory {
 
   protected AbstractDeadEndFactory(MandelScanner scanner, MandelName basename, String name)
   {
-    super(scanner,basename,name);
+    super(scanner,basename,name, true, true);
   }
 
   @Override

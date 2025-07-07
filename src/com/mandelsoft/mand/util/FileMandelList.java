@@ -27,19 +27,25 @@ import java.io.IOException;
  * @author Uwe Krüger
  */
 
-public class FileMandelList extends UniqueArrayMandelList {
+public class FileMandelList extends UniqueDefaultMandelList {
   private AbstractFile file;
   private long lastModified;
   
   public FileMandelList(File f)
-  { this(new FileAbstractFile(f));
+  { this(new FileAbstractFile(f), false);
   }
 
   public FileMandelList(AbstractFile f)
-  { this.file=f;
-    refresh(false);
+  { this(f,false);
   }
 
+  public FileMandelList(AbstractFile f, boolean projectMandelName)
+  { 
+    super(projectMandelName);
+    this.file=f;
+    refresh(false);
+  }
+  
   public FileMandelList(AbstractFile f, MandelList src)
   { this.file=f;
     addAll(src);

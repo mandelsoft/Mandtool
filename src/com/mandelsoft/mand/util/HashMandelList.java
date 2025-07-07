@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 D021770.
+ * Copyright 2021 Uwe Krueger.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 /**
  *
- * @author D021770
+ * @author Uwe Krueger
  */
 public class HashMandelList extends HashList<QualifiedMandelName> implements MandelList {
   private final Map<MandelName,List<QualifiedMandelName>> map = new HashMap<>();
@@ -113,10 +110,12 @@ public class HashMandelList extends HashList<QualifiedMandelName> implements Man
   protected void removeMap(QualifiedMandelName e)
   {
     MandelName name = e.getMandelName();
-    List<QualifiedMandelName> names = map.get(e.getMandelName());
-    names.remove(e);
-    if (names.isEmpty()) {
-      map.remove(name);
+    List<QualifiedMandelName> names = map.get(name);
+    if (names!=null) {
+      names.remove(e);
+      if (names.isEmpty()) {
+        map.remove(name);
+      }
     }
   }
   

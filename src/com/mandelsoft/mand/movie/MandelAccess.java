@@ -3,7 +3,8 @@ package com.mandelsoft.mand.movie;
 import com.mandelsoft.mand.MandIter;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.mand.MandelInfo;
-import com.mandelsoft.mand.PixelIterator;
+import com.mandelsoft.mand.MandelRaster;
+import com.mandelsoft.mand.meth.PixelIterator;
 import java.math.BigDecimal;
 
 public class MandelAccess {
@@ -11,7 +12,7 @@ public class MandelAccess {
   private MandelData data;
   private MandelInfo info;
   private PixelIterator pi;
-  private int[][] raster;
+  private MandelRaster raster;
   private int rx;
   private int ry;
 
@@ -22,7 +23,7 @@ public class MandelAccess {
     rx=info.getRX();
     ry=info.getRY();
     pi=MandIter.createPixelIterator(info);
-    raster=data.getRaster().getRaster();
+    raster=data.getRaster();
   }
 
   public MandelData getMandelData()
@@ -62,7 +63,7 @@ public class MandelAccess {
 
   public int getIter(int x, int y)
   {
-    int i=raster[y][x];
+    int i=raster.getData(x, y);
     if (i==0) return info.getLimitIt()+1;
     return i;
   }

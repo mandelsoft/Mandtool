@@ -31,7 +31,7 @@ public class DirectForkSubareaFactory extends SubAreaFactory {
   public DirectForkSubareaFactory(MandelScanner scanner, MandelName basename,
                            String title)
   {
-    super(scanner,basename,title);
+    super(scanner,basename,title, true, true);
   }
 
   @Override

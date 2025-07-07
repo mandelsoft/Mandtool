@@ -309,7 +309,8 @@ class SwatchPanel extends JPanel {
     setInheritsPopupMenu(true);
   }
 
-  public boolean isFocusTraversable()
+  @Override
+  public boolean isFocusable()
   {
     return false;
   }

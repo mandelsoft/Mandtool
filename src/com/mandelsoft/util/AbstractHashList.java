@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 D021770.
+ * Copyright 2021 Uwe Krueger.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.util.ListIterator;
 
 /**
  *
- * @author D021770
+ * @author Uwe Krueger
  */
 public abstract class AbstractHashList<T> implements List<T> {
   private List<T> list = new ArrayList<>();
@@ -33,9 +33,9 @@ public abstract class AbstractHashList<T> implements List<T> {
   {
   }
    
-  public AbstractHashList(List<T> list)
+  public AbstractHashList(Collection<? extends T> c)
   {
-    addAll(list);
+    addAll(c);
   }
     
   ///////////////////////////////////////////////////////////////////////////

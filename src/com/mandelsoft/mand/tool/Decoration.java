@@ -171,7 +171,7 @@ public class Decoration {
   public boolean showDecoration()
   {
     boolean enabled=showDecoration && decoration!="" && alpha!=0;
-    System.out.println("decoration is "+(enabled?"enabled":"disabled"));
+    // System.out.println("decoration is "+(enabled?"enabled":"disabled"));
     return enabled;
   }
 

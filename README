@@ -35,7 +35,7 @@ NEW: Support of superfractalthing maths
   - The calculation tool (mand) now supports the option `-o` to enable
     the superfractalthing maths pixel iterator.
   - it replaces the GMP iterator (if present)
-  - it completely based on double arithmetik plus some reference point
+  - it is completely based on double arithmetic plus some reference point
     iteration based on BigDecimals
   - it therefore runs on all platforms and does not require a native 
     library

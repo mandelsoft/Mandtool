@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 D021770.
+ * Copyright 2021 Uwe Krueger.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,25 @@
  */
 package com.mandelsoft.util;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
 /**
  *
- * @author D021770
+ * @author Uwe Krueger
  * @param <T> list element type (objects must be immutable hashable)
  */
-public class HashList<T> extends AbstractHashList<T> implements List<T> {
+public class HashList<T> extends AbstractHashList<T> {
   private final HashMap<T,Integer> map = new HashMap<>();
   
   public HashList()
   {
   }
    
-  public HashList(List<T> list)
+  public HashList(Collection<? extends T> c)
   {
-    super(list);
+    super(c);
   }
     
   ///////////////////////////////////////////////////////////////////////////

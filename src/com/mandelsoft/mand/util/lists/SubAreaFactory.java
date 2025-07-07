@@ -20,11 +20,11 @@ import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.scan.MandelScannerUtils;
-import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.DefaultMandelList;
 import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.mand.util.MandelList;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +39,13 @@ public class SubAreaFactory extends ScannerBasedMandelListFactory
 
   public SubAreaFactory(MandelScanner scanner, MandelName basename, String title)
   {
-    super(scanner);
+    this(scanner, basename, title, false, false);
+  }
+  
+  public SubAreaFactory(MandelScanner scanner, MandelName basename, String title,
+                        boolean uniqueNames, boolean projectMandelNames)
+  {
+    super(scanner, uniqueNames, projectMandelNames);
     this.basename=basename;
     this.title=title;
   }
@@ -83,13 +89,15 @@ public class SubAreaFactory extends ScannerBasedMandelListFactory
   {
     return true;
   }
-
+  
   protected MandelList filterTree()
   {
     MandelList list=new DefaultMandelList();
     List<QualifiedMandelName> dive=new ArrayList<QualifiedMandelName>();
     List<QualifiedMandelName> next=new ArrayList<QualifiedMandelName>();
     List<QualifiedMandelName> tmp;
+    Set<MandelName> done=new HashSet<MandelName>();
+    
     dive.add(new QualifiedMandelName(getBasename()));
     boolean check=false;
 
@@ -100,12 +108,15 @@ public class SubAreaFactory extends ScannerBasedMandelListFactory
 
            if (check) {
              if (accept(name,set)) {
-               list.add(name);
+               add(list, name);
                continue;
              }
            }
-           for (MandelName mn:set) {
-             next.addAll(getScanner().getQualifiedMandelNames(mn));
+           if (!done.contains(name.getMandelName())) {
+             done.add(name.getMandelName());
+             for (MandelName mn : set) {
+               next.addAll(getScanner().getQualifiedMandelNames(mn));
+             }
            }
          }
        }

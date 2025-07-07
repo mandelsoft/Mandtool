@@ -17,22 +17,17 @@
 package com.mandelsoft.mand.meth;
 
 import com.mandelsoft.mand.MandelSpec;
-import com.mandelsoft.mand.PixelIterator;
-import com.mandelsoft.mand.util.MandArith;
 import java.math.BigDecimal;
-import java.math.MathContext;
-import static java.math.RoundingMode.HALF_EVEN;
+
 
 /**
  *
  * @author Uwe Krueger
  */
-abstract public class AbstractPixelIterator extends MandArith implements PixelIterator {
+abstract public class AbstractPixelIterator extends PixelArith implements PixelIterator {
   protected int limit;
   protected int rx;
   protected int ry;
-  protected MathContext ctx;
-  protected int precision;
   protected int magnification;
 
   public AbstractPixelIterator(MandelSpec mi)
@@ -46,38 +41,23 @@ abstract public class AbstractPixelIterator extends MandArith implements PixelIt
     this.limit=limit;
     this.rx=rx;
     this.ry=ry;
-    setPrecision(dx, dy);
+    setPrecision(dx, dy, rx, ry);
   }
 
-  protected void setPrecision(BigDecimal dx, BigDecimal dy)
+  @Override
+  protected void setPrecision(BigDecimal dx, BigDecimal dy, int rx, int ry)
   {
-    BigDecimal dX=div(dx, rx);
-    BigDecimal dY=div(dy, ry);
-    BigDecimal d=dX;
-    if (dX.compareTo(dY)>0) d=dY;
-    int p=0;
-    while (d.compareTo(BigDecimal.ONE)<0) {
-      p++;
-      d=mul(d, BigDecimal.TEN);
-    }
-    ctx=new MathContext(p+2, HALF_EVEN);
-    precision=(int)((p+2)/Math.log10(2));
-
-    d=dx;
-    if (dx.compareTo(dy)>0) d=dy;
-    p=0;
-    while (d.compareTo(BigDecimal.ONE)<0) {
-      p++;
-      d=mul(d, BigDecimal.TEN);
-    }
-    magnification=p;
+    super.setPrecision(dx, dy, ry, ry);
+    magnification=calcDigits(dx, dy, 1, 1);
   }
 
+  @Override
   public int getPrecision()
   {
-    return precision;
+    return bits;
   }
 
+  @Override
   public int getMagnification()
   {
     return magnification;

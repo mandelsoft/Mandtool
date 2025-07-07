@@ -23,6 +23,7 @@ import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.tool.DefaultMandelListTableModel;
 import com.mandelsoft.mand.tool.MandelListDialog;
 import com.mandelsoft.mand.tool.MandelListTableModel;
+import com.mandelsoft.mand.tool.MandelNameMapper;
 import com.mandelsoft.mand.tool.MandelWindowAccess;
 import com.mandelsoft.mand.tool.ToolEnvironment;
 import com.mandelsoft.mand.tool.util.MandelContextAction;
@@ -37,6 +38,7 @@ import com.mandelsoft.mand.util.lists.MandelListFactory;
 public abstract class MandelListViewAction extends MandelContextAction {
   private MandelScanner scanner;
   private ActionEvent event;
+  private MandelNameMapper mapper;
 
   public MandelListViewAction(String name)
   {
@@ -47,6 +49,13 @@ public abstract class MandelListViewAction extends MandelContextAction {
   {
     this(name);
     this.scanner=scanner;
+  }
+  
+  public MandelListViewAction(String name, MandelScanner scanner, MandelNameMapper mapper)
+  {
+    this(name);
+    this.scanner=scanner;
+    this.mapper=mapper;
   }
 
   protected MandelWindowAccess getMandelWindowAccess()
@@ -91,8 +100,9 @@ public abstract class MandelListViewAction extends MandelContextAction {
     if (n!=null) {
       event=e;
       MandelListFactory factory=createFactory(n);
-      MandelListTableModel model=new Model(scanner,factory);
+      MandelListTableModel model=new Model(getMandelScanner(),factory);
       MandelListDialog dia=new MandelListDialog(getMandelWindowAccess(e),factory.getTitle(),model);
+      dia.setMandelNameMapper(mapper);
       if (factory instanceof MandelBasenameSource) {
         dia.setRootName(((MandelBasenameSource)factory).getBasename());
       }

@@ -25,7 +25,7 @@ import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreePath;
 import com.mandelsoft.mand.QualifiedMandelName;
-import com.mandelsoft.mand.util.UniqueArrayMandelList;
+import com.mandelsoft.mand.util.UniqueDefaultMandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
 import com.mandelsoft.mand.util.MandelListFolderTree;
 import com.mandelsoft.swing.DnDTreeModel.DragLocation;
@@ -66,7 +66,7 @@ public class MandelListFolderBrowserModel extends TreeModelListenerSupportBase
 
   public MandelListFolderBrowserModel(MandelListFolderTreeModel fmodel)
   {
-    lempty=new DefaultMandelListTableModel(new UniqueArrayMandelList(),null);
+    lempty=new DefaultMandelListTableModel(new UniqueDefaultMandelList(),null);
     fempty=new DefaultMandelListFolderTreeModel("empty",lempty);
     listener=new ForwardingListener();
     setFolderTreeModel(fmodel);

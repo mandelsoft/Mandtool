@@ -26,7 +26,6 @@ import com.mandelsoft.mand.MandelSpec;
 public class MandelRasterCalculationContext extends CalculationContext {
 
   private MandelRaster raster;
-  int[][] data;
 
   public MandelRasterCalculationContext(MandelSpec spec)
   { super(spec);
@@ -35,27 +34,25 @@ public class MandelRasterCalculationContext extends CalculationContext {
   @Override
   public int getDataRel(int x, int y)
   {
-    return data[y][x];
+    return raster.getData(x, y);
   }
 
   @Override
   public void setDataRel(int x, int y, int it)
   {
-    data[y][x]=it;
+    raster.setData(x, y, it);
   }
 
   @Override
   protected void resetData()
   {
     raster=null;
-    data=null;
   }
 
   @Override
   public void createData()
   {
     raster=new MandelRaster(getNX(),getNY());
-    data=raster.getRaster();
   }
 
   public MandelRaster getRaster()

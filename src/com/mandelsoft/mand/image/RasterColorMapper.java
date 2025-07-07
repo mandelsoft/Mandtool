@@ -26,24 +26,22 @@ import java.awt.Color;
 public class RasterColorMapper {
   private ColorMapper mapper;
   private MandelRaster mraster;
-  private int[][] raster;
 
   public RasterColorMapper(ColorMapper mapper, MandelRaster mr)
   { if (mr==null) throw new MandelException("no raster set");
 
     this.mapper=mapper;
     this.mraster=mr;
-    this.raster=mr.getRaster();
   }
 
   public int getColormapIndex(int x, int y)
   {
-    return mapper.mapColormapIndex(raster[y][x]);
+    return mapper.mapColormapIndex(mraster.getData(x, y));
   }
 
   public Color getPixelColor(int x, int y)
   { 
-    return mapper.mapIterationValue(raster[y][x]);
+    return mapper.mapIterationValue(mraster.getData(x, y));
   }
 
   public int getPixelRGB(int x, int y)
@@ -51,8 +49,8 @@ public class RasterColorMapper {
   }
 
   public Object getPixelDataElements(int x, int y)
-  { int it=raster[y][x];
-    Object de=mapper.mapIterationValueToDataElements(raster[y][x]);
+  { int it=mraster.getData(x, y);
+    Object de=mapper.mapIterationValueToDataElements(it);
     //System.out.println("raster["+x+","+y+"]="+it+"->"+((int[])de)[0]);
     return de;
   }

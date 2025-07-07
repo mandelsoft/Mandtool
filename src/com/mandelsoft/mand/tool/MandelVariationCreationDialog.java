@@ -21,6 +21,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import javax.swing.JButton;
 import com.mandelsoft.mand.MandelConstants;
+import com.mandelsoft.mand.MandelException;
 import com.mandelsoft.mand.MandelFileName;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
@@ -39,7 +40,7 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
   public MandelVariationCreationDialog(MandelWindowAccess owner, String title)
   {
     super(owner, title,null, owner.getMandelName(),
-                             owner.getMandelData().getInfo());
+                             cleanup(owner.getMandelData().getInfo()));
   }
 
   @Override
@@ -56,7 +57,6 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
     System.out.println("mandel frame is "+getMandelFrame());
     return new VariationView(name,(MandelInfo)info);
   }
-
   
   ///////////////////////////////////////////////////////////////////////
   // view
@@ -66,14 +66,15 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
                                 implements ProportionProvider {
     private JButton namebutton;
     private JButton resetbutton;
+    private JButton redobutton;
 
     private MandelName base;
     private MandelInfo initial;
-
+    
     public VariationView(QualifiedMandelName name, MandelInfo info)
     {
-      super(name, new MandelInfo(info));
-      initial=info;
+      super(name, cleanup(info));
+      initial=cleanup(info);
       base=getMandelFrame().getMandelName();
       determineFilename();
     }
@@ -108,6 +109,15 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
       addShowButton("Show variation area", false);
       resetbutton=createButton("Reset", "Reset to initial values",
                    new ResetAction());
+      try {
+        if (hasMarkRefCoordinates()) {
+          redobutton=createButton("Request Redo", "Request recalculation based on refrence coordinates of mark",
+                     new RedoAction());
+        }
+      }
+      catch (MandelException ex) {
+        System.out.printf("disable redo button: %s\n", ex.getMessage());
+      }
     }
 
     @Override
@@ -126,7 +136,39 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
       if (path==null) path=new File(".");
       setFilename(new File(path,mfn.toString()).getPath());
     }
+    
+    private class RedoAction implements ActionListener {
 
+      public void actionPerformed(ActionEvent e)
+      {
+        String ref;
+        
+        try {
+          ref = getMarkRefCoordinates();
+        }
+        catch (MandelException ex) {
+          mandelError(ex);
+          return;
+        }
+        if (ref==null) {
+          mandelError("no mark set");
+          return;
+        }
+        MandelFileName mfn=new MandelFileName(base,null,
+                            MandelConstants.INFO_SUFFIX);
+        File path=getEnvironment().getInfoFolder(null);
+        if (path==null) path=new File(".");
+        
+        MandelInfo redo=new MandelInfo(initial);
+        redo.setProperty(MandelInfo.ATTR_REFREDO,"true");
+        redo.setProperty(MandelInfo.ATTR_REFCOORD, ref);
+        setInfo(redo);
+        setFilename(new File(path,mfn.toString()).getPath());
+      
+        updateSlave();
+      }
+    }
+     
     private class ResetAction implements ActionListener {
 
       public void actionPerformed(ActionEvent e)

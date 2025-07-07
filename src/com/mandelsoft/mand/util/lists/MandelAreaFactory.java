@@ -28,7 +28,7 @@ public class MandelAreaFactory extends SubAreaFactory {
 
   public MandelAreaFactory(MandelScanner scanner, MandelName basename)
   {
-    super(scanner,basename,"Mandel Area");
+    super(scanner,basename,"Mandel Area", true, true);
   }
 
   @Override

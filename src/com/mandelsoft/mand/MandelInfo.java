@@ -35,9 +35,16 @@ public class MandelInfo extends MandelSpec
   static private final int VERSION=5;
 
   static public final String ATTR_TITLE = "title";
+  public static final String ATTR_RANGE = "merge-range";
+  public static final String ATTR_REFREDO = "reference-redo";
   public static final String ATTR_REFCOORD = "reference-coordinates";
+  public static final String ATTR_STDREFCOORD = "standard-reference-coordinates";
   public static final String ATTR_REFPIXEL = "reference-pixel";
+  public static final String ATTR_REFDEPTH = "reference-depth";
+  public static final String ATTR_REDOLASTDEPTH = "redo-last-depth";
+  public static final String ATTR_REDONUMBER = "redo-number";
   public static final String ATTR_REFCNT = "reference-count";
+  public static final String ATTR_REFCORRUPTED = "reference-corrupted";
   public static final String ATTR_ITERATONMETHOD = "pixel-iteration-method";
   
   private int version; // found version
@@ -106,6 +113,8 @@ public class MandelInfo extends MandelSpec
       setCreator(mi.getCreator());
       setSite(mi.getSite());
       setKeywords(mi.getKeywords());
+      setProperties(mi.getProperties());
+      setCreationTime(mi.getCreationTime());
     }
   }
 
@@ -420,6 +429,17 @@ public class MandelInfo extends MandelSpec
     return mcnt_set;
   }
 
+  public boolean isSameRefSpec(MandelInfo o)
+  {
+    String ref1=getProperty(ATTR_REFCOORD);
+    String ref2=o.getProperty(ATTR_REFCOORD);
+    
+    if (ref1 == null || ref2 == null) {
+      return ref1==ref2;
+    }
+    return ref1.equals(ref2);
+  }
+  
   ///////////////////////////////////////////////////////////////
   // version update
   ///////////////////////////////////////////////////////////////
@@ -430,12 +450,11 @@ public class MandelInfo extends MandelSpec
   {
     if (version==1 && mcnt==0 && data.getRaster()!=null) {
       MandelRaster raster=data.getRaster();
-      int[][] r=raster.getRaster();
       int rx=raster.getRX();
       int ry=raster.getRY();
       for (int x=0; x<rx; x++) {
         for (int y=0; y<ry; y++) {
-          if (r[y][x]==0) mcnt++;
+          if (raster.getData(x, y)==0) mcnt++;
         }
       }
       mcnt_set=true;

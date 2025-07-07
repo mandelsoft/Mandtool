@@ -23,7 +23,8 @@ import java.math.MathContext;
  * @author Uwe Krueger
  */
 public interface MandelConstants {
-  static public final MathContext MC=new MathContext(200);
+  static public final int MaxPrecision = 450;
+  static public final MathContext MC=new MathContext(MaxPrecision);
 
   public static final int MAGIC=0x55555555;
 

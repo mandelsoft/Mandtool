@@ -26,6 +26,7 @@ import java.util.Set;
 import javax.swing.JTextField;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.io.AbstractFile;
+import com.mandelsoft.mand.MandelException;
 import com.mandelsoft.mand.MandelFileName;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
@@ -36,18 +37,21 @@ import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.swing.BufferedComponent.VisibleRect;
 import com.mandelsoft.swing.GBC;
 import com.mandelsoft.util.Utils;
+import com.mandelsoft.util.upd.UpdatableObject;
+import com.mandelsoft.util.upd.UpdateContext;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.JButton;
 
 /**
  *
  * @author Uwe Krueger
  */
-public class MandelAreaCreationDialog extends MandelAreaViewDialog {
+public class MandelAreaCreationDialog extends MandelAreaViewDialog implements UpdatableObject {
 
   public MandelAreaCreationDialog(MandelWindowAccess owner, String title, String file,
-                                 MandelName name,
-                                 MandelInfo info)
+          MandelName name,
+          MandelInfo info)
   {
     super(owner, title, new QualifiedMandelName(name), info, true, false);
     setFilename(file);
@@ -60,48 +64,58 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
 
   @Override
   protected MandelAreaView createView(QualifiedMandelName name, Object info,
-                                      boolean change, boolean readonly)
+          boolean change, boolean readonly)
   {
-    return new CreationView(name,(MandelInfo)info);
+    return new CreationView(name, (MandelInfo) info);
   }
 
   public void setFilename(String file)
   {
-    ((CreationView)getView()).setFilename(file);
+    ((CreationView) getView()).setFilename(file);
   }
 
   public void setFilename(String file, boolean modifiable)
   {
-    ((CreationView)getView()).setFilename(file,modifiable);
+    ((CreationView) getView()).setFilename(file, modifiable);
   }
 
   public void setAutoMode(boolean b)
   {
-    ((CreationView)getView()).setAutoMode(b);
+    ((CreationView) getView()).setAutoMode(b);
   }
 
   public MandelWindowAccess getMandelFrame()
-  { return getMandelWindowAccess();
+  {
+    return getMandelWindowAccess();
   }
 
   protected void handleClose()
   {
-    ((CreationView)getView()).handleClose();
+    ((CreationView) getView()).handleClose();
   }
-  
+
+  @Override
+  public void updateObject(UpdateContext c)
+  {
+    if (isVisible())  {
+      getView().updateFields();
+    }
+  }
+
   ///////////////////////////////////////////////////////////////////////
   // view
   ///////////////////////////////////////////////////////////////////////
-
   protected class CreationView extends MandelAreaView {
+
     protected JTextField filename;
 
     protected boolean automode;
+    protected JButton setrefcoord_button;
 
     public CreationView(QualifiedMandelName name, MandelInfo info)
     {
       super(name, info, true, false);
-      automode=true;
+      automode = true;
       getDialog().addWindowListener(new WindowAdapter() {
         @Override
         public void windowClosing(WindowEvent e)
@@ -119,28 +133,28 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
 
     protected void handleClose()
     {
-      System.out.println("closing creation dialog "+getClass().getSimpleName());
-      if (rect!=null) {
+      System.out.println("closing creation dialog " + getClass().getSimpleName());
+      if (rect != null) {
         System.out.println(" discard old rect");
         rect.discard();
-        if (rect.getName()!=null) {
+        if (rect.getName() != null) {
           fireMandelAreaEvent(
                   new MandelAreaEvent(MandelAreaCreationDialog.this,
-                                      MandelAreaEvent.MA_UPDATE));
+                          MandelAreaEvent.MA_UPDATE));
         }
         rect.setProportionProvider(null);
-        rect=null;
+        rect = null;
       }
     }
 
     public void setFilename(String n)
     {
-      setFilename(n,true);
+      setFilename(n, true);
     }
 
     public void setAutoMode(boolean b)
     {
-      automode=b;
+      automode = b;
     }
 
     public void setFilename(String n, boolean modifiable)
@@ -158,73 +172,91 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
     protected void setupFields()
     {
       super.setupFields();
-      int row=getMaxGridRow()+1;
+      int row = getMaxGridRow() + 1;
 
       setMaxGridRow(row);
-      add(filename=new JTextField(),GBC(0,row).setSpanW(getMaxGridCol()+1).
-                                               setFill(GBC.HORIZONTAL).
-                                               setInsets(10,0,0,0).
-                                               setWeight(200, 0));
+      add(filename = new JTextField(), GBC(0, row).setSpanW(getMaxGridCol() + 1).
+              setFill(GBC.HORIZONTAL).
+              setInsets(10, 0, 0, 0).
+              setWeight(200, 0));
     }
 
     @Override
     protected void setupButtons()
     {
       super.setupButtons();
-      createButton("AdjustX","Adjust area width to preserve image propotion.",
-                   new AdjustXAction());
-      createButton("AdjustY","Adjust area height to preserve image propotion.",
-                   new AdjustYAction());
-      createButton("Adjust Width","Adjust image width to preserve image propotion.",
-                   new AdjustWidthAction());
-      createButton("Adjust Height","Adjust image height to preserve image propotion.",
-                   new AdjustHeightAction());
-      createButton("Normalize","Normalize coordinates preserving visible area.",
-                   new NormAction());
-      createButton("Round","Round image area specifical to useful precision.",
-                   new RoundAction());
-
+      createButton("AdjustX", "Adjust area width to preserve image propotion.",
+              new AdjustXAction());
+      createButton("AdjustY", "Adjust area height to preserve image propotion.",
+              new AdjustYAction());
+      createButton("Adjust Width", "Adjust image width to preserve image propotion.",
+              new AdjustWidthAction());
+      createButton("Adjust Height", "Adjust image height to preserve image propotion.",
+              new AdjustHeightAction());
+      createButton("Normalize", "Normalize coordinates preserving visible area.",
+              new NormAction());
+      createButton("Round", "Round image area specifical to useful precision.",
+              new RoundAction());
       newButtonPanel();
-      createButton("Save",null,new SaveAction());
-      createButton("Load",null,new LoadAction());
-      createButton("Delete",null,new DeleteAction());
+      createButton("Save", null, new SaveAction());
+      createButton("Load", null, new LoadAction());
+      createButton("Delete", null, new DeleteAction());
+      setrefcoord_button = createButton("Set RefCoord", "Set remembered reference coordinates",
+              new SetRefCoordAction());
+    }
+
+    @Override
+    protected void updateFields()
+    {
+      super.updateFields();
+      try {
+        setrefcoord_button.setVisible(hasMarkRefCoordinates());
+      } catch (MandelException ex) {
+        setrefcoord_button.setVisible(false);
+        System.out.printf("disable set refcoord button: %s\n", ex.getMessage());
+      }
     }
 
     protected VisibleRect getSelectedRect()
-    { return null;
+    {
+      return null;
     }
 
     private class AdjustXAction implements ActionListener {
+
       public void actionPerformed(ActionEvent e)
       {
-        MandelInfo info=new MandelInfo(getInfo());
+        MandelInfo info = new MandelInfo(getInfo());
         MandUtils.adjustDX(info);
         setInfo(info);
       }
     }
 
     private class AdjustYAction implements ActionListener {
+
       public void actionPerformed(ActionEvent e)
       {
-        MandelInfo info=new MandelInfo(getInfo());
+        MandelInfo info = new MandelInfo(getInfo());
         MandUtils.adjustDY(info);
         setInfo(info);
       }
     }
 
     private class AdjustWidthAction implements ActionListener {
+
       public void actionPerformed(ActionEvent e)
       {
-        MandelInfo info=new MandelInfo(getInfo());
+        MandelInfo info = new MandelInfo(getInfo());
         MandUtils.adjustWidth(info);
         setInfo(info);
       }
     }
 
     private class AdjustHeightAction implements ActionListener {
+
       public void actionPerformed(ActionEvent e)
       {
-        MandelInfo info=new MandelInfo(getInfo());
+        MandelInfo info = new MandelInfo(getInfo());
         MandUtils.adjustHeight(info);
         setInfo(info);
       }
@@ -234,7 +266,7 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
 
       public void actionPerformed(ActionEvent e)
       {
-        MandelInfo info=new MandelInfo(getInfo());
+        MandelInfo info = new MandelInfo(getInfo());
         MandUtils.normalize(info);
         setInfo(info);
       }
@@ -244,7 +276,7 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
 
       public void actionPerformed(ActionEvent e)
       {
-        MandelInfo info=new MandelInfo(getInfo());
+        MandelInfo info = new MandelInfo(getInfo());
         MandUtils.round(info);
         setInfo(info);
       }
@@ -254,37 +286,42 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
 
       public void actionPerformed(ActionEvent e)
       {
-        if (Utils.isEmpty(getFilename())) return;
-        MandelInfo info=getInfo();
+        if (Utils.isEmpty(getFilename())) {
+          return;
+        }
+        MandelInfo info = getInfo();
         info.setSite(getEnvironment().getProperty(Settings.SITE));
         info.setCreator(getEnvironment().getProperty(Settings.USER));
         info.setCreationTime(System.currentTimeMillis());
-        MandelData md=new MandelData(info);
+        MandelData md = new MandelData(info);
         MandelFileName name;
-        
-        File f=new File(getFilename());
-        name=MandelFileName.create(f);
-        if (name==null) {
-          mandelError(f.getName()+" is no valid mandel area name.");
+
+        File f = new File(getFilename());
+        name = MandelFileName.create(f);
+        if (name == null) {
+          mandelError(f.getName() + " is no valid mandel area name.");
           return;
         }
         if (f.exists()) {
-          if (!overwriteFileDialog(f)) return;
+          if (!overwriteFileDialog(f)) {
+            return;
+          }
         }
         getMandelWindowAccess().getEnvironment().autoRescan();
         if (getMandelWindowAccess().getEnvironment().getImageDataScanner().
-                                 getMandelHandle(name.getQualifiedName())!=null) {
-          mandelError("Image for "+name+" already exists.");
-          return;
+                getMandelHandle(name.getQualifiedName()) != null) {
+          String msg = "Image for " + name + " already exists.";
+          if (0 != optionDialog(msg, "Save Anyway", "Cancel")) {
+            return;
+          }
         }
         try {
           md.write(f);
           //getFrame().getEnvironment().addLogicalFile(f);
-          fireCreationEvent(name.getName(),md.getInfo(),getSelectedRect());
+          fireCreationEvent(name.getName(), md.getInfo(), getSelectedRect());
           getDialog().setVisible(false);
-        }
-        catch (IOException ex) {
-          mandelError("Cannot write mandel info file",ex);
+        } catch (IOException ex) {
+          mandelError("Cannot write mandel info file", ex);
         }
       }
     }
@@ -293,98 +330,129 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
 
       public void actionPerformed(ActionEvent e)
       {
-        if (Utils.isEmpty(getFilename())) return;
-        File  file=new File(getFilename());
-        MandelFileName mfn=MandelFileName.create(file.getName());
-        if (mfn==null) {
-          mandelError(getFilename()+" is no valid mandel area name.");
+        if (Utils.isEmpty(getFilename())) {
+          return;
+        }
+        File file = new File(getFilename());
+        MandelFileName mfn = MandelFileName.create(file.getName());
+        if (mfn == null) {
+          mandelError(getFilename() + " is no valid mandel area name.");
           return;
         }
 
         try {
-          AbstractFile f=getMandelWindowAccess().getEnvironment().
-                                    createMandelFile(getFilename());
-          MandelData tmp=new MandelData(f);
+          AbstractFile f = getMandelWindowAccess().getEnvironment().
+                  createMandelFile(getFilename());
+          MandelData tmp = new MandelData(f);
           if (!tmp.getHeader().isInfo()) {
             mandelError("this is not a mandel parameter file.");
             return;
           }
           getInfo().copyFrom(tmp.getInfo());
           updateFields();
-        }
-        catch (IOException ex) {
-          mandelError("Cannot read mandel info file",ex);
+        } catch (IOException ex) {
+          mandelError("Cannot read mandel info file", ex);
         }
       }
     }
 
     private class DeleteAction implements ActionListener {
+
       public void actionPerformed(ActionEvent e)
       {
-        if (Utils.isEmpty(getFilename())) return;
-        File f=new File(getFilename());
-        MandelName name=MandelName.create(f);
-        if (name==null) {
-          mandelError(f.getName()+" is no valid mandel area name.");
+        if (Utils.isEmpty(getFilename())) {
+          return;
+        }
+        File f = new File(getFilename());
+        MandelName name = MandelName.create(f);
+        if (name == null) {
+          mandelError(f.getName() + " is no valid mandel area name.");
           return;
         }
         if (!f.exists()) {
           mandelError("File does not exist.");
           return;
         }
-        if (!deleteFileDialog(f)) return;
-        try {
-          MandelFolder.Util.delete(f);
-        }
-        catch (IOException ex) {
-          mandelError("Delete Error: "+ex);
-        }
-        if (f.exists()) {
-          mandelError("Cannot delete "+f+".");
+        if (!deleteFileDialog(f)) {
           return;
         }
-        fireDeletionEvent(name,f);
-        System.out.println("are editable "+filename.isEditable());
-        if (!filename.isEditable()) getDialog().setVisible(false);
+        try {
+          MandelFolder.Util.delete(f);
+        } catch (IOException ex) {
+          mandelError("Delete Error: " + ex);
+        }
+        if (f.exists()) {
+          mandelError("Cannot delete " + f + ".");
+          return;
+        }
+        fireDeletionEvent(name, f);
+        System.out.println("are editable " + filename.isEditable());
+        if (!filename.isEditable()) {
+          getDialog().setVisible(false);
+        }
+      }
+    }
+
+    protected class SetRefCoordAction implements ActionListener {
+
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        String ref;
+
+        try {
+          ref = getMarkRefCoordinates();
+        } catch (MandelException ex) {
+          mandelError(ex);
+          return;
+        }
+        if (ref == null) {
+          mandelError("no mark set");
+          return;
+        }
+
+        MandelInfo info = getInfo();
+        info.setProperty(MandelInfo.ATTR_REFCOORD, ref);
+        setInfo(info);
       }
     }
   }
-  
+
   //////////////////////////////////////////////////////////////////////////
   // Own Events
   //////////////////////////////////////////////////////////////////////////
-  
   static public class MandelAreaEvent extends EventObject {
+
     static public final int MA_CREATED = 1;
     static public final int MA_DELETED = 2;
-    static public final int MA_UPDATE  = 3;
+    static public final int MA_UPDATE = 3;
 
-    private int        id;
+    private int id;
     private MandelInfo info;
     private MandelName name;
     private VisibleRect rect;
-    private File        file;
+    private File file;
 
     public MandelAreaEvent(Component c, MandelName name, MandelInfo info,
-                         VisibleRect r)
+            VisibleRect r)
     {
-      this(c,MA_CREATED);
-      this.name=name;
-      this.info=info;
-      this.rect=r;
+      this(c, MA_CREATED);
+      this.name = name;
+      this.info = info;
+      this.rect = r;
     }
 
     public MandelAreaEvent(Component c, MandelName name, File file)
     {
-      this(c,MA_DELETED);
-      this.name=name;
-      this.file=file;
+      this(c, MA_DELETED);
+      this.name = name;
+      this.file = file;
     }
 
     public MandelAreaEvent(Component c, int id)
     {
       super(c);
-      this.id=id;
+      this.id = id;
     }
 
     public int getId()
@@ -424,7 +492,7 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
   }
 
   //////////////////////////////////////////////////////////////////////////
-  private Set<MandelAreaListener> listeners=new HashSet<MandelAreaListener>();
+  private Set<MandelAreaListener> listeners = new HashSet<MandelAreaListener>();
 
   public void addCreationListener(MandelAreaListener l)
   {
@@ -437,7 +505,7 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
   }
 
   protected void fireCreationEvent(MandelName name, MandelInfo info,
-                                   VisibleRect r)
+          VisibleRect r)
   {
     fireMandelAreaEvent(new MandelAreaEvent(this, name, info, r));
   }
@@ -449,8 +517,19 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog {
 
   protected void fireMandelAreaEvent(MandelAreaEvent e)
   {
-    for (MandelAreaListener l:listeners) {
+    for (MandelAreaListener l : listeners) {
       l.areaActionPerformed(e);
     }
+  }
+
+  static public MandelInfo cleanup(MandelInfo info)
+  {
+    String ref = info.getProperty(MandelInfo.ATTR_REFCOORD);
+    info = new MandelInfo(info);
+    info.clearProperties();
+    if (ref != null) {
+      info.setProperty(MandelInfo.ATTR_REFCOORD, ref);
+    }
+    return info;
   }
 }

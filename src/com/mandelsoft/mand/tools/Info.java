@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 D021770.
+ * Copyright 2021 Uwe Krueger.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.util.Map;
 
 /**
  *
- * @author D021770
+ * @author Uwe Krueger
  */
 public class Info extends Command {
   
@@ -88,6 +88,8 @@ public class Info extends Command {
          System.out.printf("rx:      %d\n", info.getRX());
          System.out.printf("ry:      %d\n", info.getRY());
          System.out.printf("limit:   %d\n", info.getLimitIt());
+         System.out.printf("minit:   %d\n", info.getMinIt());
+         System.out.printf("maxit:   %d\n", info.getMaxIt());
          System.out.printf("black:   %d\n", info.getMCnt());
          if (h.hasImage()) {
            System.out.println("has image");
@@ -120,12 +122,11 @@ public class Info extends Command {
            if (!h.hasRaster()) {
              Error("no raster data available");
            }
-           int[][] raster = md.getRaster().getRaster();
+           MandelRaster raster = md.getRaster();
            int cnt = 0;
            for (int y = 0; y < info.getRY(); y++) {
-             int[] line = raster[y];
              for (int x = 0; x < info.getRX(); x++) {
-               if (line[x] > depth) {
+               if (raster.getData(x, y) > depth) {
                  cnt++;
                }
              }
@@ -139,13 +140,12 @@ public class Info extends Command {
            if (!h.hasRaster()) {
              Error("no raster data available");
            }
-           int[][] raster=md.getRaster().getRaster();
+           MandelRaster raster=md.getRaster();
            boolean incomplete=false;
            outer:
            for (int y = 0; y < info.getRY(); y++) {
-             int[] line = raster[y];
              for (int x = 0; x < info.getRX(); x++) {
-               if (line[x] > info.getLimitIt()) {
+               if (raster.getData(x, y) > info.getLimitIt()) {
                  incomplete = true;
                  break outer;
                }
@@ -185,11 +185,10 @@ public class Info extends Command {
            }
            MandelRaster n=new MandelRaster((info.getRX()+1)/2,(info.getRY()+1)/2);
            for (int y=0; y<info.getRY(); y=y+2) {
-             int[] ry = r.getRaster()[y];
-             int[] ny = n.getRaster()[y/2];
 
+             int ny=y/2;
              for (int x=0; x<info.getRX(); x=x+2) {
-                ny[x/2]=ry[x];
+                n.setData(x/2,ny,r.getData(x, y));
              }
            }
            info.setRX(n.getRX());

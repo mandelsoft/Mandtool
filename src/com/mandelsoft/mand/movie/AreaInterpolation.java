@@ -23,7 +23,7 @@ import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.MandelSpec;
-import com.mandelsoft.mand.PixelIterator;
+import com.mandelsoft.mand.meth.PixelIterator;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.calc.AreaCalculator;
 import com.mandelsoft.mand.calc.MandelRasterCalculationContext;

@@ -40,6 +40,10 @@ import com.mandelsoft.util.ChangeListener;
  * @author Uwe Krueger
  */
 public interface MandelImage {
+  public interface Updatable {
+    public void updateRaster();
+  }
+
   public static boolean debug=false;
 
   BufferedImage getImage();
@@ -49,6 +53,7 @@ public interface MandelImage {
   Mapper        getMapper();
   MandelRaster  getRasterData();
   MandelData    getMandelData();
+  MandelImage   getMandelImage();
 
   void addChangeListener(ChangeListener l);
   void removeChangeListener(ChangeListener l);

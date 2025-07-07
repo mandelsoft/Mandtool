@@ -44,7 +44,6 @@ import com.mandelsoft.mand.tool.MandelListModelMenu;
 import com.mandelsoft.mand.tool.MandelListModelSource;
 import com.mandelsoft.mand.tool.MandelWindowAccess;
 import com.mandelsoft.mand.tool.PictureSaveDialog;
-import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.DefaultMandelList;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.Selection;
@@ -205,7 +204,7 @@ public abstract class MandelListContextMenuHandler
       setBusy(false);
     }
   }
-
+  
   protected class LoadImageAction extends LoadImageContextAction {
     protected LoadImageAction(String name)
     {

@@ -20,7 +20,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -40,9 +39,7 @@ import com.mandelsoft.mand.tool.ctx.MandelListContextMenuHandler;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.DnDJTable;
 import com.mandelsoft.swing.MenuButton;
-import com.mandelsoft.swing.Selection;
 import com.mandelsoft.swing.TablePanel;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 
@@ -67,6 +64,7 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
   private Set<JButton> buttons;
 
   private boolean slideShow;
+  private MandelNameMapper mapper;
           
   public MandelListPanel()
   {
@@ -119,6 +117,11 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
     handleModifiable(modifiable);
   }
 
+  public void setMandelNameMapper(MandelNameMapper m)
+  {
+      mapper=m;
+  }
+  
   public void enableGalery(boolean active)
   {
     galeryButton.setEnabled(active);
@@ -296,7 +299,11 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
         QualifiedMandelName name=getSelectedMandelName();
         if (name!=null) {
           setBusy(true);
-          MandelHandle found=getModel().getMandelData(getSelectedIndex());
+          if (getSelectedColumn() == 0 && mapper!=null) {
+              name=mapper.mapMandelName(name,getModel().getMandelScanner());
+          }
+          MandelHandle found = getModel().getMandelScanner().getMandelHandle(name);
+   //       MandelHandle found=getModel().getMandelData(getSelectedIndex());
           if (found==null) {
             //System.out.println("file="+found.getFile());
           }
@@ -399,15 +406,22 @@ public class MandelListPanel extends TablePanel<MandelListTableModel>
 
     public void actionPerformed(ActionEvent e)
     {
-      if (getSelectedMandelName()==null) return;
-      getModel().remove(getSelectedMandelName());
+      QualifiedMandelName sel = getSelectedMandelName();
+      if (sel == null) {
+        MandelWindowAccess w = getMandelWindowAccess();
+        if (w == null) {
+          return;
+        }
+        sel = w.getQualifiedName();
+      }
+      getModel().remove(sel);
       try {
         getModel().getList().save();
       }
       catch (IOException io) {
         JOptionPane.showMessageDialog(getWindow(),
-                                      "Cannot save list file: "+io, "Mandel IO",
-                                      JOptionPane.WARNING_MESSAGE);
+                "Cannot save list file: " + io, "Mandel IO",
+                JOptionPane.WARNING_MESSAGE);
       }
     }
   }

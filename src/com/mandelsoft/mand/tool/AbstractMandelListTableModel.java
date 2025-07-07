@@ -90,7 +90,7 @@ public abstract class AbstractMandelListTableModel extends AbstractTableModel
   {
     return showlocation;
   }
-
+  
   public void setShowLocation(boolean showlocation)
   {
     boolean old=this.showlocation;
@@ -212,7 +212,7 @@ public abstract class AbstractMandelListTableModel extends AbstractTableModel
   {
     return getMandelScanner().getMandelData(getList().get(index));
   }
-
+  
   public int getRowCount()
   {
     return getList().size();

@@ -110,7 +110,7 @@ public class NestedMandelListFolder extends ArrayMandelListFolder {
   // MandelList
   //////////////////////////////////////////////////////////////
 
-  private class FolderMandelList extends UniqueArrayMandelList {
+  private class FolderMandelList extends UniqueDefaultMandelList {
 
     @Override
     public void refresh(boolean soft)

@@ -1,3 +1,12 @@
+Version 1.5-rc2
+   - reference coordinates handling in main menu
+   - explicitly remembered reference coordinates valid for redo
+   - remove button in mandel lists now removes actual are if nothing selected
+   - hires and variants derived lists
+   - navigation for link source in link overview
+   - cleanup single black pixels
+   - enables access to links in readonly mode
+
 Version 1.5-rc1
    - area list with colormaps
    - complete list of all area colormaps (mandel image + area cm)
@@ -14,9 +23,10 @@ Version 1.5-rc1
    - global list of pending requests
    - screen proportion support for sub area creation
    - complete list of previous marks in list browser
-   - dynamic attribues for mandel data
+   - dynamic attributes for mandel data
    - support of SUPERFRACTALTHING MATHS (http://www.science.eclipse.co.uk/sft_maths.pdf)
    - formal title attribute 
+   - redo requests in variation and recalc view
 
 Version 1.4
    - navigation to area colormap

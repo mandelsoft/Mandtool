@@ -49,12 +49,14 @@ import com.mandelsoft.mand.util.MemoryMandelListFolderTree;
 import com.mandelsoft.mand.util.ScannerColormapList;
 import com.mandelsoft.mand.util.ScannerMandelColormapList;
 import com.mandelsoft.mand.util.TagList;
-import com.mandelsoft.mand.util.UniqueArrayMandelList;
+import com.mandelsoft.mand.util.UniqueDefaultMandelList;
 import com.mandelsoft.util.Utils;
 import java.io.FileOutputStream;
 import static java.lang.Integer.parseInt;
 import java.net.MalformedURLException;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -121,6 +123,12 @@ public class Environment1 implements MandelConstants  {
     
     URL url=null;
     File dir=new File(".");
+    
+    String home=System.getenv("MANDEL_HOME");
+    System.out.printf("MANDEL_HOME is %s\n", home);
+    if (home!=null && new File(home).isDirectory()) {
+      dir=new File(home);
+    }
     QualifiedMandelName name=null;
     int arg=0;
     
@@ -466,6 +474,22 @@ public class Environment1 implements MandelConstants  {
   {
     return database.getProperty(name);
   }
+  
+  public int getDefaultedIntegerProperty(String name, int def) {
+    String v = database.getProperty(name);
+    if (Utils.isEmpty(v)) {
+      return def;
+    }
+    try {
+      int i = Integer.parseInt(v);
+      if (i < 0 || i > 100) {
+        return def;
+      }
+      return i;
+    } catch (NumberFormatException e) {
+      return def;
+    }
+  }
 
   public boolean getToolSwitch(String name, boolean def)
   {
@@ -777,7 +801,7 @@ public class Environment1 implements MandelConstants  {
 
   ///////////////////////////////////////////////////////////////////////////
 
-  public class UnseenRefinementList extends UniqueArrayMandelList {
+  public class UnseenRefinementList extends UniqueDefaultMandelList {
 
     UnseenRefinementList()
     {
@@ -941,7 +965,7 @@ public class Environment1 implements MandelConstants  {
 
   ///////////////////////////////////////////////////////////////////////////
 
-  private class RefinementRequestList extends UniqueArrayMandelList {
+  private class RefinementRequestList extends UniqueDefaultMandelList {
 
     RefinementRequestList()
     {
@@ -971,7 +995,7 @@ public class Environment1 implements MandelConstants  {
             for (MandelHandle i:set) {
               try {
                 MandelData data=i.getInfo();
-                if (data.getInfo().isSameSpec(info.getInfo())) {
+                if (data.getInfo().isSameSpec(info.getInfo()) && data.getInfo().isSameRefSpec(info.getInfo())) {
                   found=true;
                 }
               }
@@ -984,8 +1008,14 @@ public class Environment1 implements MandelConstants  {
             System.out.println("cannot read "+h.getFile()+": "+ex);
           }
           if (found) {
-            System.out.println("obsolete request for "+h.getFile());
-            backupInfoFile(h.getFile());
+            try {
+              if (!h.getInfo().getInfo().hasProperty(MandelInfo.ATTR_REFREDO)) {
+                System.out.println("obsolete request for "+h.getFile());
+                backupInfoFile(h.getFile());
+              }
+            }
+            catch (IOException ex) {
+            }
           }
           else {
             //System.out.println"refinement request for "+h.getFile());
@@ -1115,7 +1145,7 @@ public class Environment1 implements MandelConstants  {
 
   ///////////////////////////////////////////////////////////////////////////
 
-  public abstract class ScannerBasedList extends UniqueArrayMandelList {
+  public abstract class ScannerBasedList extends UniqueDefaultMandelList {
 
     ScannerBasedList()
     {

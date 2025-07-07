@@ -15,6 +15,7 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.Coord;
 import com.mandelsoft.mand.MandIter;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -66,10 +67,10 @@ public class IterationPathDialog extends MandelDialog implements MandIter.Iterat
 
   }
 
-  public void setValue(int it, MandIter.Coord c)
+  public void setValue(int it, Coord c)
   {
-    int x = (int) ((c.getX() - x0) * rx / dx);
-    int y = (int) ((y0 - c.getY()) * ry / dy);
+    int x = (int) ((c.getX().doubleValue() - x0) * rx / dx);
+    int y = (int) ((y0 - c.getY().doubleValue()) * ry / dy);
 
     if (x >= 0 && x < rx && y >= 0 && y < ry) {
       image.setRGB(x, y, colormap.getColor(map(it)).getRGB());
@@ -136,7 +137,7 @@ public class IterationPathDialog extends MandelDialog implements MandIter.Iterat
 
   private void calc()
   {
-    int i=MandIter.buildref(this, new MandIter.Coord(jx,jy), limit, BOUND);
+    int i=MandIter.buildref(this, new Coord(jx,jy), limit, BOUND);
     System.out.println("it="+i);
     // int i=iter(0, 0, jx, jy);
   }

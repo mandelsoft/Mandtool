@@ -15,6 +15,7 @@
  */
 package com.mandelsoft.mand;
 
+import com.mandelsoft.util.IntMatrix;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,34 +24,42 @@ import java.io.IOException;
  *
  * @author Uwe Krueger
  */
-public class MandelRaster implements MandelData.Part {
-  private int rx;
-  private int ry;
-  private int[][] raster;
+public class MandelRaster implements MandelData.Part, IntMatrix {
+  private IntMatrix raster;
 
   public MandelRaster()
   {
   }
-
-  public MandelRaster(int rx, int ry)
-  { this.rx=rx;
-    this.ry=ry;
-    raster=new int[ry][rx];
+  
+  public MandelRaster(IntMatrix m)
+  { this.raster = m;
   }
 
-  public int[][] getRaster()
+  public MandelRaster(int rx, int ry)
+  { raster=new IntMatrix.Memory(rx, ry);
+  }
+
+  public IntMatrix getRaster()
   {
     return raster;
   }
-
+  
   public int getRX()
   {
-    return rx;
+    return raster.getRX();
   }
 
   public int getRY()
   {
-    return ry;
+    return raster.getRY();
+  }
+
+  public int getData(int x, int y) {
+    return raster.getData(x, y);
+  }
+
+  public void setData(int x, int y, int val) {
+    raster.setData(x, y, val);
   }
 
   ///////////////////////////////////////////////////////////////
@@ -75,20 +84,23 @@ public class MandelRaster implements MandelData.Part {
     int dx=1;
     int c=0;
     int v=-1;
-
+    int rx=getRX();
+    int ry=getRY();
+    
     if (verbose) System.out.println("  writing raster ("+rx+","+ry+")...");
     dos.writeInt(rx);
     dos.writeInt(ry);
 
     for (y=0; y<ry; y++) {
       for (ix=0; ix<rx; ix++, x+=dx) {
-        if (raster[y][x]==v && c<255) {
+        int it = raster.getData(x, y);
+        if (it==v && c<255) {
           c++;
         }
         else {
           write(dos,c,v);
           c=1;
-          v=raster[y][x];
+          v=it;
         }
       }
       dx=-dx;
@@ -117,10 +129,10 @@ public class MandelRaster implements MandelData.Part {
     int c=0;
     int v=-1;
 
-    rx=dis.readInt();
-    ry=dis.readInt();
+    int rx=dis.readInt();
+    int ry=dis.readInt();
     if (verbose) System.out.println("  reading raster ("+rx+","+ry+")...");
-    raster=new int[ry][rx];
+    raster=new IntMatrix.Memory(rx, ry);
 
     for (y=0; y<ry; y++) {
       for (ix=0; ix<rx; ix++, x+=dx) {
@@ -128,7 +140,7 @@ public class MandelRaster implements MandelData.Part {
           c=dis.readUnsignedByte();
           v=dis.readInt();
         }
-        raster[y][x]=v;
+        raster.setData(x, y, v);
         c--;
       }
       dx=-dx;

@@ -832,9 +832,14 @@ public class BufferedComponent extends JComponent
 
     public void discard()
     {
+      boolean cur=active;
+      
       setVisible(false);
       active=false;
       rects.remove(this);
+      if (cur) {
+        fireRectStateEvent();
+      }
     }
 
     public void activate()
@@ -852,6 +857,7 @@ public class BufferedComponent extends JComponent
           }
         }
         active=true;
+        fireRectStateEvent();
         rects.add(this);
       }
     }
@@ -1251,6 +1257,14 @@ public class BufferedComponent extends JComponent
         l.buttonClicked(e);
       }
     }
+   
+    protected void fireRectStateEvent()
+    {
+      RectStateEvent e = new RectStateEvent(this);
+      for (RectEventListener l : listeners) {
+        l.stateChanged(e);
+      }
+    }
 
     //////////////////////////////////////////////////////////////////////////
     private Set<RectModifiedEventListener> mlisteners=new HashSet<RectModifiedEventListener>();
@@ -1389,8 +1403,34 @@ public class BufferedComponent extends JComponent
 
   }
 
+  public static class RectStateEvent {
+    private VisibleRect rect;
+    
+    public RectStateEvent(VisibleRect r)
+    { 
+      this.rect=r;
+    }
+
+    public VisibleRect getRect()
+    { return rect;
+    }
+  }
+  
   public interface RectEventListener {
     void buttonClicked(RectEvent e);
+    void stateChanged(RectStateEvent e);
+  }
+  
+  public static class DefaultRectEventListener implements RectEventListener {
+    @Override
+    public void buttonClicked(RectEvent e)
+    {
+    }
+
+    @Override
+    public void stateChanged(RectStateEvent e)
+    {
+    }
   }
   
   //////////////////////////////////////////////////////////////////////////
@@ -2052,7 +2092,7 @@ public class BufferedComponent extends JComponent
   }
 
   public static class RectangleSelector {
-    private boolean           active;
+    private Point             active;
     private Point             origin;
     private VisibleRect       rect;
     private boolean           move;
@@ -2074,7 +2114,7 @@ public class BufferedComponent extends JComponent
 
     public void uninstall()
     {
-      active=false;
+      active=null;
       origin=null;
       comp=null;
       if (rect!=null) {
@@ -2157,14 +2197,14 @@ public class BufferedComponent extends JComponent
     // event processing
     public void mousePressed(MouseEvent e)
     {
-      if (e.getButton()==MouseEvent.BUTTON1) active=true;
+      if (e.getButton()==MouseEvent.BUTTON1) active=e.getPoint();
     }
 
     public void mouseReleased(MouseEvent e)
     {
       //System.out.println("released "+e.getPoint()+"/"+e.getButton());
       if (e.getButton()==MouseEvent.BUTTON1) {
-        active=false;
+        active=null;
         origin=null;
         if (rect!=null) {
           VisibleRect selected=rect;
@@ -2202,7 +2242,7 @@ public class BufferedComponent extends JComponent
     {
       //System.out.println("drag "+e.getPoint()+"/"+e.getButton());
 
-      if (active) {
+      if (active!=null) {
         Point current=e.getPoint();
         if (!comp.getVisibleRect().contains(current)) return;
         if (origin==null) {
@@ -2212,7 +2252,7 @@ public class BufferedComponent extends JComponent
             rect=comp.findRect(current,false,false);
             if (rect==null) {
               //System.out.println("found no move rect");
-              active=false;
+              active=null;
               return;
             }
             if (debug) System.out.println("found move rect "+rect.getId());
@@ -2221,7 +2261,7 @@ public class BufferedComponent extends JComponent
             action=RectModifiedEvent.RECT_MOVED;
           }
           else {
-            VisibleRectBorder b=comp.findRectBorder(current,false);
+            VisibleRectBorder b=comp.findRectBorder(active,false);
             if (b!=null) {
               rect=b.getRect();
               origin=getOrigin(b);
@@ -2527,8 +2567,8 @@ public class BufferedComponent extends JComponent
 
     TestComponent tc;
 
-    class MyListener implements RectPointEventListener,
-                                RectEventListener {
+    class MyListener extends DefaultRectEventListener
+            implements RectPointEventListener, RectEventListener {
 
       RectangleSelector[] sel=new RectangleSelector[]{
         new RectangleSelector(),

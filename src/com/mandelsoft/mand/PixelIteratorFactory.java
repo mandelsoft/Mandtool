@@ -16,10 +16,12 @@
 
 package com.mandelsoft.mand;
 
+import com.mandelsoft.mand.meth.PixelIterator;
+
 /**
  *
  * @author Uwe Krueger
  */
 public interface PixelIteratorFactory {
-  PixelIterator createPixelIterator(MandelSpec spec)
+  PixelIterator createPixelIterator(MandelInfo mi)
 ;}

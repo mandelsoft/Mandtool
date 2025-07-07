@@ -31,7 +31,7 @@ public class ForkSubareaFactory extends SubAreaFactory {
   public ForkSubareaFactory(MandelScanner scanner, MandelName basename,
                            String title)
   {
-    super(scanner,basename,title);
+    super(scanner,basename,title, true, true);
   }
 
   @Override

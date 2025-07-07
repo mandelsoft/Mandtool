@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import com.mandelsoft.mand.Environment;
 import com.mandelsoft.io.AbstractFile;
+import com.mandelsoft.mand.ElementName;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.mand.MandelFileName;
 import com.mandelsoft.mand.MandelHeader;
@@ -261,6 +262,12 @@ public class Copy<E extends ExecutionHandler> extends Command {
       for (ElementHandle<?> h:srcscan.getAllHandles()) {
         if (match(h)) {
           //System.out.println("  found "+h.getName()+" DOIT "+h.getHeader());
+          if (mainVariants) {
+            ElementName<?> name=h.getName();
+            if (name instanceof QualifiedMandelName && ((QualifiedMandelName)name).getQualifier()!=null) {
+              continue;
+            }
+          }
           handleFile(this,h);
         }
       }
@@ -424,6 +431,8 @@ public class Copy<E extends ExecutionHandler> extends Command {
   
   protected String sp;
   protected String dp;
+  
+  protected boolean mainVariants=false;
 
   public Copy(Environment src, Environment dst)
   {
@@ -436,6 +445,11 @@ public class Copy<E extends ExecutionHandler> extends Command {
     this.types.add(new RasterImageType());
   }
 
+  public void setMainVariants(boolean flag)
+  {
+    mainVariants=flag;
+  }
+  
   protected void additionalSteps()
   {
   }

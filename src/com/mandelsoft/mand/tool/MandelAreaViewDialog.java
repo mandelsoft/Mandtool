@@ -17,6 +17,9 @@
 package com.mandelsoft.mand.tool;
 
 import com.mandelsoft.io.AbstractFile;
+import com.mandelsoft.mand.Coord;
+import com.mandelsoft.mand.MandIter;
+import com.mandelsoft.mand.Coord;
 import java.awt.Container;
 import java.awt.Rectangle;
 import java.awt.Font;
@@ -39,9 +42,12 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import com.mandelsoft.mand.MandelData;
+import com.mandelsoft.mand.MandelException;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
+import com.mandelsoft.mand.scan.MandelHandle;
+import com.mandelsoft.mand.util.MandArith;
 import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolder;
@@ -56,6 +62,9 @@ import com.mandelsoft.swing.TextField;
 import com.mandelsoft.swing.Utils;
 import com.mandelsoft.swing.WindowControlAction;
 import java.awt.Component;
+import java.io.IOException;
+import java.math.BigDecimal;
+import javax.swing.JFrame;
 
 /**
  *
@@ -77,6 +86,7 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
   public  class MandelAreaView extends GBCPanel {
     protected QualifiedMandelName qname;
     protected VisibleRect rect;
+    protected VisibleRect ref;
     private boolean inupdate;
     private MandelInfo info;    // core data
     protected MandelData data;  // optional information
@@ -86,11 +96,12 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
     private int[] row;
     private int col;
     private int maxcol=0;
-    private PropertyChangeListener updateListener;
+    protected UpdateListener updateListener;
     protected NumberField limitfield;
     protected JTextField infofield;
 
     protected JButton    showbutton;
+    protected JButton    showrefbutton;
 
     public MandelAreaView(QualifiedMandelName name, MandelInfo info, boolean change,
                                                         boolean readonly)
@@ -131,6 +142,9 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       if (rect!=null) {
         rect.discard();
       }
+      if (ref!=null) {
+        ref.discard();
+      }
     }
 
     public void setName(QualifiedMandelName name)
@@ -145,6 +159,9 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
         text="Area "+name.getName();
       }
 
+      if (data!=null && data.getInfo().getProperty(MandelInfo.ATTR_TITLE)!=null) {
+        text+=" ("+data.getInfo().getProperty(MandelInfo.ATTR_TITLE)+")";
+      }
       setName(text);
       if (altspec!=null) altspec.setName(text);
       if (modtimes!=null) modtimes.setName(text);
@@ -169,6 +186,7 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
     {
       this.info.setInfo(info);
       updateFields();
+      updateRef();
     }
 
     public void setInfo(MandelInfo info)
@@ -682,7 +700,9 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       protected MandelSpecDialog createDialog(Window owner, String name,
                                               boolean change)
       {
-        return new AttrSpec(owner,name,!readonlyMode);
+        AttrSpec spec= new AttrSpec(owner,name,!readonlyMode);
+        spec.addChangeListener(updateListener);
+        return spec;
       }
     }
     
@@ -735,6 +755,8 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
     protected void addShowButton(String help, boolean subst)
     {
        showbutton=createButton("Show", help, new ShowAction(subst));
+       showrefbutton=createButton("Show Ref", "Reference Pixel for Superfractional Math", new ShowRefAction());
+       updateRef();
     }
 
     private class ShowAction implements ActionListener {
@@ -760,6 +782,29 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
         rect.setVisible(true);
       }
     }
+    
+    private class ShowRefAction implements ActionListener {
+
+      public ShowRefAction()
+      {
+      }
+
+      public void actionPerformed(ActionEvent e)
+      {
+        if (ref==null) {
+          String label="Reference "+getRectLabel();
+          ref=getMandelWindowAccess().getMandelImagePane().getImagePane().
+                createRect(label,label);
+          //ref.addRectModifiedEventListener(new ModifiedListener());
+          ref.setFixed(true);
+        }
+        // getMandelWindowAccess().getMandelImagePane().hideSubRects();
+        ref.activate(false);
+        updateRef();
+        ref.setVisible(true);
+      }
+    }
+    
 
     ////////////////////////////////////////////////////////////////////
 
@@ -789,7 +834,12 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
 
     protected String getInfoString()
     {
-      return MandelAreaViewDialog.this.getInfoString(getEnvironment(),qname);
+      String info= MandelAreaViewDialog.this.getInfoString(getEnvironment(),qname);
+      if (getInfo().hasProperty(MandelInfo.ATTR_REFCORRUPTED) && getInfo().getProperty(MandelInfo.ATTR_REFCORRUPTED).equals("true")) {
+        if (info.isEmpty()) return "Corrupted";
+        return "Corrupted, "+info;
+      }
+      return info;
     }
 
     protected void updateSlave()
@@ -798,6 +848,46 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       if (qname!=null && infofield!=null) infofield.setText(getInfoString());
       if (rect!=null) updateRect(rect,getInfo());
     }
+    
+    protected void updateRef()
+    {
+      System.out.println("update ref");
+      String c = getInfo().getProperty(MandelInfo.ATTR_REFCOORD);
+      if (c != null) {
+          try {
+            Coord coord=Coord.parse(c);
+            showrefbutton.setVisible(true);
+            if (ref != null) {
+              MandelInfo i = new MandelInfo();
+              
+              BigDecimal dx=MandArith.div(getInfo().getDX(), getInfo().getRX() * 10);
+              BigDecimal dy=MandArith.div(getInfo().getDY(), getInfo().getRY() * 10);
+              
+              if (dx.compareTo(MandArith.bmin)>0) dx=MandArith.bmin;
+              if (dy.compareTo(MandArith.bmin)>0) dy=MandArith.bmin;
+              i.setXM(coord.getX());
+              i.setYM(coord.getY());
+              i.setDX(dx);
+              i.setDY(dy);
+              i.setRX(1);
+              i.setRY(1);
+                System.out.printf("minX: %s\n", getInfo().getXMin());
+                System.out.printf("X:    %s\n", coord.getX());
+                System.out.printf("maxX: %s\n", getInfo().getXMax());
+              /*
+              */
+              updateRect(ref, i);
+            }
+            return;
+          }
+          catch (NumberFormatException ex) {}
+      }
+      showrefbutton.setVisible(false);
+      if (ref!=null) {
+        ref.setVisible(false);
+      }
+    }
+    
 
     protected void updateRect(VisibleRect rect, MandelInfo info)
     {
@@ -809,7 +899,7 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
       getMandelWindowAccess().getMandelImagePane().updateInfo(info, rect);
     }
 
-    class UpdateListener implements PropertyChangeListener {
+    class UpdateListener implements PropertyChangeListener, ChangeListener {
 
       public void propertyChange(PropertyChangeEvent evt)
       { // only way to assure listener order
@@ -820,6 +910,13 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
           setAltSpec();
         }
         updateSlave();
+      }
+
+      @Override
+      public void stateChanged(ChangeEvent e)
+      {
+        System.out.println("attr changed -> update ref");
+        updateRef();
       }
     }
   }
@@ -886,6 +983,7 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
   {
     super(owner, title);
     setup(name, info, change, readonly);
+    this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     setVisible(true);
   }
 
@@ -1102,5 +1200,106 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
         throw new IllegalArgumentException("cannot access property "+setter);
       }
     }
+  }
+  
+  protected String getMarkRefCoordinates() throws MandelException
+  {
+    Coord c = getMandelWindowAccess().getMandelImagePane().getRemembered().getRefCoord();
+    if (c!=null) {
+      return c.toString();
+    }     
+    QualifiedMandelName mark = getMandelWindowAccess().getMandelImagePane().getMark();
+    if (mark == null) {
+      return null;
+    }
+    MandelHandle h = getMandelWindowAccess().getEnvironment().getImageDataScanner().getMandelData(mark);
+
+    if (h == null) {
+      throw new MandelException(String.format("image for mark %s not found", mark));
+    }
+    MandelInfo info;
+    try {
+      info = h.getInfo().getInfo();
+    }
+    catch (IOException io) {
+      throw new MandelException(String.format("mark %s: ", mark), io);
+    }
+    if (!getMandelWindowAccess().getMandelImagePane().getMandelName().isAbove(mark.getMandelName())) {
+      if (!getMandelWindowAccess().getMandelData().getInfo().contains(info.getXM(),info.getYM())) {
+        throw new MandelException(String.format("mark %s is no sub area", mark));
+      }
+    }
+    if (!info.hasProperty(MandelInfo.ATTR_REFCOORD)) {
+      MandelData data;
+      try {
+        data = h.getData();
+      }
+      catch (IOException io) {
+        throw new MandelException(String.format("mark %s: ", mark), io);
+      }
+      Coord ref=ToolUtils.getRefCoord(data);
+      if (ref==null) {
+        throw new MandelException(String.format("no reference coordinates for mark %s not found", mark));        
+      }
+      return ref.toString();
+    }
+    else {
+      return info.getProperty(MandelInfo.ATTR_REFCOORD);
+    }
+  }
+  
+   protected boolean hasMarkRefCoordinates() throws MandelException
+  {
+    if (getMandelWindowAccess().getMandelImagePane().getRemembered().refcoord!=null) {
+      return true;
+    }
+    QualifiedMandelName mark = getMandelWindowAccess().getMandelImagePane().getMark();
+    if (mark == null) {
+      return false;
+    }
+    MandelHandle h = getMandelWindowAccess().getEnvironment().getImageDataScanner().getMandelData(mark);
+    MandelInfo info;
+    try {
+      info = h.getInfo().getInfo();
+    }
+    catch (IOException io) {
+      throw new MandelException(String.format("mark %s: ", mark), io);
+    }
+    if (!getMandelWindowAccess().getMandelImagePane().getMandelName().isAbove(mark.getMandelName())) {
+      if (!getMandelWindowAccess().getMandelData().getInfo().contains(info.getXM(),info.getYM())) {
+        throw new MandelException(String.format("mark %s is no sub area", mark));
+      }
+    }
+
+    if (h == null) {
+      throw new MandelException(String.format("image for mark %s not found", mark));
+    }
+    if (!info.hasProperty(MandelInfo.ATTR_REFCOORD)) {
+      MandelData data;
+      try {
+        data = h.getData();
+      }
+      catch (IOException io) {
+        throw new MandelException(String.format("mark %s: ", mark), io);
+      }
+      return ToolUtils.hasRefCoord(data);
+    }
+    else {
+      return true;
+    }
+  }
+  
+  static public MandelInfo cleanup(MandelInfo info)
+  {
+      info=new MandelInfo().copyFrom(info);
+      info.removeProperty(MandelInfo.ATTR_ITERATONMETHOD);
+      info.removeProperty(MandelInfo.ATTR_REFCNT);
+      info.removeProperty(MandelInfo.ATTR_REFPIXEL);
+      info.removeProperty(MandelInfo.ATTR_REFREDO);
+      info.removeProperty(MandelInfo.ATTR_REFDEPTH);
+      info.removeProperty(MandelInfo.ATTR_REDOLASTDEPTH);
+      info.removeProperty(MandelInfo.ATTR_REDONUMBER);
+      info.removeProperty(MandelInfo.ATTR_REFCORRUPTED);
+      return info;
   }
 }

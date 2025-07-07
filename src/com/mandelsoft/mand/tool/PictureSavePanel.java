@@ -44,6 +44,7 @@ public abstract class PictureSavePanel extends ActionPanel
     protected IntegerField width;
     protected IntegerField h_inset;
     protected IntegerField v_inset;
+    protected IntegerField fontsize;
     protected TextField text;
     protected FilePanel imagefile;
 
@@ -92,6 +93,14 @@ public abstract class PictureSavePanel extends ActionPanel
       v_inset=new IntegerField(0);
       v_inset.setColumns(10);
       addContent(v_inset, GBC(1, row).setAnchor(GBC.WEST).setWeight(
+              100, 100));
+      row++;
+      c=new JLabel("Font Size");
+      addContent(c, GBC(0, row).setRightInset(10).setAnchor(GBC.EAST).setWeight(
+              100, 100));
+      fontsize=new IntegerField(0);
+      fontsize.setColumns(10);
+      addContent(fontsize, GBC(1, row).setAnchor(GBC.WEST).setWeight(
               100, 100));
       
       row++;

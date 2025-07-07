@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 d021770.
+ * Copyright 2021 Uwe Krueger.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.io.IOException;
 
 /**
  *
- * @author d021770
+ * @author Uwe Krueger
  */
 public class ProxyColormapHandleForMandelHandle implements ColormapHandle {
   private MandelHandle handle;

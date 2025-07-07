@@ -331,6 +331,11 @@ displayed area. A fork area is an area that contains more than one sub areas.
 This generated list shows the fork areas of the sub tree below the actually
 displayed area.
 
+1.6.14 Related Areas
+
+This generated list shows the transitive closue following the explicit
+links of the actually displayed area.
+
 1.7 Colormaps for Displaying Area Images
 
 The browser is able to display images for areas already calculated. It is
@@ -354,6 +359,9 @@ The main window is available as applet, also.
 Besides the central main window there are lot of secondary windows that
 can be opened from the main window to assist for supporting tasks. This
 section contains a detailed description for all those windows.
+
+Note: Please be aware, that in read-only mode not the complete functionality is
+available or even visible as menu entries.
 
 2.1 Main Window
 
@@ -465,7 +473,10 @@ The following menu entries can be found:
       Show the image control window. It provides access to several settings
       controlling the raster mapping and display behaviour. It also allows
       to choose among different variants found for the actual area.
-
+  - Clean Black.
+      Single black pixels will be set to max iterations. The image control
+      can be used to configure the range for examined surrounding pixels and
+      the max percentage, which may be black to execute the substitution.
   - Image Meta Data.
       Show the area meta data window.
   - Parent.
@@ -561,6 +572,137 @@ Here comes the list of features for a marked area:
 2.3 Colormap Window
 
 2.4 Image Control
+
+The Image Control Window offers various options to display and browse
+areas as well as settings for the mapping of pixel raster values to
+colormmaps and final images. There are several tabs for the various
+control areas.
+
+2.4.1 Image
+
+The Image tab can be used to select different variants of the actual
+area. A variant may provide different resolutions or slightly different
+dimensions.
+
+Additionally it is possible to control the mapping of iteration values
+described by a mandel raster file to colormap values and final images.
+
+The following options can be configured
+- colormap size (changing the size will resize the actual colormap)
+  (see Mapping)
+- scaling of the actual display (default 100%)
+- it shows the effective mapping type used for the actual image.
+  This type is predefined by the tool implementation, but carried around
+  with saved image flavors of the area.
+- maximum percentage for pixel surrounding a black pixel to clean black pixels.
+- detection neighborhood for examining pixels to clen black pixels.
+- mapping method (default Statistic). Possible options are
+  - Cyclic: assign colors of the colormap one after the other in a cyclic 
+            manner
+  - Statistic: mapping done based on the incidence of an interation value
+  - Optimal: again incidence based with area weighting.
+
+  The last two methods provide some parameters that can be used to play
+  with to try to achieve better results than the default setting.
+
+2.4.2 Mapping
+
+The mapping tab is a special view just providing mapping options.
+Besides the already shown mapping method it is possible to select
+a method for resizing colormaps.
+
+Colormaps are based on interpolation points. When a colormap is 
+resized there are several possibilities how to map or determine
+the interpolation points for the new colormap:
+- proportinal: The index of the interpolation points are just scaled
+               with the size of the colormap.
+- lock points: This method is based on the actual raster values
+               (if available). After a new mapping of the
+               raster iteration values to color map indices (according
+               to the new size), the current interpolation points are
+               mapped to the indices covering a matching range of
+               iteration values.
+- lock colors: Here every color to iteration range is tried to be kept,
+               not only the mapping of the old interpolation points.
+               As result the areas of the image will keep their color
+               values as before, but the number of iteration points
+               is increasing.
+
+2.4.3 Colormaps
+
+Here a list of available explicitly configured colormaps is shown.
+There are two storages: filesystem and memory. In memory colormaps
+will be lost, if the tool is aborted. The actual colormap can be 
+saved to a file or kept im memory.
+               
+Selecting a colormap will replace the actually used colormap by the
+selected one. If the size changes a new mapping is calculated.
+
+2.4.4 Area Colormaps
+
+On the main window the actually used colormap can be remembered to be
+always used for the actually shown area. In this case the colormap is
+not stored as part of the mandel area file, but stored separately under
+the name of the area. 
+
+This tab shows all colormaps used in the area tree, either definied by 
+Modifiable Mandel Images or as Area Colormap. It allows to select
+any such colormap to be used for the actually shown area.
+  
+2.4.5 Picture
+
+This tab provides the possibility to save the actually displayed area
+as picture file using various supported formats (like png or jpg).
+
+Here it is possible to add some informative text as label on the
+lower right corner of the image. It could be explicitly configured text,
+the area creator and/or the title of the area (stored together with the
+area meta data).
+
+It is possible to specify additional insets (vertical and horizontal)
+and to modify the image width (in pixels).
+
+2.4.6 Data
+
+This tab can be used to write an informational text file containing
+the meta data of the actually displayed area.
+
+2.4.7 Display
+
+The display tab offers several settings for the main window.
+
+- Show subarea names (as labels for the sub area boxes)
+- Show full names (instead of just the subarea index)
+- Automatically select the next upstream colormap if no explicit
+  colormap is set for the actual area.
+- Show the image info (at the top of the main window) on every area switch.
+- Automatically set the mark if a key area navigation is executed
+- Automatically set the mark if a fork area navigation is executed
+- Automatically set the mark is a parent navigation is executed 
+- Always show the copyright text in main window
+- Always show the area title (if set)
+- Enable the pixel tool tip
+- Tool tip mode
+  - Pixel Info
+  - Subarea name (in case of not enabled sub area box labels)
+- Sub area selection mode
+  - Centered Proportinal (The new center point of the area is dermined 
+    by the starting selection)
+  - Proportinal (A corner point is determined by the starting selection)
+- Selection Proportion
+  - Use the proportion of the actually displayed area
+  - Explicit standard proportions 1:1, 3:2, 4:3, 10:7
+  - Screen proportion
+  - Manually configured proportion
+- Enable automatic reference point calculation based on actual raster
+  values. This coordinate will be used as reference point for the 
+  initial iteration history calculation for the superfractional math
+  calculation method. It tries to find a black pixel surrounded by
+  black pixels.
+
+2.4.8 Image
+
+This tab show statistic informations about the actually used image base.
 
 2.5 Area Lists Window
 

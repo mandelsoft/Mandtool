@@ -19,7 +19,8 @@ package com.mandelsoft.mand.srv;
 import java.util.HashSet;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.mand.MandelInfo;
-import com.mandelsoft.mand.PixelIterator;
+import com.mandelsoft.mand.MandelRaster;
+import com.mandelsoft.mand.meth.PixelIterator;
 import com.mandelsoft.util.ChangeEvent;
 import com.mandelsoft.util.ChangeListener;
 import com.mandelsoft.util.StateChangeSupport;
@@ -168,9 +169,9 @@ public class AreaHandler implements Request {
   }
 
   private boolean constantFrame()
-  { int[][] raster=getRaster();
+  { MandelRaster raster=getRaster();
 
-    int it=raster[sy][sx];
+    int it=raster.getData(sx, sy);
     if (!equals(raster,it,sx+1,   sy,      nx-1,1)) return false;
     if (!equals(raster,it,sx+1,   sy+ny-1, nx-1,1)) return false;
     if (!equals(raster,it,sx,     sy+1,    1,ny-1)) return false;
@@ -178,12 +179,12 @@ public class AreaHandler implements Request {
     return true;
   }
 
-  private boolean equals(int[][] raster, int it, int x0, int y0,
+  private boolean equals(MandelRaster raster, int it, int x0, int y0,
                                                  int dx, int dy)
   {
     for (int y=y0; y<y0+dy; y++) {
       for (int x=x0; x<x0+dx; x++) {
-        if (raster[y][x]!=it) return false;
+        if (raster.getData(x, y)!=it) return false;
       }
     }
     return true;
@@ -191,11 +192,11 @@ public class AreaHandler implements Request {
 
   private void fillFrame()
   {
-    int[][] raster=getRaster();
-    fillFrame(raster,raster[sy][sx],sx+1,sy+1,nx-2,ny-2);
+    MandelRaster raster=getRaster();
+    fillFrame(raster,raster.getData(sx, sy),sx+1,sy+1,nx-2,ny-2);
   }
 
-  private void fillFrame(int[][] raster, int it, int x0, int y0,
+  private void fillFrame(MandelRaster raster, int it, int x0, int y0,
                                                  int dx, int dy)
   { int m=it==0?1:0;
     int cnt=0;
@@ -205,7 +206,7 @@ public class AreaHandler implements Request {
     MandelInfo info=data.getInfo();
     for (int y=y0; y<y0+dy; y++) {
       for (int x=x0; x<x0+dx; x++) {
-        raster[y][x]=it;
+        raster.setData(x, y, it);
         cnt+=it;
         mcnt+=m;
       }
@@ -214,9 +215,9 @@ public class AreaHandler implements Request {
     info.setNumIt(info.getNumIt()+cnt);
   }
 
-  private int[][] getRaster()
+  private MandelRaster getRaster()
   {
-    return data.getRaster().getRaster();
+    return data.getRaster();
   }
 
   /////////////////
@@ -227,14 +228,14 @@ public class AreaHandler implements Request {
     int ny=req.getNY();
     int sx=req.getSX();
     int sy=req.getSY();
-    int[][] raster=getRaster();
+    MandelRaster raster=getRaster();
     MandelInfo info=data.getInfo();
 
     for (int x=0; x<nx; x++) {
       for (int y=0; y<ny; y++) {
         int ax=sx+x;
         int ay=sy+y;
-        raster[ay][ax]=req.getDataRel(x, y);
+        raster.setData(ax, ay, req.getDataRel(x, y));
       }
     }
 
@@ -252,7 +253,7 @@ public class AreaHandler implements Request {
     int sx=req.getSX();
     int sy=req.getSY();
     MandelInfo info=data.getInfo();
-    int[][] raster=getRaster();
+    MandelRaster raster=getRaster();
     boolean found=false;
     int minit=info.getMinIt();
     int maxit=info.getMinIt();
@@ -266,7 +267,7 @@ public class AreaHandler implements Request {
       for (int y=0; y<ny; y++) {
         int ax=sx+x;
         int ay=sy+y;
-        int it=raster[ay][ax];
+        int it=raster.getData(ax,ay);
         req.setDataRel(x,y,it);
         //buffer[req.getIndexRel(x, y)]=it;
         if (it==0) {

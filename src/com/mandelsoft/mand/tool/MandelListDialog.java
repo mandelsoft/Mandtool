@@ -82,6 +82,10 @@ public class MandelListDialog extends MandelDialog {
     this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
   }
 
+  public void setMandelNameMapper(MandelNameMapper m) {
+      panel.setMandelNameMapper(m);
+  }
+  
   public void setRootName(MandelName rootName)
   {
     panel.setRootName(rootName);

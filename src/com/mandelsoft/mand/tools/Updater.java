@@ -140,16 +140,15 @@ public class Updater extends MandUtils {
       int limit=info.getLimitIt();
       int mcnt=0;
       long cnt=0;
-      int[][] r=raster.getRaster();
       int rx=raster.getRX();
       int ry=raster.getRY();
       for (int x=0; x<rx; x++) {
         for (int y=0; y<ry; y++) {
-          if (r[y][x]==0) {
+          if (raster.getData(x, y) == 0) {
             mcnt++;
             cnt+=limit;
           }
-          else cnt+=r[y][x];
+          else cnt+=raster.getData(x, y);
         }
       }
       info.setMCnt(mcnt);

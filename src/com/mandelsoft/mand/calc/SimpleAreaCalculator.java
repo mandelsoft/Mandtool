@@ -15,6 +15,7 @@
  */
 package com.mandelsoft.mand.calc;
 
+import com.mandelsoft.mand.meth.PixelIterator;
 import com.mandelsoft.mand.*;
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 D021770.
+ * Copyright 2021 Uwe Krueger.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.awt.image.ColorModel;
 
 /**
  *
- * @author D021770
+ * @author Uwe Krueger
  */
 public class DynamicColor implements Decoration.ColorHandler {
   public interface ImageSource {

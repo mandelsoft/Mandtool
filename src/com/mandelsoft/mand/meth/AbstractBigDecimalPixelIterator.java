@@ -25,6 +25,11 @@ import java.math.BigDecimal;
  */
 public abstract class AbstractBigDecimalPixelIterator extends AbstractPixelIterator {
 
+  protected int x;
+  protected int y;
+
+  protected BigDecimal sx;
+  protected BigDecimal sy;
   protected BigDecimal dx;
   protected BigDecimal dy;
   protected BigDecimal drx;
@@ -37,7 +42,7 @@ public abstract class AbstractBigDecimalPixelIterator extends AbstractPixelItera
   public AbstractBigDecimalPixelIterator(MandelSpec spec)
   {
     this(spec.getXMin(), spec.getYMax(), spec.getDX(), spec.getDY(),
-         spec.getRX(), spec.getRY(), spec.getLimitIt());
+            spec.getRX(), spec.getRY(), spec.getLimitIt());
   }
 
   public AbstractBigDecimalPixelIterator(BigDecimal x0,
@@ -50,13 +55,13 @@ public abstract class AbstractBigDecimalPixelIterator extends AbstractPixelItera
   {
     super(rx, ry, limit, dx, dy);
 
-    this.dx=dx;
-    this.dy=dy;
-    this.drx=new BigDecimal(rx);
-    this.dry=new BigDecimal(ry);
+    this.dx = dx;
+    this.dy = dy;
+    this.drx = new BigDecimal(rx);
+    this.dry = new BigDecimal(ry);
 
-    this.x0=x0;
-    this.y0=y0;
+    this.x0 = x0;
+    this.y0 = y0;
   }
 
   public boolean isFast()
@@ -66,12 +71,14 @@ public abstract class AbstractBigDecimalPixelIterator extends AbstractPixelItera
 
   public void setX(int x)
   {
-    cx=MandArith.add(x0, MandArith.div(MandArith.mul(dx, x), drx));
+    this.x = x;
+    cx = MandArith.add(x0, MandArith.div(MandArith.mul(dx, x), drx));
   }
 
   public void setY(int y)
   {
-    cy=MandArith.sub(y0, MandArith.div(MandArith.mul(dy, y), dry));
+    this.y = y;
+    cy = MandArith.sub(y0, MandArith.div(MandArith.mul(dy, y), dry));
   }
 
   public BigDecimal getCX()
@@ -92,5 +99,27 @@ public abstract class AbstractBigDecimalPixelIterator extends AbstractPixelItera
   public double getY(BigDecimal y)
   {
     return MandArith.div(MandArith.mul(MandArith.sub(y0, y), dry), dy).doubleValue();
+  }
+
+  public int iter(BigDecimal sx, BigDecimal sy,
+                         BigDecimal cx, BigDecimal cy,
+                         BigDecimal bound, int limit)
+  {
+    BigDecimal x = sx;
+    BigDecimal y = sy;
+
+    BigDecimal x2 = mul(x, x);
+    BigDecimal y2 = mul(y, y);
+    int it = 0;
+
+    while (add(x2, y2).compareTo(bound) < 0 && ++it <= limit) {
+      BigDecimal xn = add(sub(x2, y2), cx);
+      BigDecimal yn = add(mul(mul(MandArith.b2, x), y), cy);
+      x = xn;
+      x2 = mul(x, x);
+      y = yn;
+      y2 = mul(y, y);
+    }
+    return it;
   }
 }

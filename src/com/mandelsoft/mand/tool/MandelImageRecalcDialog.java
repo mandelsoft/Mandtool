@@ -21,11 +21,14 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.plaf.basic.BasicBorders;
 import com.mandelsoft.mand.MandelData;
+import com.mandelsoft.mand.MandelException;
 import com.mandelsoft.mand.MandelFileName;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.util.Utils;
+import javax.swing.JButton;
+import javax.swing.event.ChangeEvent;
 
 /**
  *
@@ -36,9 +39,11 @@ public class MandelImageRecalcDialog extends MandelImageAreaDialog {
   public MandelImageRecalcDialog(MandelWindowAccess owner, String title,
                                  QualifiedMandelName name,
                                  MandelData data)
-  { super(owner, title,
+  { 
+    super(owner, title,
           owner.getEnvironment().mapToInfoFile(data.getFile()).getPath(),
-          name,new MandelInfo().copyFrom(data.getInfo()),true);
+          name,cleanup(
+                  new MandelInfo().copyFrom(data.getInfo())),true);
   }
   
   @Override
@@ -54,7 +59,9 @@ public class MandelImageRecalcDialog extends MandelImageAreaDialog {
   ///////////////////////////////////////////////////////////////////////
 
   protected class RecalcView extends View {
-   
+    private JButton redobutton;
+    private JButton stdredobutton;
+    
     public RecalcView(QualifiedMandelName name, MandelInfo info, boolean readonly)
     {
       super(name, info, readonly);
@@ -70,6 +77,17 @@ public class MandelImageRecalcDialog extends MandelImageAreaDialog {
       createButton("Save",null,new SaveAction());
       createButton("Delete",null,new DeleteAction());
       super.setupButtons();
+      try {
+        if (hasMarkRefCoordinates()) {
+          redobutton=createButton("Request Redo", "Request recalculation based on refrence coordinates of mark",
+                     new RedoAction());
+          stdredobutton=createButton("Request Std Redo", "Request recalculation based on refrence coordinates of mark",
+                     new RedoAction(MandelInfo.ATTR_STDREFCOORD));
+        }
+      }
+      catch (MandelException ex) {
+        System.out.printf("disable redo button: %s\n", ex.getMessage());
+      }
     }
 
     private class SaveAction implements ActionListener {
@@ -127,6 +145,46 @@ public class MandelImageRecalcDialog extends MandelImageAreaDialog {
           mandelError("Cannot delete "+f+".");
           return;
         }
+      }
+    }
+    
+    protected class RedoAction implements ActionListener {
+      private String attr;
+    
+      public RedoAction(String attr)
+      {
+        this.attr = attr;
+      }
+
+      public RedoAction()
+      {
+        this(MandelInfo.ATTR_REFCOORD);
+      }
+
+      public void actionPerformed(ActionEvent e)
+      {
+        String ref;
+        
+        try {
+          ref = getMarkRefCoordinates();
+        }
+        catch (MandelException ex) {
+          mandelError(ex);
+          return;
+        }
+        if (ref==null) {
+          mandelError("no mark set");
+          return;
+        }
+        
+        MandelInfo redo=new MandelInfo(getInfo());
+        redo.setProperty(MandelInfo.ATTR_REFREDO,"true");
+        redo.setProperty(attr, ref);
+        setInfo(redo);
+        updateListener.stateChanged(new ChangeEvent(redo));
+        setFilename(initialFilename);
+      
+        updateSlave();
       }
     }
   }

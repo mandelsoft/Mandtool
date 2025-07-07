@@ -95,6 +95,7 @@ public class AsyncThumbnailFactory extends AbstractThumbnailFactory {
     ImageSource<QualifiedMandelName> src;
     BufferedImage image;
 
+    n = n.getBaseName();
     if (queue.getMaxSize()==null || !max.equals(queue.getMaxSize())) {
       thumbnails.clear();
       queue.clear();

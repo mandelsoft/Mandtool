@@ -16,7 +16,7 @@
  */
 package com.mandelsoft.mand.srv;
 
-import com.mandelsoft.mand.PixelIterator;
+import com.mandelsoft.mand.meth.PixelIterator;
 import com.mandelsoft.util.ChangeListener;
 
 /**

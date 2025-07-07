@@ -72,6 +72,15 @@ public class MandelDialog extends IJDialog implements MandelWindowAccessSource {
             null, options, options[1]);
     return o==0;
   }
+  
+  public int optionDialog(String msg, String... options)
+  {
+    int o=JOptionPane.showOptionDialog(getOwner(), msg,
+            "Warning",
+            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+            null, options, options[options.length-1]);
+    return o;
+  }
 
   public boolean deleteFileDialog(File f)
   {
@@ -107,4 +116,12 @@ public class MandelDialog extends IJDialog implements MandelWindowAccessSource {
                 "Mandel Area",
                 JOptionPane.ERROR_MESSAGE);
   }
+  
+  public void mandelError( Exception ex)
+  {
+    JOptionPane.showMessageDialog(getOwner(),
+                ex.toString(),
+                "Mandel Area",
+                JOptionPane.ERROR_MESSAGE);
+  } 
 }

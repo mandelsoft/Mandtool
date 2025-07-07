@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 d021770.
+ * Copyright 2021 Uwe Krüger.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,6 @@
  */
 package com.mandelsoft.mand.scan;
 
-/**
- *
- * @author d021770
- */
 public interface MandelScannerTree {
   public void startUpdate();
   public void finishUpdate();

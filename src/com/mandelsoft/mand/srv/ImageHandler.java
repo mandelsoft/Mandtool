@@ -27,7 +27,8 @@ import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.io.AbstractFile;
 import com.mandelsoft.mand.MandelFileName;
 import com.mandelsoft.mand.MandelInfo;
-import com.mandelsoft.mand.PixelIterator;
+import com.mandelsoft.mand.MandelRaster;
+import com.mandelsoft.mand.meth.PixelIterator;
 import com.mandelsoft.mand.cm.ColormapModel.ResizeMode;
 import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
@@ -163,7 +164,6 @@ public class ImageHandler implements Request {
                                              pi.getMagnification(),starttime);
     server.addImage(data);
     if (!recalc) mi.setTime(0);
-    raster=md.createRaster().getRaster();
     AreaHandler area=new AreaHandler(server, recalc, true, md,
                                      0, 0, mi.getRX(), mi.getRY());
     area.setPixelIterator(pi);
@@ -228,7 +228,6 @@ public class ImageHandler implements Request {
   private MandelInfo mi;
   private PixelIterator pi;
   private int limit;
-  private int[][] raster;
 
   public void setPixelIterator(PixelIterator pi)
   {

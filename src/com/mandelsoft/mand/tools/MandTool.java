@@ -24,6 +24,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.SplashScreen;
+import java.io.File;
 import java.util.ResourceBundle;
 
 /**
@@ -54,13 +55,19 @@ public class MandTool extends Command{
         g.setColor(new Color(200,200,200));
         g.drawString("Mandtool, Version "+
                      bundle.getString("Application.version"), 300, 360);
-        g.drawString("by Uwe Krüger, 2009-2021",40,360);
+        g.drawString("by Uwe Krüger, 2009-2025",40,360);
         sp.update();
 //        try {
 //          Thread.sleep(10000);
 //        }
 //        catch (InterruptedException ex) {
 //        }
+      }
+      if (args.length==0) {
+        if (System.getenv("MANDEL_HOME")==null && !new File(".mandtool").isFile()) {
+          args=new String[1];
+          args[0]="http://www.beauty-of-chaos.de/mandel/mandel";
+        }
       }
       ToolEnvironment env=new ToolEnvironment(args);
       env.startup();

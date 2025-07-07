@@ -10,7 +10,7 @@ goto cont
 set SPLASH="-splash:%MANDEL_HOME%\bin\images\splash.png"
 
 :cont
-"%JAVA_HOME%\bin\java" %SPLASH% -Djava.library.path="%MANDEL_HOME%\lib\win" -Xmx1024M -classpath "%MANDEL_HOME%\lib\Mandelbrot.jar" com.mandelsoft.mand.tools.Cmd %*
+"%JAVA_HOME%\bin\java" %SPLASH% -Djava.library.path="%MANDEL_HOME%\lib\win" -Xmx4024M -classpath "%MANDEL_HOME%\lib\Mandelbrot.jar" com.mandelsoft.mand.tools.Cmd %*
  
 goto end
  

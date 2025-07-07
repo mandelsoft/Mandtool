@@ -23,6 +23,7 @@ import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.util.DefaultMandelList;
 import com.mandelsoft.mand.util.MandelList;
+import com.mandelsoft.mand.util.UniqueDefaultMandelList;
 import java.io.IOException;
 
 /**
@@ -31,11 +32,21 @@ import java.io.IOException;
  */
 public abstract class ScannerBasedMandelListFactory implements MandelListFactory {
   private MandelScanner scanner;
-
+  private boolean uniqueNames;
+  private boolean projectMandelNames;
+  
   protected ScannerBasedMandelListFactory(MandelScanner scanner)
   {
     this.scanner=scanner;
   }
+  
+  protected ScannerBasedMandelListFactory(MandelScanner scanner, boolean uniqueNames, boolean projectMandelNames)
+  {
+    this.scanner=scanner;
+    this.uniqueNames=uniqueNames;
+    this.projectMandelNames=projectMandelNames;
+  }
+  
 
   public MandelScanner getScanner()
   {
@@ -47,15 +58,37 @@ public abstract class ScannerBasedMandelListFactory implements MandelListFactory
     this.scanner=scanner;
   }
 
+  protected void add(MandelList list, QualifiedMandelName name)
+  {
+    list.add(name);
+  }
+  
   public MandelList getList()
   {
-     MandelList list=new DefaultMandelList();
-     for (QualifiedMandelName n:scanner.getQualifiedMandelNames()) {
-       if (acceptType(n) && accept(n)) list.add(n);
+     MandelList list;
+     if (uniqueNames) {
+       list=new UniqueDefaultMandelList(projectMandelNames);
+     }
+     else {
+       list=new DefaultMandelList();
+     
+     }
+     for (MandelHandle h:scanner.getMandelHandles()) {
+       if (acceptType(h) && accept(h)) add(list, h.getName());
      }
      return list;
   }
 
+  protected boolean accept(MandelHandle h)
+  {
+    return accept(h.getName());
+  }
+  
+  protected boolean acceptType(MandelHandle h)
+  {
+    return acceptType(h.getName());
+  }
+  
   protected boolean accept(QualifiedMandelName n)
   {
     return true;

@@ -19,7 +19,7 @@ import com.mandelsoft.io.AbstractFile;
 import static com.mandelsoft.mand.Settings.ENV_MANDEL_HOME;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.FileMandelList;
-import com.mandelsoft.mand.util.UniqueArrayMandelList;
+import com.mandelsoft.mand.util.UniqueDefaultMandelList;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -1140,7 +1140,7 @@ public class Environment0 implements MandelConstants  {
 
   ///////////////////////////////////////////////////////////////////////////
 
-  public abstract class ScannerBasedList extends UniqueArrayMandelList {
+  public abstract class ScannerBasedList extends UniqueDefaultMandelList {
 
     ScannerBasedList()
     {

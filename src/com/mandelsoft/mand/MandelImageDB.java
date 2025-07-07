@@ -42,6 +42,7 @@ import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MandelListFolderTree;
 import com.mandelsoft.mand.util.TagList;
 import com.mandelsoft.util.Utils;
+import java.util.Collection;
 
 /**
  *
@@ -126,7 +127,7 @@ public class MandelImageDB implements MandelConstants  {
     if (!this.readonly) {
       ttodos=createMandelListFolderTree(Settings.TODO);
       todos=ttodos.getRoot().getMandelList();
-      seenrasters=createMandelList(Settings.SEEN);
+      seenrasters=createMandelList(Settings.SEEN, false);
     }
   }
 
@@ -188,8 +189,8 @@ public class MandelImageDB implements MandelConstants  {
       }
     }
    
-    areas=createMandelList(Settings.AREAS);
-    refinements=createMandelList(Settings.REFINEMENTS);
+    areas=createMandelList(Settings.AREAS, true);
+    refinements=createMandelList(Settings.REFINEMENTS, false);
 
     colors=createColorList(Settings.COLORS);
     tags=createTagList(Settings.TAGS);
@@ -202,8 +203,17 @@ public class MandelImageDB implements MandelConstants  {
       String fp=settings.getProperty(Settings.LINKS);
       if (!Utils.isEmpty(fp)) {
         AbstractFile mf=createAbstractFile(fp);
-        //tlinks=new FileMandelListListMandelListFolderTree(mf);
-        tlinks=new LinkTree(mf);
+        boolean use = settings.isLocal();
+        try {
+          mf.getInputStream().close();
+          use=true;
+        }
+        catch (IOException ex) {
+        }
+        if (use) {
+          //tlinks=new FileMandelListListMandelListFolderTree(mf);
+          tlinks = new LinkTree(mf);
+        }
       }
     }
     catch (Exception ex) {
@@ -251,13 +261,13 @@ public class MandelImageDB implements MandelConstants  {
     return AbstractFile.Factory.create(path, proxy, settings.isLocal());
   }
   
-  public final MandelList createMandelList(String prop)
+  public final MandelList createMandelList(String prop, boolean projectMandelName)
   { String path=settings.getProperty(prop);
     if (Utils.isEmpty(path)) return null;
     AbstractFile mf=createAbstractFile(path);
-    return new FileMandelList(mf);
+    return new FileMandelList(mf, projectMandelName);
   }
-
+  
   public final MandelListFolderTree createMandelListFolderTree(String prop)
   { String path=settings.getProperty(prop);
     if (Utils.isEmpty(path)) return null;

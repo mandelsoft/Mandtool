@@ -68,6 +68,7 @@ import com.mandelsoft.io.AbstractFile;
 import com.mandelsoft.mand.ColormapName;
 import com.mandelsoft.mand.Environment;
 import com.mandelsoft.mand.IllegalConfigurationException;
+import com.mandelsoft.mand.Coord;
 import com.mandelsoft.mand.MandelHeader;
 import com.mandelsoft.mand.MandelInfo;
 import com.mandelsoft.mand.MandelName;
@@ -106,6 +107,7 @@ import com.mandelsoft.mand.tool.slideshow.DefaultSlideShowModel;
 import com.mandelsoft.mand.tool.slideshow.SlideShowDestination;
 import com.mandelsoft.mand.tool.slideshow.SlideShowModel;
 import com.mandelsoft.mand.tool.slideshow.SlideShowSourceAdapter;
+import com.mandelsoft.mand.tool.util.RasterCleaner;
 import com.mandelsoft.mand.util.ArrayMandelList;
 import com.mandelsoft.mand.util.CachedUpstreamColormapSource;
 import com.mandelsoft.mand.util.DefaultMandelList;
@@ -113,6 +115,7 @@ import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.util.MemoryMandelListFolderTree;
 import com.mandelsoft.swing.AbstractListDataListener;
 import com.mandelsoft.swing.BooleanAttribute;
+import com.mandelsoft.swing.BufferedComponent.DefaultRectEventListener;
 import com.mandelsoft.swing.BufferedComponent.ProportionalRectangleSelector;
 import com.mandelsoft.swing.BufferedComponent.RectPointEvent;
 import com.mandelsoft.swing.BufferedComponent.RectangleActionEvent;
@@ -140,8 +143,10 @@ import com.mandelsoft.util.upd.BooleanUpdateCondition;
 import com.mandelsoft.util.upd.UpdateContext;
 import com.mandelsoft.util.upd.UpdateReason;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.event.MouseListener;
 import java.awt.image.ColorModel;
 import java.util.Calendar;
 import java.util.Date;
@@ -156,6 +161,7 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
+import javax.swing.MenuSelectionManager;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.MenuEvent;
@@ -381,7 +387,7 @@ public class MandelImagePanel  extends GBCPanel
       r=image.getRasterData();
       m=image.getImage().getColorModel();
       int rgb=image.getImage().getRGB(event.getX(), event.getY());
-      int d=(r.getRaster())[(int)p.getY()][(int)p.getX()];
+      int d=r.getData((int)p.getX(),(int)p.getY());
       return "("+event.getX()+","+event.getY()+"): "+d+
               " ("+m.getRed(rgb)+","+m.getGreen(rgb)+","+m.getBlue(rgb)+")";
     }
@@ -655,9 +661,32 @@ public class MandelImagePanel  extends GBCPanel
   }
 
   ///////////////////////////////////////////
+  public static class RememberedData {
+    RefCoord refcoord;
+    
+    public Coord getRefCoord() {
+      if (refcoord!=null) {
+        return refcoord.coord;
+      }
+      return null;
+    }
+  }
+  
+  public static class RefCoord  {
+    Coord coord;
+    QualifiedMandelName area;
+
+    public RefCoord(QualifiedMandelName n, Coord c)
+    {
+      coord=c;
+      area=n;
+    }
+  }
+  
+  ///////////////////////////////////////////
   public class Mark extends ExplicitHighlight {
     private DefaultMandelListListModel previous;
-     private DefaultMandelListListModel all;
+    private DefaultMandelListListModel all;
     private MandelInfo info;
     private VisibleRect rect;
             
@@ -801,6 +830,7 @@ public class MandelImagePanel  extends GBCPanel
   private ChangeListenerSupport listeners=new ChangeListenerSupport();
 
   private ExplicitHighlight   lastname;
+  private RememberedData      remembered;
   private Mark                marked;
   private ExplicitHighlights  explicitHighlights;
   
@@ -812,6 +842,7 @@ public class MandelImagePanel  extends GBCPanel
   private AbstractMandelListModelMenu removelinks;
   private JMenu               linkhist;
   private JPopupMenu          linkhistpopup;
+  private MouseListener       subMenuLoadAction;
   private LinkListener        linkListener;
 
   private MandelListModel     keyareas;
@@ -835,7 +866,13 @@ public class MandelImagePanel  extends GBCPanel
   private ImageListener          imageListener;
   private List<ListModifierMenu> listModifiers;
 
+  private ShowRefCoordAction showRefCoordAction;
+  private Action gotoRefCoordAction;
+  private Action clearRefCoordAction;
+  private Action rememberRefCoordAction;
+  private Action rememberMouseRefCoordAction;
   private Action parentAction;
+  private Action cleanAction;
   private Action areaUpAction;
   private Action forkAction;
   private Action showSubAction;
@@ -927,6 +964,7 @@ public class MandelImagePanel  extends GBCPanel
     };
     this.showlinks.setSorted(true);
     
+    this.subMenuLoadAction = new SubMenuLoadAction();
     this.linkhist=new JMenu("Parent Links");
     this.linkhistpopup=new JPopupMenu("Parent Links");
     this.linkListener=new EnvListener();
@@ -945,6 +983,7 @@ public class MandelImagePanel  extends GBCPanel
     this.keyareas.setModifiable(true);
     this.highlighted=new ExplicitHighlight("highlighted", true);
     this.lastname=new ExplicitHighlight("lastshown");
+    this.remembered = new RememberedData();
     this.marked=new Mark(env);
     this.explicitHighlights=new ExplicitHighlights();
     this.explicitHighlights.add(highlighted);
@@ -1051,6 +1090,19 @@ public class MandelImagePanel  extends GBCPanel
     this.buffer.setLimitWindowSize(true);    
   }
 
+  public Coord getCoordinatesAtMouse()
+  {
+      MandelInfo parent = getMandelInfo();
+      BigDecimal x = MandArith.sub(parent.getXM(),
+              MandArith.div(parent.getDX(), 2));
+      BigDecimal y = MandArith.add(parent.getYM(),
+              MandArith.div(parent.getDY(), 2));
+
+      BigDecimal jx = MandArith.add(x, MandArith.div(MandArith.mul(parent.getDX(), mouseX), parent.getRX()));
+      BigDecimal jy = MandArith.sub(y, MandArith.div(MandArith.mul(parent.getDY(), mouseY), parent.getRY()));
+      return new Coord(jx, jy);
+  }
+  
   private class Buffer extends BufferedComponent {
     private Decoration decoration;
 
@@ -1108,6 +1160,7 @@ public class MandelImagePanel  extends GBCPanel
     imageListener=new MandelFrameImageListner();
 
     create=new MandelSubAreaCreationDialog(frame,"Mandel Sub Area Creation");
+    uss.addUpdatableObject(create);
     colormapDialog=new ColormapDialog(frame,"Main Colormap",this.colormapmodel);
     imageDialog=new ImageControl(frame);
     
@@ -1157,7 +1210,16 @@ public class MandelImagePanel  extends GBCPanel
     });
 
     create.addCreationListener(new SubAreaListener());
+    gotoRefCoordAction=new GotoRefCoordAction();
+    gotoRefCoordAction.setEnabled(false);
+    showRefCoordAction=new ShowRefCoordAction();
+    showRefCoordAction.setEnabled(false);
+    clearRefCoordAction=new ClearCoordAction();
+    clearRefCoordAction.setEnabled(false);
+    rememberRefCoordAction=new RefCoordAction();
+    rememberMouseRefCoordAction=new MouseRefCoordAction();
     parentAction=new ParentAction();
+    cleanAction=new CleanAction();
     areaUpAction=new AreaUpAction();
     forkAction=new ForkAction();
     showSubAction=new ShowSubAction();
@@ -1641,6 +1703,7 @@ public class MandelImagePanel  extends GBCPanel
       MandelListModel m=getEnvironment().getLinkModel(getMandelName());
       // avoid self links and duplicates
       a.setEnabled((m==null || m.getList().get(n.getMandelName())==null) &&
+                   !isReadonly() &&
                    (!n.getMandelName().equals(getMandelName())));
       return a;
     }
@@ -1805,6 +1868,8 @@ public class MandelImagePanel  extends GBCPanel
     it=new JMenuItem(new WindowControlAction(getWindow(),"Image Control",
                                                   imageDialog));
     menu.add(it);
+    it=new UpdatableJMenuItem(cleanAction);
+    menu.add(it);
 
     menu.addSeparator();
     it=new JMenuItem(showMetaAction);
@@ -1816,16 +1881,18 @@ public class MandelImagePanel  extends GBCPanel
     galerymenu.add(zoomGaleryAction);
 
     ///////////////////////////////////////////////////
-    JMenu windowLink=new JMenu("Link To Other Display Area");
-    mandelwindowslistener=new MandelWindowsMenuListener(windowLink);
-    windowLink.addActionListener(mandelwindowslistener);
-    windowLink.addMenuListener(mandelwindowslistener);
-    getEnvironment().getMandelWindowsModel().addListDataListener(mandelwindowslistener);
     JMenu linkmenu=new JMenu("Links");
     linkmenu.add(gotolinks);
     linkmenu.add(showlinks);
-    linkmenu.add(windowLink);
-    linkmenu.add(removelinks);
+    if (!isReadonly()) {
+      JMenu windowLink = new JMenu("Link To Other Display Area");
+      mandelwindowslistener = new MandelWindowsMenuListener(windowLink);
+      windowLink.addActionListener(mandelwindowslistener);
+      windowLink.addMenuListener(mandelwindowslistener);
+      getEnvironment().getMandelWindowsModel().addListDataListener(mandelwindowslistener);
+      linkmenu.add(windowLink);
+      linkmenu.add(removelinks);
+    }
     linkmenu.add(linkhist);
     menu.add(galerymenu);
     menu.add(linkmenu);
@@ -1849,6 +1916,23 @@ public class MandelImagePanel  extends GBCPanel
     menu.add(it);
     it=new UpdatableJMenuItem(parentAction);
     menu.add(it);
+    
+    JMenu refmenu=new UpdatableJMenu("Ref Coord");
+     
+    it=new UpdatableJMenuItem(gotoRefCoordAction);
+    refmenu.add(it);
+    it=new UpdatableJMenuItem(showRefCoordAction);
+    refmenu.add(it);
+    it=new UpdatableJMenuItem(clearRefCoordAction);
+    refmenu.add(it);
+    it=new UpdatableJMenuItem(rememberRefCoordAction);
+    refmenu.add(it);
+    it=new JMenuItem(rememberMouseRefCoordAction);
+    refmenu.add(it);
+    it=new UpdatableJMenuItem(new ShowActualRefCoordAction());
+    refmenu.add(it);
+    menu.add(refmenu);
+    
     if (!isReadonly()) {
       it=new JMenuItem(variationAction);
       menu.add(it);
@@ -1861,6 +1945,7 @@ public class MandelImagePanel  extends GBCPanel
 
     menu.add(getEnvironment().getListActions().createMenu(this,
                                                    new MandelNameSelector() {
+      @Override
       public QualifiedMandelName getSelectedMandelName()
       { return getQualifiedMandelName(); }
     }));
@@ -2065,6 +2150,22 @@ public class MandelImagePanel  extends GBCPanel
     keyareasGaleryAction.setEnabled(!keyareas.getList().isEmpty());
   }
 
+  private void cleanupMandelMenu(JComponent menu)
+  { boolean found=false;
+    Component[] comps=menu.getComponents();
+    for (int i=0; i< comps.length; i++) {
+      if (comps[i] instanceof AbstractMandelListModelMenu) {
+        if (!found) {
+          System.out.println("cleanup list models");
+          found=true;
+        }
+        ((AbstractMandelListModelMenu)comps[i]).setMandelListModel(null);
+      }
+    }
+    menu.removeAll();
+    menu.setEnabled(false);
+  }
+  
   private void updateLinks()
   {
     MandelListModel m=getEnvironment().getLinkModel(name.getMandelName());
@@ -2073,29 +2174,56 @@ public class MandelImagePanel  extends GBCPanel
     showlinks.setMandelListModel(m);
     removelinks.setMandelListModel(m);
 
+    MandelListModelMenu sub;
     MandelName loop=name.getMandelName();
     boolean found=false;
     boolean parent=false;
-    linkhist.removeAll();
-    linkhist.setEnabled(false);
-    linkhistpopup.removeAll();
-    linkhistpopup.setEnabled(false);
+    cleanupMandelMenu(linkhist);
+    cleanupMandelMenu(linkhistpopup);
     while (!loop.isRoot()) {
       m=getEnvironment().getLinkModel(loop);
       if (m!=null && m.getList().size()>0) {
         if (parent) {
           System.out.println("found parent links for "+loop);
-          linkhist.add(new MandelListModelMenu(loop.getName(),this,m));
+          linkhist.add(sub=new MandelListModelMenu(loop.getName(),this,m));
+          sub.addMouseListener(this.subMenuLoadAction);
           linkhist.setEnabled(found=true);
         }
 
-        linkhistpopup.add(new MandelListModelMenu(loop.getName(),this,m));
+        linkhistpopup.add(sub=new MandelListModelMenu(loop.getName(),this,m));
+        sub.addMouseListener(this.subMenuLoadAction);
         linkhistpopup.setEnabled(true);
       }
       loop=loop.getParentName();
       parent=true;
     }
     if (!found) System.out.println("no parent links found");
+  }
+  
+  private class SubMenuLoadAction extends MouseAdapter {
+    public SubMenuLoadAction()
+    {
+    }
+    
+    @Override
+    public void mousePressed(MouseEvent e) {
+      // Important: check if it is actually a click
+      if (SwingUtilities.isLeftMouseButton(e)) {
+        JMenu clickedMenu = (JMenu) e.getSource();
+        MenuSelectionManager manager =
+                MenuSelectionManager.defaultManager();
+        manager.setSelectedPath(null);
+        System.out.printf("parent %s clicked!\n!", clickedMenu.getText());
+        setImage(new MandelName( clickedMenu.getText()));
+        // You could open a dialog or trigger an action here
+      }
+      /*
+        if (automark_parent.isSet()) {
+          setAutoMark();
+        }
+        setImage(getMandelName().getParentName());
+       */
+    }
   }
   
   private void setImageData(MandelAreaImage img, boolean showlast)
@@ -2838,6 +2966,279 @@ public class MandelImagePanel  extends GBCPanel
 
   ////////////////////////////////////////////////////////////////////////////
   
+  private abstract class RefCoordActionBase extends OptionalAction {
+    public RefCoordActionBase(String name)
+    { super(name);
+    }
+
+    protected boolean isPossible()
+    {
+      return remembered.refcoord!=null;
+    }
+
+    public void actionPerformed(ActionEvent e)
+    {
+      if (isPossible()) {
+        refcoordActionPerformed(e);
+      }
+    }
+
+    protected abstract void refcoordActionPerformed(ActionEvent e);
+  }
+  
+  private class ShowActualRefCoordAction extends ShowRefCoordAction {
+    Coord coord;
+            
+    public ShowActualRefCoordAction()
+    { super("actual");
+    }
+    
+    protected Coord getRefCoord() {
+      return coord;
+    }
+
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+      MandelInfo info = getMandelInfo();
+      if (info != null) {
+        String refcoord = info.getProperty(MandelInfo.ATTR_REFCOORD);
+        if (refcoord != null && !refcoord.isEmpty()) {
+          try {
+            coord=Coord.parse(refcoord);
+            setEnabled(true);
+            return;
+          }
+          catch (NumberFormatException ex) {
+          }
+        }
+      }
+      super.updateObject(ctx);
+    }
+  }
+  
+  private class GotoRefCoordAction extends RefCoordActionBase {
+
+    public GotoRefCoordAction()
+    {
+      super("None");
+    }
+
+    public void refcoordActionPerformed(ActionEvent e)
+    {
+      if (remembered.refcoord!=null) {
+        setImage(remembered.refcoord.area);
+      }
+    }
+
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+      super.updateObject(ctx);
+      putValue(Action.NAME, remembered.refcoord!=null ? remembered.refcoord.area.toString()
+              : "None");
+    }
+  }
+  
+  public class ShowRefCoordAction extends RefCoordActionBase {
+    VisibleRect ref;
+    String tag;
+    RectEventListener listener;
+        
+    public ShowRefCoordAction(String name)
+    {
+      super("undef");
+      if (name == null || name.isEmpty()){
+        tag = "";
+      }
+      else {
+        tag = " " + name;
+      }
+      this.putValue(Action.NAME, "Show" + tag);
+      setEnabled(false);
+      listener = new RectEventListener() {
+        @Override
+        public void buttonClicked(RectEvent e)
+        {
+        }
+
+        @Override
+        public void stateChanged(BufferedComponent.RectStateEvent e)
+        {
+          if (e.getRect().isActive()) {
+            show();
+          }
+          else {
+            hide();
+          }
+        }
+      };
+    }
+    
+    public ShowRefCoordAction()
+    { this("");
+    }
+
+    protected boolean isPossible()
+    {
+      return getRefCoord()!=null;
+    }
+    
+    protected Coord getRefCoord() {
+      return remembered.getRefCoord();
+    }
+    
+    public void refcoordActionPerformed(ActionEvent e)
+    {
+      Coord coord = getRefCoord();
+      if (coord == null || (ref!=null && ref.isActive())) {
+        hide();
+        return;
+      }
+      if (ref == null) {
+        String label = "Ref Coords";
+        ref = getImagePane().createRect(label, label);
+        ref.addRectEventListener(listener);
+        ref.setFixed(true);
+      }
+      show();
+    }
+   
+    public void show()
+    {
+      if (ref != null) {
+        ref.activate(false);
+        updateRef();
+        ref.setVisible(true);
+        this.putValue(Action.NAME, "Hide" + tag);
+        setEnabled(true);
+      }
+      else {
+        hide();
+      }
+    }
+      
+    public void hide() { 
+      if (ref != null) {
+        ref.discard();
+      }
+      this.putValue(Action.NAME, "Show "+tag);
+      setEnabled(getRefCoord()!=null);
+    }
+    
+    public void disable()
+    {
+      setEnabled(false);
+      hide();
+    }
+
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+       super.updateObject(ctx);
+       hide();
+    }
+    
+    public void updateRef()
+    {
+      if (ref==null) return;
+      MandelInfo i = new MandelInfo();
+      MandelInfo info=getMandelInfo();
+      BigDecimal dx = MandArith.div(info.getDX(), info.getRX() * 10);
+      BigDecimal dy = MandArith.div(info.getDY(), info.getRY() * 10);
+
+      if (dx.compareTo(MandArith.bmin) > 0) {
+        dx = MandArith.bmin;
+      }
+      if (dy.compareTo(MandArith.bmin) > 0) {
+        dy = MandArith.bmin;
+      }
+      Coord coord=getRefCoord();
+      i.setXM(coord.getX());
+      i.setYM(coord.getY());
+      i.setDX(dx);
+      i.setDY(dy);
+      i.setRX(1);
+      i.setRY(1);
+      System.out.printf("minX: %s\n", info.getXMin());
+      System.out.printf("X:    %s\n", coord.getX());
+      System.out.printf("maxX: %s\n", info.getXMax());
+      /*
+       */
+      updateRect(ref, i);
+    }
+  }
+  
+  private class ClearCoordAction extends RefCoordActionBase {
+    public ClearCoordAction()
+    { super("Clear");
+    }
+    
+    public void refcoordActionPerformed(ActionEvent e)
+    { 
+      remembered.refcoord=null;
+      updateObjects("refcoord",null);
+    }
+    
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+      super.updateObject(ctx);
+    }
+  }
+
+private class MouseRefCoordAction extends UpdatableAction {
+    public MouseRefCoordAction()
+    { super("Remember Selected");
+    }
+    
+    public void actionPerformed(ActionEvent e)
+    {
+      Coord c = MandelImagePanel.this.getCoordinatesAtMouse();
+      remembered.refcoord = new RefCoord(getQualifiedMandelName(), c);
+      updateObjects("refcoord", remembered.refcoord);
+    }
+  }
+
+  private class RefCoordAction extends UpdatableAction {
+    public RefCoordAction()
+    { super("Remember");
+    }
+    
+    public void actionPerformed(ActionEvent e)
+    { 
+      MandelInfo info = getMandelInfo();
+      if (info!=null) {
+        String refcoord=info.getProperty(MandelInfo.ATTR_REFCOORD);
+        if (refcoord!=null && !refcoord.isEmpty()) {
+          try {
+            Coord c=Coord.parse(refcoord);
+            remembered.refcoord=new RefCoord(getQualifiedMandelName(),c);
+            updateObjects("refcoord",remembered.refcoord);
+          }
+          catch (NumberFormatException ex) {}
+        }
+      }
+    }
+    
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+      MandelInfo info = getMandelInfo();
+      if (info!=null) {
+        String refcoord=info.getProperty(MandelInfo.ATTR_REFCOORD);
+        if (refcoord!=null && !refcoord.isEmpty()) {
+          try {
+            setEnabled(true);
+            return;
+          }
+          catch (NumberFormatException ex) {}
+        }
+      }
+      setEnabled(false);
+    }
+  }
+  
   private class ParentAction extends UpdatableAction {
     public ParentAction()
     { super("Parent");
@@ -2860,6 +3261,47 @@ public class MandelImagePanel  extends GBCPanel
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////
+  
+   private class CleanAction extends UpdatableAction {
+    public CleanAction()
+    { super("Clean black");
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e)
+    { 
+      RasterCleaner c = new RasterCleaner(getMandelData());
+      setBusy(true);
+      c.clean(imageDialog.getCleanLimit(), imageDialog.getDetectionNeighborhood());
+      setBusy(false);
+      
+      /*
+      image.setMapper(getColormapModel().getResizeMode(),
+               image.getMapper());
+      */
+      ((MandelImage.Updatable)image.getMandelImage()).updateRaster();
+    }
+
+    @Override
+    public void updateObject(UpdateContext ctx)
+    {
+      if (image.getMandelImage() instanceof MandelImage.Updatable && image.getRasterData() != null ) {
+        setEnabled(true);
+      }
+      else {
+        setEnabled(false);
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+   
+  public RememberedData getRemembered()
+  {
+    return remembered;
+  }
+  
   ////////////////////////////////////////////////////////////////////////////
 
   public void setMark()
@@ -3920,8 +4362,8 @@ public class MandelImagePanel  extends GBCPanel
                 JOptionPane.INFORMATION_MESSAGE);
   }
   
-  public class SelectAreaListener implements RectEventListener,
-                                             RectModifiedEventListener {
+  public class SelectAreaListener extends DefaultRectEventListener
+          implements RectEventListener, RectModifiedEventListener {
 
     private MandelHandle getMandelInfo(String n)
     { MandelHandle data=null;
@@ -4053,6 +4495,7 @@ public class MandelImagePanel  extends GBCPanel
                           " prop="+(((double)rect.getWidth())/rect.getHeight()));
         info=new MandelInfo(MandelImagePanel.this.getMandelInfo());
         info.setKeywords(new HashSet<String>());
+        info.clearProperties();
         rect.setOwner(info);
         created=true;
       }
@@ -4167,6 +4610,7 @@ public class MandelImagePanel  extends GBCPanel
     private Timer timer;
     private QualifiedMandelName name;
     private String location;
+    private boolean corrupted;
             
     public InfoPopup()
     {
@@ -4212,6 +4656,7 @@ public class MandelImagePanel  extends GBCPanel
     {
       
       int m=MandUtils.getMagnification(i);
+      corrupted=i.hasProperty(MandelInfo.ATTR_REFCORRUPTED) && i.getProperty(MandelInfo.ATTR_REFCORRUPTED).equals("true");
       setMagnification(m);
       setInfo(name);
       setMin(i.getMinIt());
@@ -4231,6 +4676,14 @@ public class MandelImagePanel  extends GBCPanel
     private void updateInfo()
     {
       String info=MandelAreaViewDialog.getInfoString(getEnvironment(),name);
+      if (corrupted) {
+        if (info.isEmpty()) {
+          info="Corrupted";
+        }
+        else {
+          info="Corrupted, "+info;
+        }
+      }
       int ic=count(name.getMandelName(), getEnvironment().getImageDataScanner());
       setInfo(info+location);
       setAreas(""+ic);
@@ -4332,6 +4785,9 @@ public class MandelImagePanel  extends GBCPanel
     infoPopup.showAt(this, dst);
   }
 
+  private int mouseX;
+  private int mouseY;
+  
   public class PixelListener extends MouseAdapter {
 
     @Override
@@ -4368,24 +4824,20 @@ public class MandelImagePanel  extends GBCPanel
       px=(int)(buffer.translateX(e)/filterscale);
       py=(int)(buffer.translateY(e)/filterscale);
 
+      mouseX=px;
+      mouseY=py;
+      
       if (e.isAltDown()) {
         // notify julia dialog
         if (juliaDialog.isVisible() || iterDialog.isVisible()) {
           //System.out.println("julia "+e.getX()+","+e.getY());
+          Coord c = MandelImagePanel.this.getCoordinatesAtMouse(); 
           MandelInfo parent=getMandelInfo();
-          BigDecimal x=MandArith.sub(parent.getXM(),
-                       MandArith.div(parent.getDX(), 2));
-          BigDecimal y=MandArith.add(parent.getYM(),
-                       MandArith.div(parent.getDY(), 2));
-
-          BigDecimal jx=MandArith.add(x,MandArith.div(
-                  MandArith.mul(parent.getDX(),px),parent.getRX()));
-          BigDecimal jy=MandArith.sub(y,MandArith.div(
-                  MandArith.mul(parent.getDY(),py),parent.getRY()));
+        
           if (juliaDialog.isVisible())
-            juliaDialog.update(jx.doubleValue(), jy.doubleValue());
+            juliaDialog.update(c.getX().doubleValue(), c.getY().doubleValue());
           if (iterDialog.isVisible())
-            iterDialog.update(parent.getLimitIt(),jx, jy);
+            iterDialog.update(parent.getLimitIt(),c.getX(), c.getY());
         }
       }
       try {

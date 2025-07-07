@@ -39,12 +39,15 @@ import javax.swing.JButton;
  * @author Uwe Krueger
  */
 public class MandelImageAreaDialog extends MandelAreaViewDialog {
- 
+  
+  protected String initialFilename;
+  
   public MandelImageAreaDialog(MandelWindowAccess owner, String title, String file,
                                  QualifiedMandelName name,
                                  MandelInfo info, boolean readonly)
   {
     super(owner, title, name, info, false, readonly);
+    initialFilename=file;
     ((View)getView()).setFilename(file);
   }
 
@@ -57,6 +60,7 @@ public class MandelImageAreaDialog extends MandelAreaViewDialog {
     setup(name, data, false, isReadonly(owner,f,name));
 
     if (f!=null)
+      initialFilename=f.toString();
       ((View)getView()).setFilename(f.toString());
   }
 
@@ -243,7 +247,7 @@ public class MandelImageAreaDialog extends MandelAreaViewDialog {
       }
     }
   }
-
+  
   static String formatTime(long t)
   {
     StringWriter sw=new StringWriter();

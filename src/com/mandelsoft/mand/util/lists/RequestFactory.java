@@ -29,7 +29,7 @@ public class RequestFactory extends SubAreaFactory {
 
   public RequestFactory(MandelScanner scanner, MandelName basename)
   {
-    super(scanner,basename,"Requests");
+    super(scanner,basename,"Requests", true, false);
   }
 
   @Override

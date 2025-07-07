@@ -134,7 +134,14 @@ public class ImageControl extends ControlDialog {
     addTab("Imagebase", new ImagebasePanel());
   }
 
-
+  public int getCleanLimit() {
+    return image.getCleanLimit();
+  }
+  
+  public int getDetectionNeighborhood() {
+    return image.getDetectionNeighborhood();
+  }
+  
   ////////////////////////////////////////////////////////////////////////
   private void updateState(MandelData md)
   {
@@ -180,9 +187,12 @@ public class ImageControl extends ControlDialog {
                                   implements Updatable {
 
     private MandelVariantModel vmodel;
+    private JLabel             variantsLabel;
     private JComboBox          variants;
     private IntegerField       colmapsize;
     private IntegerField       scale;
+    private IntegerField       cleanlimit;
+    private IntegerField       neighborhood;
     private MapperControl      mapper;
     private JTextField         mappingtype;
     private boolean            adjusting;
@@ -194,8 +204,9 @@ public class ImageControl extends ControlDialog {
       int row=0;
 
       listener=new UpdateHandler(this);
-      JLabel c=new JLabel("Variants");
       vmodel=new MandelVariantModel(getEnvironment().getImageDataScanner());
+      JLabel c=new JLabel("Variants");
+      variantsLabel = c;
       addContent(c, GBC(0, row).setAnchor(GBC.WEST));
       variants=new JComboBox(vmodel);
       variants.setEditable(false);
@@ -218,6 +229,23 @@ public class ImageControl extends ControlDialog {
       scale.setEditable(false);
       scale.addPropertyChangeListener("value", sl=new ScaleListener());
       addContent(scale, GBC(1, row++).setInsets(0,5,5,5));
+      
+      c=new JLabel("Clean Black Pixel Limit (%)");
+      addContent(c, GBC(0, row).setAnchor(GBC.WEST).setInsets(0,0,5,0));
+      cleanlimit=new IntegerField(getMandelWindowAccess().getEnvironment().getDefaultedIntegerProperty(Settings.CLEAN_BLACK_LIMIT, 30));
+      cleanlimit.setColumns(4);
+      cleanlimit.setMaximumNumber(100);
+      cleanlimit.setMinimumNumber(0);
+      addContent(cleanlimit, GBC(1, row++).setInsets(5));
+      
+       c=new JLabel("Detection Neighborhood");
+      addContent(c, GBC(0, row).setAnchor(GBC.WEST).setInsets(0,0,5,0));
+      neighborhood=new IntegerField(getMandelWindowAccess().getEnvironment().getDefaultedIntegerProperty(Settings.DETECTION_NEIGHBORHOOD, 1));
+      neighborhood.setColumns(4);
+      neighborhood.setMaximumNumber(100);
+      neighborhood.setMinimumNumber(0);
+      addContent(neighborhood, GBC(1, row++).setInsets(5));
+      
       getMandelWindowAccess().getMandelImagePane().getImagePane().addScaleEventListener(sl);
 
       c=new JLabel("Mapping type");
@@ -233,6 +261,16 @@ public class ImageControl extends ControlDialog {
       mapper.addChangeListener(new RemapListener());
     }
 
+    public int getCleanLimit()
+    {
+      return cleanlimit.getValue().intValue();
+    }
+    
+    public int getDetectionNeighborhood()
+    {
+      return neighborhood.getValue().intValue();
+    }
+    
     @Override
     protected void panelBound()
     {
@@ -289,6 +327,7 @@ public class ImageControl extends ControlDialog {
 //          !vmodel.getName().equals(getMandelWindowAccess().getMandelName()))
       {
         vmodel.refresh(acc.getQualifiedName(),acc.getMandelData().getOrigHeader());
+        variantsLabel.setText(String.format("Variants (%d)", vmodel.getSize()));
       }
       adjusting=false;
     }
@@ -459,13 +498,20 @@ public class ImageControl extends ControlDialog {
               }
               Decoration decoration = new Decoration(deco);
 
+              int size = fontsize.getValue().intValue();
               if (im.getHeight() > 1000) {
-                int size = 14 + (im.getHeight() - 1000) / 200;
+                if (size == 0) {
+                   size = 14 + (im.getHeight() - 1000) / 200;
+                } 
+                
                 decoration.setFontSize(size);
                 decoration.setHInset(hi + size - 14);
                 decoration.setVInset(vi + size - 14);
               }
               else {
+                if (size != 0) {
+                  decoration.setFontSize(size);
+                }
                 decoration.setHInset(decoration.getHInset() + hi);
                 decoration.setVInset(decoration.getVInset() + vi);
               }

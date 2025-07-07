@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1">
+        <file>
+            <url>src/my/mand/tool/MandelAreaCreationDialog.java</url>
+            <line>268</line>
+        </file>
+        <file>
+            <url>src/my/reorg/convert/ABAP/ConverterBase.java</url>
+            <line>341</line>
+            <line>361</line>
+        </file>
+        <file>
+            <url>src/my/mand/Settings.java</url>
+            <line>106</line>
+        </file>
+        <file>
+            <url>src/my/reorg/convert/ConverterBase.java</url>
+            <line>288</line>
+            <line>407</line>
+        </file>
+        <file>
+            <url>src/my/reorg/tool/ComponentTablet.java</url>
+            <line>723</line>
+            <line>739</line>
+        </file>
+        <file>
+            <url>src/my/reorg/model/DefaultNodeView.java</url>
+            <line>215</line>
+            <line>254</line>
+        </file>
+        <file>
+            <url>src/my/reorg/convert/Convert.java</url>
+            <line>265</line>
+            <line>378</line>
+        </file>
+        <file>
+            <url>src/com/mandelsoft/mand/tool/MandelImagePanel.java</url>
+            <line>513</line>
+            <line>909</line>
+            <line>1276</line>
+            <line>1826</line>
+        </file>
+        <file>
+            <url>src/my/mand/tool/MandelVariationCreationDialog.java</url>
+            <line>171</line>
+        </file>
+        <file>
+            <url>src/my/mand/tool/ImageControl.java</url>
+            <line>673</line>
+        </file>
+        <file>
+            <url>src/my/mand/tool/cm/ColormapComponent.java</url>
+            <line>238</line>
+        </file>
+        <file>
+            <url>src/my/reorg/Convert.java</url>
+            <line>172</line>
+            <line>286</line>
+        </file>
+        <file>
+            <url>src/my/reorg/ComponentTablet.java</url>
+            <line>3</line>
+        </file>
+        <file>
+            <url>src/my/reorg/VisibleRects.java</url>
+            <line>273</line>
+            <line>448</line>
+            <line>716</line>
+            <line>985</line>
+            <line>1468</line>
+            <line>2843</line>
+        </file>
+        <file>
+            <url>src/my/reorg/tool/LayoutContainer.java</url>
+            <line>899</line>
+        </file>
+        <file>
+            <url>src/my/reorg/convert/ConverterUtils.java</url>
+            <line>265</line>
+            <line>378</line>
+        </file>
+        <file>
+            <url>src/my/reorg/model/DefaultContainer.java</url>
+            <line>348</line>
+            <line>394</line>
+            <line>501</line>
+        </file>
+    </editor-bookmarks>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0">
+        <file>
+            <url>src/my/mand/Settings.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>106</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/VisibleRects.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>273</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>448</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>716</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>985</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>1468</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>2843</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/com/mandelsoft/mand/tool/MandelImagePanel.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>519</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>947</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>1341</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>1999</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/convert/Convert.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>265</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>378</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/tool/ComponentTablet.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>723</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>739</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/mand/tool/ImageControl.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>673</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/convert/ConverterUtils.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>265</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>378</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/model/DefaultNodeView.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>215</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>254</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/mand/tool/cm/ColormapComponent.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>238</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/convert/ABAP/ConverterBase.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>341</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>361</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/mand/tool/MandelAreaCreationDialog.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>268</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/ComponentTablet.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>3</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/Convert.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>172</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>286</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/convert/ConverterBase.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>288</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>407</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/tool/LayoutContainer.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>899</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/mand/tool/MandelVariationCreationDialog.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>171</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/model/DefaultContainer.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>348</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>394</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>501</line>
+                <key/>
+            </bookmark>
+        </file>
+    </editor-bookmarks>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group/>
+    </open-files>
+</project-private>

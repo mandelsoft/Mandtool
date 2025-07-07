@@ -23,6 +23,7 @@ import com.mandelsoft.swing.GBC;
 import com.mandelsoft.util.Utils;
 import java.awt.FlowLayout;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.ComboBoxModel;
@@ -57,7 +58,7 @@ public class TagSpec extends MandelSpecDialog<TagSpec.TagPanel> {
   }
 
   public class TagPanel extends MandelSpecDialog.Panel {
-    private JList tags;
+    private JList<String> tags;
     private DefaultListModel model;
     private JComboBox input;
     private JPanel buttons;
@@ -70,7 +71,7 @@ public class TagSpec extends MandelSpecDialog<TagSpec.TagPanel> {
       super(name,change);
       model=new DefaultListModel();
       //model.addElement("Initial");
-      tags=new JList(model);
+      tags=new JList<>(model);
       tags.setPrototypeCellValue("InitialTagValueForMandelArea");
       tags.setVisibleRowCount(10);
       tags.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -196,9 +197,9 @@ public class TagSpec extends MandelSpecDialog<TagSpec.TagPanel> {
       @Override
       public void actionPerformed(ActionEvent e)
       {
-        Object[] values=tags.getSelectedValues();
-        if (values!=null && values.length>0) {
-          for (Object v :values) {
+        List<String> values=tags.getSelectedValuesList();
+        if (values!=null && values.size()>0) {
+          for (String v :values) {
             model.removeElement(v);
           }
           fireChangeEvent();

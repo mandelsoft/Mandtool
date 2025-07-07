@@ -77,7 +77,7 @@ public class ToolEnvironment extends Environment {
   private MandelListTableModel favorites;
   private MandelListFolderTreeModel ttodos;
   private MandelListTableModel todos;
-  private MandelListFolderTreeModel tlinks;
+  private LinkFolderTreeModel tlinks;
   private AreasModel     areas;
   private NewRasterModel newrasters;
   private UnseenRasterModel unseenrasters;
@@ -160,7 +160,22 @@ public class ToolEnvironment extends Environment {
     refresh_pending=new HashMap<MandelListTableModel,Boolean>();
     refresh_order=new ArrayList<MandelListTableModel>();
     toolControl = new ToolControlAction();
-    listactions=new MandelListsMenuFactory(isReadonly());
+    
+    int hires=2000;
+    v = getProperty(Settings.HIRES);
+    if (v != null) {
+      try {
+        hires = Integer.parseInt(v);
+        if (hires <= 0) {
+          hires = 2000;
+        }
+      } catch (NumberFormatException nfe) {
+        System.out.println("illegal hig resolution minimum " + v + ": " + nfe);
+        // keep default
+      }
+    }
+    
+    listactions=new MandelListsMenuFactory(isReadonly(), hires);
 
     if (!isReadonly())
       fileChooser=new JFileChooser();
@@ -174,6 +189,7 @@ public class ToolEnvironment extends Environment {
     }
     if (getAttrs()!=null) {
       attrs=new TagListModel(getAttrs());
+      attrs.addUniqueElement(MandelInfo.ATTR_REFREDO);
       attrs.addUniqueElement(MandelInfo.ATTR_TITLE);
       attrs.addUniqueElement(MandelInfo.ATTR_ITERATONMETHOD);
       attrs.addUniqueElement(MandelInfo.ATTR_REFCOORD);
@@ -193,7 +209,7 @@ public class ToolEnvironment extends Environment {
       todos=ttodos.getMandelListModel(ttodos.getRoot());
     }
     if (getLinks()!=null) {
-      tlinks=new LinkFolderTreeModel(getLinks());
+      tlinks=new LinkFolderTreeModel(getLinks(), getAllScanner(), isReadonly());
     }
     if (getNewRasters()!=null) newrasters=new NewRasterModel();
     if (getUnseenRasters()!=null) unseenrasters=new UnseenRasterModel();
@@ -249,87 +265,36 @@ public class ToolEnvironment extends Environment {
   // link support
 
   public void addLink(MandelName src, MandelName dst)
-  { boolean done=false;
-
+  {
     if (tlinks==null || isReadonly()) return;
-    done|=_addLink(src,dst);
-    done|=_addLink(dst,src);
-    if (done) handleAddLink(src,dst);
+    tlinks.addLink(src, dst);
   }
 
   public void removeLink(MandelName src, MandelName dst)
-  { boolean done=false;
-
+  {
     if (tlinks==null || isReadonly()) return;
-    done|=_removeLink(src,dst);
-    done|=_removeLink(dst,src);
-    if (done) handleRemoveLink(src,dst);
+    tlinks.removeLink(src, dst);
   }
 
-  public boolean _removeLink(MandelName src, MandelName dst)
-  { boolean done=false;
-
-    if (tlinks==null||isReadonly()) return done;
-    MandelListFolder f=tlinks.getChild(tlinks.getRoot(), src.getName());
-    if (f!=null) {
-      MandelListModel m=tlinks.getMandelListModel(f);
-      QualifiedMandelName qn=new QualifiedMandelName(dst);
-      done=f.contains(qn);
-      m.remove(qn);
-      if (m.getList().isEmpty()) {
-        tlinks.removeFolder(f);
-      }
-    }
-    return done;
+  public LinkFolderTreeModel getLinkModel()
+  {
+    return tlinks;
   }
-
-  private boolean _addLink(MandelName src, MandelName dst)
-  { boolean done=false;
-
-    if (tlinks==null || isReadonly()) return done;
-     MandelListFolder f=tlinks.getChild(tlinks.getRoot(), src.getName());
-     if (f==null) {
-       f=tlinks.insertFolder(src.getName(), tlinks.getRoot());
-       f.setThumbnailName(new QualifiedMandelName(src));
-     }
-     QualifiedMandelName qn=new QualifiedMandelName(dst);
-     done=!f.contains(qn);
-     tlinks.add(f, qn);
-     return done;
-  }
-
+  
   public MandelListModel getLinkModel(MandelName n)
   {
     if (tlinks==null) return null;
-    MandelListFolder f=tlinks.getChild(tlinks.getRoot(), n.getName());
-    if (f==null) return null;
-    return tlinks.getMandelListModel(f);
+    return tlinks.getLinkModel(n);
   }
-
-  private Set<LinkListener> llisteners=new HashSet<LinkListener>();
 
   public void addLinkListener(LinkListener h)
   {
-    llisteners.add(h);
+    if (tlinks!=null) tlinks.addLinkListener(h);
   }
 
   public void removeLinkListener(LinkListener h)
   {
-    llisteners.remove(h);
-  }
-
-  private void handleAddLink(MandelName src, MandelName dst)
-  { 
-    for (LinkListener h:llisteners) {
-      h.linkAdded(src,dst);
-    }
-  }
-
-  private void handleRemoveLink(MandelName src, MandelName dst)
-  {
-    for (LinkListener h:llisteners) {
-      h.linkRemoved(src,dst);
-    }
+     if (tlinks!=null) tlinks.removeLinkListener(h);
   }
 
   synchronized
@@ -673,23 +638,6 @@ public class ToolEnvironment extends Environment {
     {
       super(tree, getAllScanner());
       setModifiable(mod);
-    }
-  }
-
-  private class LinkFolderTreeModel extends DefaultMandelListFolderTreeModel {
-    private boolean mod;
-
-    public LinkFolderTreeModel(MandelListFolderTree tree)
-    {
-      super(tree, getAllScanner());
-      setModifiable(false);
-      this.mod=!isReadonly();
-    }
-
-    @Override
-    protected boolean isListModifiable(MandelListFolder f)
-    {
-      return mod;
     }
   }
 

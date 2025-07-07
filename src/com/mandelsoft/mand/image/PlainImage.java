@@ -40,6 +40,11 @@ public class PlainImage extends ImageEventSupport
     }
   }
 
+  public MandelImage getMandelImage()
+  {
+    return this;
+  }
+   
   public MandelData getMandelData()
   {
     return data;

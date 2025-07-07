@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package com.mandelsoft.mand.meth;
 
 import com.mandelsoft.mand.tools.Mand;
@@ -46,14 +45,14 @@ public abstract class AbstractDoublePixelIterator extends AbstractPixelIterator 
                                      int limit)
   {
     super(rx, ry, limit, dx, dy);
-    bound=Mand.BOUND;
+    bound = Mand.BOUND;
 
-    this.dx=dx.doubleValue();
-    this.dy=dy.doubleValue();
-    this.x0=x0.doubleValue();
-    this.y0=y0.doubleValue();
-    this.drx=rx;
-    this.dry=ry;
+    this.dx = dx.doubleValue();
+    this.dy = dy.doubleValue();
+    this.x0 = x0.doubleValue();
+    this.y0 = y0.doubleValue();
+    this.drx = rx;
+    this.dry = ry;
   }
 
   public boolean isFast()
@@ -63,12 +62,12 @@ public abstract class AbstractDoublePixelIterator extends AbstractPixelIterator 
 
   public void setX(int x)
   {
-    cx=x0+(x*dx)/drx;
+    cx = x0 + (x * dx) / drx;
   }
 
   public void setY(int y)
   {
-    cy=y0-(y*dy)/dry;
+    cy = y0 - (y * dy) / dry;
   }
 
   public BigDecimal getCX()
@@ -83,13 +82,31 @@ public abstract class AbstractDoublePixelIterator extends AbstractPixelIterator 
 
   public double getX(BigDecimal x)
   {
-    double xd=x.doubleValue();
-    return (xd-x0)*drx/dx;
+    double xd = x.doubleValue();
+    return (xd - x0) * drx / dx;
   }
 
   public double getY(BigDecimal y)
   {
-    double yd=y.doubleValue();
-    return (y0-yd)*dry/dy;
+    double yd = y.doubleValue();
+    return (y0 - yd) * dry / dy;
+  }
+
+  protected static int iter(double x, double y, double px, double py,
+                            double bound, int limit)
+  {
+    double x2 = x * x;
+    double y2 = y * y;
+    int it = 0;
+
+    while (x2 + y2 < bound && ++it <= limit) {
+      double xn = x2 - y2 + px;
+      double yn = 2 * x * y + py;
+      x = xn;
+      x2 = x * x;
+      y = yn;
+      y2 = y * y;
+    }
+    return it;
   }
 }

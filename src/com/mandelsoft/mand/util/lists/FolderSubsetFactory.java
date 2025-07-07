@@ -31,10 +31,17 @@ public class FolderSubsetFactory extends SubAreaFactory {
   public FolderSubsetFactory(MandelScanner scanner, MandelName basename,
                        MandelListFolder folder, String title)
   {
-    super(scanner,basename,title);
-    this.folder=folder;
+    this(scanner, basename, folder, title, true, false);
   }
 
+  public FolderSubsetFactory(MandelScanner scanner, MandelName basename,
+                       MandelListFolder folder, String title,
+                       boolean uniqueNames, boolean projectMandelNames)
+  {
+    super(scanner,basename,title, uniqueNames, projectMandelNames);
+    this.folder=folder;
+  }
+  
   @Override
   protected boolean accept(QualifiedMandelName name)
   {

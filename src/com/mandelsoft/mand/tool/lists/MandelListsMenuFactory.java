@@ -30,15 +30,20 @@ import com.mandelsoft.mand.tool.util.MandelContextMenuFactory;
 public class MandelListsMenuFactory extends MandelContextMenuFactory {
   private List<MandelListViewAction> lists=new ArrayList<MandelListViewAction>();
   private boolean readonly;
+  private int hires;
 
-  public MandelListsMenuFactory(boolean readonly)
+  public MandelListsMenuFactory(boolean readonly, int hires)
   {
     super("Derived Lists");
+    this.hires = hires;
+    this.readonly = readonly;
     setup();
   }
 
   protected void setup()
   {
+    add(new ParentListAction());
+    add(new RelatedListAction());
     add(new FavoritesListAction());
     add(new TodoListAction());
     add(new SubAreaListAction());
@@ -47,10 +52,16 @@ public class MandelListsMenuFactory extends MandelContextMenuFactory {
     add(new DeadEndListAction());
     add(new PendingWorkListAction());
     add(new MandelLeafListAction());
-    if (!readonly)
+    add(new TitleListAction());
+    if (!readonly) {
       add(new UnseenListAction());
+      add(new SeenListAction());
+    }
     add(new RequestListAction());
-
+    add(new CorruptedListAction());
+    add(new HighResolutionListAction(hires));
+    add(new VariantListAction());
+    
     add(new DirectAreaMarkerListAction());
     add(new AreaMarkerListAction());
     
