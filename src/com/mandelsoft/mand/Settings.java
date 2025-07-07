@@ -70,6 +70,8 @@ public class Settings {
   static public final String VARIANT_SEEN_PATH="path.variant.seen";
   static public final String RASTER_SAVE_PATH="path.raster.save";
   
+  static public final String RASTER_JOIN_PATH="path.raster.join";
+  
   static public final String AREACOLMAP_PATH="path.areacolormap";
   static public final String AREACOLMAP_SAVE_PATH="path.areacolormap.save";
   static public final String AREACOLMAP_BACKUP_PATH="path.areacolormap.backup";
@@ -106,12 +108,19 @@ public class Settings {
 
   static public final String NESTED="path.base";
   static public final String ALIASES="aliases";
+  
+  static public final String PRESENTATION_MODE="presentationmode";
 
   static public final String COLORMAP_CACHE_SIZE="cache.colormaps";
   
   static public final String HIRES="default.highres";
   static public final String CLEAN_BLACK_LIMIT="default.cleanblacklimit";
   static public final String DETECTION_NEIGHBORHOOD="default.detectionneighborhood";
+  
+  static public final String DISPLAY_PIXEL_TOOLTIP="default.display.pixeltooltip";
+  static public final String PIXEL_TOOLTIP_PIXELINFO="PIXELINFO";
+  static public final String PIXEL_TOOLTIP_SUBAREANAME="SUBAREANAME";
+  static public final String PIXEL_TOOLTIP_COORDINATES="COORDINATES";
   
   ////////////////////////////////////////////////////////////////////////
   // factory
@@ -316,7 +325,9 @@ public class Settings {
     raw.setProperty(IMAGE_SAVE_PATH, "${"+SAVE_PATH+"}");
     raw.setProperty(RASTER_SAVE_PATH, "${"+SAVE_PATH+"}");
     raw.setProperty(AREACOLMAP_SAVE_PATH, "${"+SAVE_PATH+"}");
+    raw.setProperty(RASTER_JOIN_PATH, "${"+RASTER_SAVE_PATH+"}");
     raw.setProperty(RASTER_PATH, "${"+RASTER_SAVE_PATH+"};"+
+            "${"+RASTER_JOIN_PATH+"};"+
             "${"+RASTER_SEEN_PATH+"};"+
             "${"+VARIANT_SEEN_PATH+"}");
     raw.setProperty(RASTERIMAGE_SAVE_PATH, "${"+SAVE_PATH+"}");
@@ -325,6 +336,7 @@ public class Settings {
 
     raw.setProperty(PATH, "${"+IMAGE_SAVE_PATH+"};${"+
             RASTERIMAGE_SAVE_PATH+"};${"+
+            RASTER_JOIN_PATH+"};${"+
             RASTER_SAVE_PATH+"};${"+
             RASTER_SEEN_PATH+"};${"+
             VARIANT_SEEN_PATH+"};${"+

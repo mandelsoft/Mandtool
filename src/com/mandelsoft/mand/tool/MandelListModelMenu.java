@@ -26,12 +26,12 @@ import javax.swing.JOptionPane;
 public class MandelListModelMenu extends AbstractMandelListModelMenu {
   // copied from MandelListMenu : found no better way
   
-  public MandelListModelMenu(MandelWindowAccess access, MandelListModel model)
+  public MandelListModelMenu(MandelWindowAccess access, MandelListBaseModel model)
   {
     this("Load", access, model);
   }
   
-  public MandelListModelMenu(String name, MandelWindowAccess access, MandelListModel model)
+  public MandelListModelMenu(String name, MandelWindowAccess access, MandelListBaseModel model)
   {
     super(name, access, model);
   }

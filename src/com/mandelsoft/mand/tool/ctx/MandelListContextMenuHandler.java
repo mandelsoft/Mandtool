@@ -38,7 +38,7 @@ import com.mandelsoft.mand.scan.MandelScannerUtils;
 import com.mandelsoft.mand.tool.MandelAreaViewDialog;
 import com.mandelsoft.mand.tool.MandelImageAreaDialog;
 import com.mandelsoft.mand.tool.MandelImagePanel;
-import com.mandelsoft.mand.tool.MandelListGaleryDialog;
+import com.mandelsoft.mand.tool.MandelListGalleryDialog;
 import com.mandelsoft.mand.tool.MandelListModel;
 import com.mandelsoft.mand.tool.MandelListModelMenu;
 import com.mandelsoft.mand.tool.MandelListModelSource;
@@ -234,11 +234,12 @@ public abstract class MandelListContextMenuHandler
       MandelWindowAccess access=getMandelWindowAccess();
       Environment env=access.getEnvironment();
       MandelScanner scanner=env.getImageDataScanner();
-      Set<MandelHandle> set=scanner.getMandelHandles(n);;
-      while (!MandelScannerUtils.hasImageData(set)) {
+      Set<MandelHandle> set;
+      do {
         n=new QualifiedMandelName(n.getMandelName().getParentName());
         set=scanner.getMandelHandles(n);
       }
+      while (!MandelScannerUtils.hasImageData(set));
       return n;
     }
   }
@@ -402,11 +403,11 @@ public abstract class MandelListContextMenuHandler
     }
   }
 
-  private class GalerySelectedAction extends ContextAction {
+  private class GallerySelectedAction extends ContextAction {
 
-    public GalerySelectedAction()
+    public GallerySelectedAction()
     {
-      super("Show as galery");
+      super("Show as gallery");
     }
 
     public void actionPerformed(ActionEvent e)
@@ -414,9 +415,9 @@ public abstract class MandelListContextMenuHandler
       String title;
       MandelList ml=getSelectedItems();
       if (ml!=null && ml.size()>0) {
-        title="Galery for selected areas ("+Utils.sizeString(ml.size(),"entry")+")";
+        title="Gallery for selected areas ("+Utils.sizeString(ml.size(),"entry")+")";
         System.out.println(title);
-        new MandelListGaleryDialog(getMandelWindowAccess(),ml,title);
+        new MandelListGalleryDialog(getMandelWindowAccess(),ml,title);
       }
     }
   }
@@ -442,7 +443,7 @@ public abstract class MandelListContextMenuHandler
   protected Action saveImagesAction=new SaveImagesAction();
 
   protected Action saveSelectedImagesAction=new SaveSelectedImagesAction();
-  protected Action galerySelectedAction=new GalerySelectedAction();
+  protected Action gallerySelectedAction=new GallerySelectedAction();
 
   protected JPopupMenu createLabeledMenu(String text)
   {
@@ -545,7 +546,7 @@ public abstract class MandelListContextMenuHandler
           menu.add(new MandelListModelMenu("Links", mp, m));
         }
       }
-      else {
+      if (!sel.isRoot()) {
         menu.add(loadParentAction);
       }
       link.setEnabled(link.getItemCount()>0);
@@ -555,7 +556,7 @@ public abstract class MandelListContextMenuHandler
     }
     
     if (mp!=null) {
-      if (access!=null) {
+      if (access!=null && sel != null) {
         MandelHandle h=access.getEnvironment().getImageDataScanner().getMandelData(sel);
         if (h!=null) {
            if (sep) menu.addSeparator();
@@ -609,7 +610,7 @@ public abstract class MandelListContextMenuHandler
     }
 
     menu.add(new JMenuItem(saveSelectedImagesAction));
-    menu.add(new JMenuItem(galerySelectedAction));
+    menu.add(new JMenuItem(gallerySelectedAction));
 
     return menu;
   }

@@ -32,6 +32,11 @@ import com.mandelsoft.swing.ChangeListenerSupport;
 public class MapperModel extends AbstractListModel implements ComboBoxModel {
   public static boolean debug=false;
 
+  public final static int CYCLIC_INDEX = 0;
+  public final static int EXPONENTIAL_INDEX = 1;
+  public final static int STATISTIC_INDEX = 2;
+  public final static int OPTIMAL_INDEX = 3;
+  
   private List<MapperCreator> mappers;
   private MapperCreator selected;
   private ChangeListenerSupport listeners=new ChangeListenerSupport();
@@ -48,6 +53,7 @@ public class MapperModel extends AbstractListModel implements ComboBoxModel {
   private void setup()
   {
     addCreator(new CyclicMapperCreator());
+    addCreator(new ExponentialMapperCreator());
     addCreator(new StatisticMapperCreator());
     addCreator(new OptimalMapperCreator());
   }

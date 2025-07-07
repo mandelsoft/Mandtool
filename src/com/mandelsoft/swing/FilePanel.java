@@ -30,6 +30,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import com.mandelsoft.util.Utils;
+import java.awt.event.FocusListener;
 
 /**
  *
@@ -67,6 +68,11 @@ public class FilePanel extends GBCPanel {
     add(select, GBC(2, 0).setWeight(0, 0));
     select.setMargin(new Insets(0, 0, 0, 0));
     select.addActionListener(new FileChooserAction());
+  }
+
+  @Override
+  public synchronized void addFocusListener(FocusListener l) {
+    field.addFocusListener(l);
   }
 
   public boolean isEditable()

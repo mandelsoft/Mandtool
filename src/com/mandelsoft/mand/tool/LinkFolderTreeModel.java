@@ -72,6 +72,7 @@ public class LinkFolderTreeModel extends DefaultMandelListFolderTreeModel {
     MandelList list = new DefaultMandelList();
     HashList<MandelName> pending=new HashList<>();
     Set<MandelName> closure = new HashSet<>();
+    list.add(new QualifiedMandelName(n));
     closure.add(n);
     pending.add(n);
 

@@ -52,4 +52,6 @@ public interface MandelConstants {
   public static final String RASTERIMAGE_SUFFIX=".mi";
   public static final String IMAGE_SUFFIX=".mpng";
   public static final String INCOMPLETE_SUFFIX=".ms";
+  
+  public static final String REF_QUALIFIER_PREFIX="ref";
 }

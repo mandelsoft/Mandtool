@@ -20,6 +20,8 @@
 package com.mandelsoft.swing;
 
 import com.mandelsoft.util.BigDecimalFormat;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.GridBagLayout;
 import java.math.BigDecimal;
 import java.text.DateFormat;
@@ -51,7 +53,7 @@ import javax.swing.text.NumberFormatter;
 public class FormattedField extends JFormattedTextField {
 
   static boolean debug=false;
-  
+   
   ///////////////////////////////////////////////////////////////////////
   // own formal objects to control input
   ///////////////////////////////////////////////////////////////////////

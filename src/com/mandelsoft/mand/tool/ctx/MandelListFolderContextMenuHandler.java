@@ -23,10 +23,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.tree.TreePath;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.tool.MandelImagePanel;
-import com.mandelsoft.mand.tool.MandelListFolderGaleryDialog;
+import com.mandelsoft.mand.tool.MandelListFolderGalleryDialog;
 import com.mandelsoft.mand.tool.MandelListFolderTreeModel;
 import com.mandelsoft.mand.tool.MandelListFolderTreeModelSource;
-import com.mandelsoft.mand.tool.MandelListGaleryDialog;
+import com.mandelsoft.mand.tool.MandelListGalleryDialog;
 import com.mandelsoft.mand.tool.MandelListModel;
 import com.mandelsoft.mand.tool.MandelListSelector;
 import com.mandelsoft.mand.tool.MandelListTableModel;
@@ -99,7 +99,7 @@ public class MandelListFolderContextMenuHandler
     public void actionPerformed(ActionEvent e)
     {
       MandelWindowAccess access=getMandelWindowAccess();
-      new MandelListFolderGaleryDialog(access,getModel().getEffectiveFolderTreeModel(),
+      new MandelListFolderGalleryDialog(access,getModel().getEffectiveFolderTreeModel(),
                                               getSelectedItem());
     }
   }
@@ -113,7 +113,7 @@ public class MandelListFolderContextMenuHandler
     {
 
       MandelWindowAccess access=getMandelWindowAccess();
-      new MandelListGaleryDialog(access,getModel().getEffectiveFolderTreeModel(),
+      new MandelListGalleryDialog(access,getModel().getEffectiveFolderTreeModel(),
                                         getSelectedItem());
     }
   }

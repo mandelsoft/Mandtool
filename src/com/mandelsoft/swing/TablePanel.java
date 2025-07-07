@@ -178,6 +178,7 @@ public class TablePanel<T extends TableModel>
     JLabel c;
 
     showsize=true;
+    title=header;
     if (debug) System.out.println("*** creating "+this);
     if (action!=null) addActionListener(action);
     if (!com.mandelsoft.util.Utils.isEmpty(header)) {
@@ -246,7 +247,8 @@ public class TablePanel<T extends TableModel>
 
   protected JTable createTable()
   {
-    return new IJTable();
+    JTable t =  new IJTable();
+    return t;
   }
 
   protected void setupTable(JTable table)
@@ -294,11 +296,35 @@ public class TablePanel<T extends TableModel>
     return table.convertColumnIndexToModel(index);
   }
 
+  public ListSelectionModel getSelectionModel()
+  {
+    return table.getSelectionModel();
+  }
+  
   public void setSelectedRow(int index)
   {
     table.clearSelection();
-    index=table.convertRowIndexToView(index);
+   // index=table.convertRowIndexToView(index);
     table.addRowSelectionInterval(index, index);
+    table.scrollRectToVisible(table.getCellRect(index, 0, true));
+  }
+  
+  public void setSelectedIndex(int index)
+  {
+    table.clearSelection();
+   index=table.convertRowIndexToView(index);
+    table.addRowSelectionInterval(index, index);
+    table.scrollRectToVisible(table.getCellRect(index, 0, true));
+  }
+  
+  public int getRowCount()
+  {
+    return table.getRowCount();
+  }
+  
+  public int getSelectedRow()
+  {
+    return table.getSelectedRow();
   }
   
   public int getSelectedIndex()

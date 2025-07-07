@@ -58,6 +58,16 @@ public class MandelVariationCreationDialog extends MandelAreaCreationDialog {
     return new VariationView(name,(MandelInfo)info);
   }
   
+  @Override
+  protected long getAreaCreationTime()
+  { // keep original area creation time for variation
+    long t = getMandelWindowAccess().getMandelData().getInfo().getCreationTime();
+    if (t == 0 ) {
+      t=super.getAreaCreationTime();
+    }
+    return t;
+  }
+  
   ///////////////////////////////////////////////////////////////////////
   // view
   ///////////////////////////////////////////////////////////////////////

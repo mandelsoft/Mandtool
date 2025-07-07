@@ -16,6 +16,7 @@
  */
 package com.mandelsoft.mand.tool;
 
+import com.mandelsoft.mand.Environment;
 import com.mandelsoft.swing.worker.UIFunction;
 import com.mandelsoft.swing.worker.UIExecution;
 import com.mandelsoft.mand.MandelInfo;
@@ -231,6 +232,7 @@ public class PictureSaveDialog extends MandelDialog {
     private String fmt;
     private int width;
     private boolean showDecoration;
+    private MandelImagePanel mp;
 
     public Worker(List<MandelHandle> list, MandelWindowAccess acc,
                   String path, String fmt, int width, boolean showDecoration)
@@ -247,9 +249,9 @@ public class PictureSaveDialog extends MandelDialog {
       this.mode=cmm.getResizeMode();
       this.mapper=acc.getMapperModel().getMapper();
 
-      MandelImagePanel mp=acc.getMandelImagePane();
+      mp=acc.getMandelImagePane();
       if (mp!=null&&mp.getParentColormapModel().isSet()) {
-        cmfac=new CachedUpstreamColormapSourceFactory(env.getImageDataScanner(),
+        cmfac=new CachedUpstreamColormapSourceFactory(env.getAreaColormapScanner(),
                                                       mp.getColormapModel(),
                                                       env.getColormapCache());
         System.out.println("-> save with upstream colormap");
@@ -268,7 +270,7 @@ public class PictureSaveDialog extends MandelDialog {
     public Decoration getDecoration(MandelInfo info)
     {
       String deco = info.getProperty(MandelInfo.ATTR_TITLE);
-      String copyright = env.getCopyright(info);
+      String copyright = mp.getCopyright(info);
       if (!Utils.isEmpty(copyright)) {
         if (Utils.isEmpty(deco)) {
           deco = copyright;

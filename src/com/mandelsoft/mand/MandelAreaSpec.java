@@ -131,6 +131,7 @@ public class MandelAreaSpec extends MandArith {
     return x1;
   }
 
+
   public BigDecimal getXMin()
   {
     setAlt();
@@ -206,6 +207,18 @@ public class MandelAreaSpec extends MandArith {
            getDY().equals(o.getDY());
   }
 
+  public boolean hasOverlapWith(MandelAreaSpec o)
+  {
+     if (getXMin().compareTo(o.getXMax()) < 0
+            && o.getXMin().compareTo(getXMax()) < 0
+            && getYMin().compareTo(o.getYMax()) < 0
+            && o.getYMin().compareTo(getYMax()) < 0) {
+      return true;
+
+    }
+    return false;
+  }
+  
   @Override
   public boolean equals(Object obj)
   {

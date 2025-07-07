@@ -46,7 +46,7 @@ public class MappedIntMatrix implements IntMatrix {
     }
     RandomAccessFile rfile = new RandomAccessFile(file, "rw");
     FileChannel channel = rfile.getChannel();
-    MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, size * 4);
+    MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, size);
     this.buffer = buffer.asIntBuffer();
     this.rx = rx;
     this.ry = ry;

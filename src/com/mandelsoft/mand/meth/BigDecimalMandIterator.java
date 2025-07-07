@@ -15,6 +15,7 @@
  */
 package com.mandelsoft.mand.meth;
 
+import com.mandelsoft.mand.MandelSpec;
 import com.mandelsoft.mand.tools.Mand;
 import static com.mandelsoft.mand.util.MandArith.b0;
 import java.math.BigDecimal;
@@ -36,6 +37,12 @@ public class BigDecimalMandIterator extends AbstractBigDecimalPixelIterator {
                                   int limit)
     {
       super(x0,y0,dx,dy,rx,ry,limit);
+      bound=new BigDecimal(Mand.BOUND);
+    }
+    
+    public BigDecimalMandIterator(MandelSpec spec)
+    {
+      super(spec.getXMin(),spec.getYMax(),spec.getDX(),spec.getDY(),spec.getRX(),spec.getRY(),spec.getLimitIt());
       bound=new BigDecimal(Mand.BOUND);
     }
 

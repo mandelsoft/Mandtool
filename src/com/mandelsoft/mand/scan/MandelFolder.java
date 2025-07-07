@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import com.mandelsoft.io.FolderLock;
 import java.util.HashMap;
+import com.mandelsoft.io.FolderLock;
+import com.mandelsoft.mand.MandelData;
+import static com.mandelsoft.mand.scan.MandelFolder.getMandelFolder;
 
 /**
  *
@@ -35,7 +37,13 @@ public class MandelFolder extends FolderLock  {
   synchronized
   public static MandelFolder getMandelFolder(File f) throws IOException
   {
-    f=f.getCanonicalFile();
+    if (f == null) {
+      return null;
+    }
+    File ff=f.getCanonicalFile();
+    if (ff != null) {
+      f=ff;
+    }
     if (!f.isDirectory()) f=f.getParentFile();
     if (debug) System.out.println("%%% get mandel folder "+f);
     MandelFolder m=map.get(f);
@@ -182,7 +190,7 @@ public class MandelFolder extends FolderLock  {
             else {
               if (debug) System.out.println("remove from other "+old.getParentFile());
               src=getMandelFolder(old.getParentFile());
-              //src._handleRemoved(old);
+              src.handleRemoved(old);
             }
             _handleAdded(dst);
             return true;
@@ -239,6 +247,28 @@ public class MandelFolder extends FolderLock  {
     }
   }
 
+  synchronized
+  public void update(File f, MandelData d) throws IOException
+  {
+    boolean full=false;
+    f=f.getCanonicalFile();
+    if (!f.getParentFile().equals(getFolder())) {
+      throw new IllegalArgumentException(f+" not in directory");
+    }
+    lock();
+    try {
+      if (cache!=null) {
+        full=cache.update();
+        cache.add(f.getName(), d, f.lastModified());
+        cache.write();
+        folderUpdated(getFolder());
+      }
+    }
+    finally {
+      releaseLock();
+    }
+  }
+  
   @Override
   public String toString()
   {
@@ -302,7 +332,10 @@ public class MandelFolder extends FolderLock  {
     public static boolean delete(File f) throws IOException
     {
       MandelFolder mf=getMandelFolder(f.getParentFile());
-      return mf.remove(f);
+      if (mf != null) {
+        return mf.remove(f);
+      }
+      return false;
     }
 
     public static boolean renameTo(File s, File d) throws IOException

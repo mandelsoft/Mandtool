@@ -33,7 +33,7 @@ import com.mandelsoft.mand.image.MandelImage;
 import com.mandelsoft.mand.tool.DefaultMandelListTableModel;
 import com.mandelsoft.mand.tool.History;
 import com.mandelsoft.mand.tool.MandelImagePanel;
-import com.mandelsoft.mand.tool.MandelListGaleryPanel;
+import com.mandelsoft.mand.tool.MandelListGalleryPanel;
 import com.mandelsoft.mand.tool.MandelListProxyListModelForTable;
 import com.mandelsoft.mand.tool.MandelListTableModel;
 import com.mandelsoft.mand.tool.MandelWindowAccess;
@@ -213,7 +213,7 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
   // there we are
   ////////////////////////////////////////////////////////////////////
 
-   MandelListGaleryPanel panel;
+   MandelListGalleryPanel panel;
    ToolEnvironment env;
    Timer timer;
    int maxx;
@@ -231,10 +231,10 @@ public class GaleryStarter extends JApplet implements MandelWindowAccess {
 
     if (width>0 && height>0) {
       Dimension d=new Dimension(width,height);
-      panel=new MandelListGaleryPanel(proxyModel,rows,d);
+      panel=new MandelListGalleryPanel(proxyModel,rows,d);
     }
     else {
-      panel=new MandelListGaleryPanel(proxyModel,rows);
+      panel=new MandelListGalleryPanel(proxyModel,rows);
     }
     panel.setMaxFrame(maxx);
     MandelImage.Factory factory=new MandelImage.Factory(env.getDefaultColormap());

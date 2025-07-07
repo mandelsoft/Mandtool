@@ -86,7 +86,7 @@
         <mkdir dir="${zip.dir}/lib"/>
 
         <copy todir="${zip.dir}/lib">
-            <fileset dir="${zip.dir}/lib">
+            <fileset dir="lib">
                 <exclude name="README.TXT"/>
                 <exclude name="lib/**"/>
             </fileset>

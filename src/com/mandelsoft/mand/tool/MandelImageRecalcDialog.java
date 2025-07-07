@@ -15,6 +15,8 @@
  */
 package com.mandelsoft.mand.tool;
 
+import static com.mandelsoft.mand.MandelConstants.INFO_SUFFIX;
+import static com.mandelsoft.mand.MandelConstants.REF_QUALIFIER_PREFIX;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -79,10 +81,12 @@ public class MandelImageRecalcDialog extends MandelImageAreaDialog {
       super.setupButtons();
       try {
         if (hasMarkRefCoordinates()) {
+          newButtonPanel();
           redobutton=createButton("Request Redo", "Request recalculation based on refrence coordinates of mark",
                      new RedoAction());
           stdredobutton=createButton("Request Std Redo", "Request recalculation based on refrence coordinates of mark",
                      new RedoAction(MandelInfo.ATTR_STDREFCOORD));
+          createButton("NextRefName", "Set next reference name for redo request", new RefAction());
         }
       }
       catch (MandelException ex) {
@@ -187,6 +191,50 @@ public class MandelImageRecalcDialog extends MandelImageAreaDialog {
         updateSlave();
       }
     }
-  }
+    
+     protected class RefAction implements ActionListener {
+    
+      public RefAction()
+      {
+      }
 
+      public void actionPerformed(ActionEvent e)
+      {
+        String f = getFilename();
+        if (f==null || f.trim().isEmpty()) {
+          f=initialFilename;
+        }
+        
+        File file=new File(f);
+        QualifiedMandelName qn = QualifiedMandelName.create(file);
+        if (qn==null) {
+          return;
+        }
+        String qual = qn.getVariant();
+        if (qual==null) {
+          qual="";
+        }
+        
+        int cnt=1;
+        String q;
+        do  {
+          q=String.format("%s%d", REF_QUALIFIER_PREFIX, cnt);
+          if (!qual.isEmpty()) {
+            q+="-"+qual;
+          }
+          cnt++;
+        }
+        while (getEnvironment().getMetaScanner().getMandelHandle(new QualifiedMandelName(qn.getMandelName(), q))!=null);
+       
+        String p = file.getParent();
+        String next=new QualifiedMandelName(qn.getMandelName(), q).getName()+INFO_SUFFIX;
+        if (p != null) {
+          setFilename(new File(file.getParentFile(), next).getPath());
+        } else {
+          setFilename(next);
+        }
+        updateSlave();
+      }
+    }
+  }
 }

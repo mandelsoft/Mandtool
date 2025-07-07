@@ -47,8 +47,8 @@ public class MandelVariantModel extends AbstractListModel
   {
     this.scanner=scanner;
     this.list=new ArrayList<MandelHandle>();
-  }
-
+  }  
+  
   public MandelName getName()
   {
     return name;
@@ -122,6 +122,12 @@ public class MandelVariantModel extends AbstractListModel
 //    return h==null?null:h.getName().toString();
 //  }
 
+  public Object getHandleAt(int index)
+  {
+     if (index>=list.size()) return null;
+     return list.get(index);
+  }
+  
   public Object getElementAt(int index)
   {
     MandelHandle h;

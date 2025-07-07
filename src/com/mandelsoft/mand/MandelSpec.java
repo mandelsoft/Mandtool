@@ -15,6 +15,7 @@
  */
 package com.mandelsoft.mand;
 
+import com.mandelsoft.mand.util.MandArith;
 import java.math.BigDecimal;
 
 /**
@@ -123,12 +124,19 @@ public class MandelSpec extends MandelAreaSpec {
 
   public boolean isSameSpec(MandelSpec o)
   {
-    return super.isSameArea(o) &&
+    return isSameArea(o) &&
            getRX()==o.getRX() &&
            getRY()==o.getRY() &&
            getLimitIt()==o.getLimitIt();
   }
-
+  
+  public boolean isSameVariant(MandelInfo o)
+  {
+    return isSameArea(o) &&
+           getRX()==o.getRX() &&
+           getRY()==o.getRY();
+  }
+  
   @Override
   public boolean equals(Object obj)
   {

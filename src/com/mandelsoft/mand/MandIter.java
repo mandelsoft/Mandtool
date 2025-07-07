@@ -21,16 +21,6 @@ import java.math.BigDecimal;
 import com.mandelsoft.mand.util.MandArith;
 import com.mandelsoft.mand.meth.AbstractPixelIterator;
 import com.mandelsoft.mand.meth.DefaultMandIteratorFactory;
-import com.mandelsoft.mand.util.MandUtils;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -64,36 +54,9 @@ public class MandIter extends MandArith {
   {
     
     return new DefaultMandIteratorFactory(optimized, useDLL).createPixelIterator(mi, properties);
-    /*
-    BigDecimal sx = new BigDecimal(0);
-    BigDecimal sy = new BigDecimal(0);
-
-    BigDecimal x0 = mi.getXMin();
-    BigDecimal y0 = mi.getYMax();
-    BigDecimal dx = mi.getDX();
-    BigDecimal dy = mi.getDY();
-    int rx = mi.getRX();
-    int ry = mi.getRY();
-    int limit = mi.getLimitIt();
-
-    if (MandArith.div(dx, rx).compareTo(br) > 0 && MandArith.div(dy, ry).compareTo(br) > 0) {
-      System.out.println("double iteration mode");
-      return new DoubleMandIterator(sx, sy, x0, y0, dx, dy, rx, ry, limit);
-    }
-    if (optimized) {
-      System.out.println("optimized iteration mode");
-      return new OptimizedBigDecimalMandIterator(x0, y0, dx, dy, rx, ry, limit, properties);
-    }
-    if (useDLL) {
-      System.out.println("long double iteration mode");
-      return new LongDoubleMandIterator(sy, sy, x0, y0, dx, dy, rx, ry, limit);
-    }
-    System.out.println("big decimal iteration mode");
-    return new BigDecimalMandIterator(sx, sy, x0, y0, dx, dy, rx, ry, limit);
-    */
   }
-
  
+
 
   /////////////////////////////////////////////////////////////////////////
   // big decimal iterator support

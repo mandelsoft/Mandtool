@@ -1,3 +1,19 @@
+Version 1.5-rc3
+   - Move shown image area by dragging with left button and alt/cntrl pressed
+   - Upper Fork and Key Area derived list for actual area
+   - Back and Forth menu item
+   - merging rasters to solve problems with superfractalthing maths.
+   - special area names (ref<x>) for merge support
+   - adjustment tab for image control
+   - exponential mapper (experimental)
+   - saving modified raster
+   - next/prev for colormap lists
+   - color chooser scroll color bar
+   - fix: optimal mapper with colormap substitution and resize
+   - fix: color chooser labels 
+   - fix: number field resize on mandel area views (DPI schange)
+   - fix: color sample on color chooser (DPI change)
+
 Version 1.5-rc2
    - reference coordinates handling in main menu
    - explicitly remembered reference coordinates valid for redo
@@ -30,7 +46,7 @@ Version 1.5-rc1
 
 Version 1.4
    - navigation to area colormap
-   - preload of images for galery ticker
+   - preload of images for gallery ticker
    - control shutdown mode by tool
    - create area links to areas of other mandel windows
    - direct removal of area links
@@ -100,12 +116,12 @@ Version 0.9
    - fix bugs in readonly mode
    - optimize http access
    * 0.9.1
-   - async galery loader
+   - async gallery loader
    - folder lock fix
    - unseen list for area
    * 0.9.2
-   - ticker for list galeries
-   - ticker option for galery applet
+   - ticker for list galleries
+   - ticker option for gallery applet
    - oops, misunderstanding in proxy handling
    - home navigation for sub area based derived lists
    - area tagging
@@ -135,12 +151,12 @@ Version 0.8
    * 0.8.3
    - configurable image pixel tooltip: pixel info/subarea info
    * 0.8.4
-   - image and folder galeries
-   - applet galery
+   - image and folder galleries
+   - applet gallery
    - leaf and pending mandel lists
    - derived mandel list
    - scanner rescan propagation to dependent list models
-   - list and galery item context menus
+   - list and gallery item context menus
    - trip slide shows
 
 Version 0.7

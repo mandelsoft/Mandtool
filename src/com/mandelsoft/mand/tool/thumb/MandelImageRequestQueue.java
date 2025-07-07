@@ -24,6 +24,7 @@ import com.mandelsoft.mand.image.MandelImage.Factory;
 import com.mandelsoft.mand.scan.MandelHandle;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.tool.AbstractMandelListModel;
+import com.mandelsoft.mand.util.UpstreamColormapSource;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;

@@ -44,6 +44,11 @@ public class ExtendedColormapListModel extends DefaultColormapListModel {
     this.fireTableDataChanged();
   }
 
+  public boolean isMemorized(int index)
+  {
+    return index>=maps.size();
+  }
+  
   @Override
   public boolean remove(int index)
   {

@@ -46,18 +46,16 @@ import com.mandelsoft.mand.util.DeltaMandelList;
 import com.mandelsoft.mand.util.MandUtils;
 import com.mandelsoft.mand.util.MandelListFolderTree;
 import com.mandelsoft.mand.util.MemoryMandelListFolderTree;
+import com.mandelsoft.mand.util.QualifierSelector;
+import com.mandelsoft.mand.util.Refreshable;
 import com.mandelsoft.mand.util.ScannerColormapList;
 import com.mandelsoft.mand.util.ScannerMandelColormapList;
 import com.mandelsoft.mand.util.TagList;
 import com.mandelsoft.mand.util.UniqueDefaultMandelList;
 import com.mandelsoft.util.Utils;
 import java.io.FileOutputStream;
-import static java.lang.Integer.parseInt;
 import java.net.MalformedURLException;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -286,7 +284,8 @@ public class Environment1 implements MandelConstants  {
   { autoRescan=b;
   }
 
-  public void refresh(MandelList list)
+ 
+  public void refresh(Refreshable list)
   { boolean save=autoRescan;
     autoRescan=true;
     list.refresh(false);
@@ -1181,35 +1180,7 @@ public class Environment1 implements MandelConstants  {
   
  public MandelHandle getMandelImageData(MandelName name)
   {
-    
-    Set<MandelHandle> set = getImageDataScanner().getMandelHandles(name);
-    if (set == null || set.isEmpty()) return null;
-    MandelHandle found=null;
-    int found_vers = -1;
-    for ( MandelHandle h : set) {
-      String q = h.getQualifier();
-      if (q==null || q.isEmpty()) {
-        if (found_vers < 0 ) {
-          found = h;
-        }
-      }
-      else {
-        Matcher m = vers.matcher(q);
-        if (m.matches()) {
-          int no = parseInt(q.substring(1));
-          if ( no > found_vers) {
-            found=h;
-            found_vers = no;
-          }
-        } else {
-          if (found==null) {
-            found=h;
-          }
-        }
-      }
-    }
-  
-    return found;
+    return new QualifierSelector(getImageDataScanner().getMandelHandles(name)).getSelected();
   }
 
   public MandelHandle getMandelImageData(QualifiedMandelName name)
@@ -1374,6 +1345,7 @@ public class Environment1 implements MandelConstants  {
   { String n=getProperty(Settings.RASTER_SAVE_PATH);
     String s=getProperty(Settings.RASTER_SEEN_PATH);
     String v=getProperty(Settings.VARIANT_SEEN_PATH);
+    String r=getProperty(Settings.RASTER_JOIN_PATH);
 
     if (f==null || isReadonly()) return false;
     if (!f.isFile()) return false;
@@ -1477,27 +1449,18 @@ public class Environment1 implements MandelConstants  {
 
         File store;
         try {
-          store=new File(s).getCanonicalFile();
+          if (mn.getQualifier()!=null && mn.getQualifier().startsWith(REF_QUALIFIER_PREFIX)) {
+            store=new File(r).getCanonicalFile();
+          }
+          else {
+            store=new File(s).getCanonicalFile();
+          }
         }
         catch (IOException ex) {
           return false;
         }
         if (!store.equals(root)&&f.isFile()) {
-          File nf=new File(store, f.getName());
-          File of=f.getFile();
-          try {
-            if (debug) System.out.println("relocate file "+of+" to "+store);
-            MandelFolder mf=MandelFolder.getMandelFolder(store);
-            if (mf.renameTo(of, nf)) {
-              if (of.exists()&&nf.exists()) {
-                if (debug) System.out.println("*** delete "+of);
-                of.delete();
-              }
-              return true;
-            }
-          }
-          catch (IOException ex) {
-          }
+          return move(f, store);
           //if (isAutoRescan()) newraster.rescan(false);
           //else addLogicalFile(nf);
         }
@@ -1509,6 +1472,29 @@ public class Environment1 implements MandelConstants  {
     }
   }
 
+  public boolean move( AbstractFile s, File d)
+  {
+    File nf = new File(d, s.getName());
+    File of = s.getFile();
+    try {
+      if (debug) {
+        System.out.println("relocate file " + of + " to " + d);
+      }
+      MandelFolder mf = MandelFolder.getMandelFolder(d);
+      if (mf.renameTo(of, nf)) {
+        if (of.exists() && nf.exists()) {
+          if (debug) {
+            System.out.println("*** delete " + of);
+          }
+          of.delete();
+        }
+        return true;
+      }
+    } catch (IOException ex) {
+    }
+    return false;
+  }
+  
   ////////////////////////////////////////////////////////////////////////////
   // update handling / delayed event dispatching
   ////////////////////////////////////////////////////////////////////////////

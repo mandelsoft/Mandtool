@@ -18,8 +18,6 @@ package com.mandelsoft.mand.tool;
 
 import com.mandelsoft.io.AbstractFile;
 import com.mandelsoft.mand.Coord;
-import com.mandelsoft.mand.MandIter;
-import com.mandelsoft.mand.Coord;
 import java.awt.Container;
 import java.awt.Rectangle;
 import java.awt.Font;
@@ -471,9 +469,9 @@ public abstract class MandelAreaViewDialog extends MandelDialog {
     {
       label.setLabelFor(field);
       label.setHorizontalAlignment(JLabel.LEFT);
-      add(label, new GBC(col*2, row[col]).setWeight(0, 0).setAnchor(GBC.WEST));
+      add(label, new GBC(col*2, row[col]).setWeight(0, 0).setAnchor(GBC.WEST).setFill(GBC.HORIZONTAL));
       add(field,
-            new GBC(col*2+1, row[col]++).setWeight(100, 10).setLeftInset(10));
+            new GBC(col*2+1, row[col]++).setWeight(1, 0).setLeftInset(10).setFill(GBC.HORIZONTAL));
       if (col>0 && field_length==LEN_1) updateFieldLength(LEN_2);
     }
 

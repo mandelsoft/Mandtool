@@ -27,6 +27,11 @@ import java.awt.Insets;
  */
 public class GBC extends GridBagConstraints
 {
+  
+  public GBC()
+  { this(0,0);
+  }
+  
    /**
     * Constructs a GBC with a given gridx and gridy position and all other grid
     * bag constraint values set to the default.
@@ -54,6 +59,25 @@ public class GBC extends GridBagConstraints
       setSpan(gridwidth, gridheight);
    }
 
+   public GBC setX(int x)
+   {
+     this.gridx=x;
+     return this;
+   }
+   
+   public GBC nextY()
+   {
+     this.gridy+=1;
+     this.gridx=0;
+     return this;
+   }
+   
+   public GBC nextX()
+   {
+     this.gridx+=1;
+     return this;
+   }
+   
    /**
     * Sets the Grid span.
     * @param gridwidth the width span 

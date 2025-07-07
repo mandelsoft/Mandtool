@@ -99,6 +99,11 @@ public class MandelImageAreaDialog extends MandelAreaViewDialog {
       filename.setText(n);
     }
 
+    public String getFilename()
+    {
+      return filename.getText();
+    }
+    
     @Override
     protected void setupFields()
     { NumberFormat fmt;

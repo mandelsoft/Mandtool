@@ -40,18 +40,21 @@ public class RasterCleaner {
 
     }
     
-    public void clean(int max, int r)
+    public int clean(int max, int r)
     {
-        for (int y = 0; y < ry; y++) {
-            for (int x = 0; x < rx; x++) {
-                if (raster.getData(x,y)==0) {
-                    int c = countBlack(x, y, r);
-                    if (c < max) {
-                        raster.setData(x, y, limit-1);
-                    }
-                }
+      int found = 0;
+      for (int y = 0; y < ry; y++) {
+        for (int x = 0; x < rx; x++) {
+          if (raster.getData(x, y) == 0) {
+            int c = countBlack(x, y, r);
+            if (c < max) {
+              raster.setData(x, y, limit - 1);
+              found++;
             }
+          }
         }
+      }
+      return found;
     }
     
     private int countBlack(int x, int y, int r) {

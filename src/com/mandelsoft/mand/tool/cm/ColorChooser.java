@@ -77,8 +77,8 @@ public class ColorChooser extends JDialog {
     
     if (!preview) {
       setLayout(new GridBagLayout());
-      colorSampleGBC = new GBC(0,0).setInsets(10,10,10,10)
-                                             .setFill(GBC.HORIZONTAL);
+      colorSampleGBC = new GBC(0,0).setInsets(10,10,10,10).setWeight(1, 1)
+                                             .setFill(GBC.BOTH);
       cc.setPreviewPanel(new JPanel());
     }
     

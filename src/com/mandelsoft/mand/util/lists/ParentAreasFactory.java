@@ -26,10 +26,17 @@ import com.mandelsoft.mand.util.MandelList;
  * @author Uwe Krueger
  */
 public class ParentAreasFactory implements MandelListFactory {
+  private String title;
   private MandelName basename;
 
   public ParentAreasFactory(MandelName basename)
   {
+    this("Parent Areas", basename);
+  }
+  
+  public ParentAreasFactory(String title, MandelName basename)
+  {
+    this.title=title;
     this.basename = basename;
   }
 
@@ -41,15 +48,22 @@ public class ParentAreasFactory implements MandelListFactory {
     MandelName n = basename;
     
     while (n != null) {
-      list.add(new QualifiedMandelName(n));
+      if (accept(n)) {
+        list.add(new QualifiedMandelName(n));
+      }
       n = n.getParentName();
     }
     return list;
   }
 
+  protected boolean accept(MandelName n)
+  {
+    return true;
+  }
+  
   @Override
   public String getTitle()
   {
-    return "Parent Areas for "+basename.toString();
+    return title+" for "+basename.toString();
   }
 }

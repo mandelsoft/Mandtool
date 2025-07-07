@@ -30,13 +30,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
 import com.mandelsoft.mand.cm.Colormap;
-import com.mandelsoft.mand.mapping.IdentityMapper;
 import com.mandelsoft.mand.mapping.Mapper;
 import com.mandelsoft.mand.mapping.Mapping;
 import com.mandelsoft.mand.cm.ColormapModel;
 import com.mandelsoft.mand.cm.ColormapModel.ResizeMode;
 import com.mandelsoft.mand.scan.MandelFolder;
 import com.mandelsoft.mand.util.MandUtils;
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -308,6 +308,7 @@ public class MandelData extends Command implements MandelConstants {
           System.out.println("keep smaller mapping "+mapping.getTargetSize()+
                              "<"+colormap.getSize());
         }
+        this.colormap=colormap;
       }
       else {
         // create new mapping
@@ -318,15 +319,15 @@ public class MandelData extends Command implements MandelConstants {
                           colormap.getSize()+"!="+mapping.getTargetSize());
       }
     }
-//    else {
+    else {
       this.colormap=colormap;
 //      if (colormap!=null && colormap.getSize()>=info.getTargetSize() &&
 //          mapping==null) {
 //        System.out.println("create identity mapping");
 //        setMapping(new IdentityMapper().createMapping(raster, colormap.getSize()));
 //      }
+    }
       setModified(true);
-//    }
   }
 
   public Colormap resizeColormap(ResizeMode mode, int size)

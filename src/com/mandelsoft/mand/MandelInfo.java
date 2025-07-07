@@ -39,6 +39,7 @@ public class MandelInfo extends MandelSpec
   public static final String ATTR_REFREDO = "reference-redo";
   public static final String ATTR_REFCOORD = "reference-coordinates";
   public static final String ATTR_STDREFCOORD = "standard-reference-coordinates";
+  public static final String ATTR_FRAGMENTSCALE = "fragment-scale";
   public static final String ATTR_REFPIXEL = "reference-pixel";
   public static final String ATTR_REFDEPTH = "reference-depth";
   public static final String ATTR_REDOLASTDEPTH = "redo-last-depth";
@@ -46,6 +47,8 @@ public class MandelInfo extends MandelSpec
   public static final String ATTR_REFCNT = "reference-count";
   public static final String ATTR_REFCORRUPTED = "reference-corrupted";
   public static final String ATTR_ITERATONMETHOD = "pixel-iteration-method";
+  public static final String ATTR_COMPOSED_TIME = "composed-time";
+  public static final String ATTR_COMPOSED_REFS = "composed-refs";
   
   private int version; // found version
   private boolean hidden;  // hidden area: hint for ui

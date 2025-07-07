@@ -166,6 +166,7 @@ public class RasterImage extends BufferedImage implements MandelImage,  MandelIm
 
   public void updateRaster()
   {
+    data.getRaster().setModified(true);
     // resize mode should not be used because colmap size is not changed
     setMapper(ResizeMode.RESIZE_LOCK_IPS, getMapper());
   }

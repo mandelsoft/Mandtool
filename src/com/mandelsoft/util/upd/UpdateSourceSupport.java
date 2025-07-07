@@ -36,9 +36,25 @@ public class UpdateSourceSupport implements UpdateSource {
     if (!objects.contains(o)) objects.add(o);
   }
 
+  public void tryAddUpdatableObject(Object o)
+  {
+    if (o instanceof UpdatableObject) {
+      UpdatableObject u = (UpdatableObject)o;
+      if (!objects.contains(u)) objects.add(u);
+    }
+  }
+  
   public void removeUpdatableObject(UpdatableObject o)
   {
     objects.remove(o);
+  }
+  
+  public void tryRemoveUpdatableObject(Object o)
+  {
+    if (o instanceof UpdatableObject) {
+      UpdatableObject u = (UpdatableObject)o;
+      objects.remove(u);
+    }
   }
 
   public void updateObjects(UpdateContext c)

@@ -17,6 +17,7 @@
 package com.mandelsoft.mand;
 
 import com.mandelsoft.io.AbstractFile;
+import static com.mandelsoft.mand.MandelConstants.REF_QUALIFIER_PREFIX;
 import com.mandelsoft.util.Utils;
 import java.io.File;
 
@@ -167,6 +168,40 @@ public class QualifiedMandelName implements ElementName<QualifiedMandelName> {
        }
     }
     return c;
+  }
+  
+  public String getRefPrefix() {
+
+    String qual = getQualifier();
+    if (qual == null) {
+      return null;
+    }
+
+    if (qual.startsWith(REF_QUALIFIER_PREFIX)) {
+      int idx = qual.indexOf("-");
+      if (idx > 0) {
+        return qual.substring(0, idx);
+      }
+      return qual;
+    }
+    return null;
+  }
+  
+  public String getVariant() {
+
+    String qual = getQualifier();
+    if (qual == null) {
+      return null;
+    }
+
+    if (qual.startsWith(REF_QUALIFIER_PREFIX)) {
+      int idx = qual.indexOf("-");
+      if (idx > 0) {
+        return qual.substring(idx+1);
+      }
+      return null;
+    }
+    return qual;
   }
   
   ////////////////////////////////////////////////////////////////////////

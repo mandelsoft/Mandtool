@@ -58,7 +58,7 @@ public class MapperControl {
     creatorPanel.setPreferredSize(new Dimension(300, 100));
     p.add(creatorPanel,new GBC(x,y+1,2,0).setWeight(100, 100));
     selection.addItemListener(new CreatorListener());
-    if (model.getSize()>0) selection.setSelectedIndex(1);
+    if (model.getSize()>0) selection.setSelectedIndex(MapperModel.STATISTIC_INDEX);
     this.panel=p;
   }
 

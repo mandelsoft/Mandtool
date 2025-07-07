@@ -69,16 +69,26 @@ public abstract class AbstractBigDecimalPixelIterator extends AbstractPixelItera
     return false;
   }
 
+  public BigDecimal getCX(int x)
+  {
+    return MandArith.add(x0, MandArith.div(MandArith.mul(dx, x), drx));
+  }
+
+  public BigDecimal getCY(int y)
+  {
+    return MandArith.sub(y0, MandArith.div(MandArith.mul(dy, y), dry));
+  }
+  
   public void setX(int x)
   {
     this.x = x;
-    cx = MandArith.add(x0, MandArith.div(MandArith.mul(dx, x), drx));
+    cx = getCX(x);
   }
 
   public void setY(int y)
   {
     this.y = y;
-    cy = MandArith.sub(y0, MandArith.div(MandArith.mul(dy, y), dry));
+    cy = getCY(y);
   }
 
   public BigDecimal getCX()

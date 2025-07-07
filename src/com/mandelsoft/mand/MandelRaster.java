@@ -26,6 +26,7 @@ import java.io.IOException;
  */
 public class MandelRaster implements MandelData.Part, IntMatrix {
   private IntMatrix raster;
+  private boolean modified;
 
   public MandelRaster()
   {
@@ -54,6 +55,16 @@ public class MandelRaster implements MandelData.Part, IntMatrix {
     return raster.getRY();
   }
 
+  public void setModified(boolean m)
+  {
+    modified=m;
+  }
+  
+  public boolean isModified()
+  {
+    return modified;
+  }
+  
   public int getData(int x, int y) {
     return raster.getData(x, y);
   }

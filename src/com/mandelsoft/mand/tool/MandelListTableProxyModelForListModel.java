@@ -20,6 +20,7 @@ import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.scan.MandelScanner;
 import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.util.ChangeEvent;
+import javax.swing.event.ListDataListener;
 
 /**
  *
@@ -33,6 +34,26 @@ public class MandelListTableProxyModelForListModel extends AbstractMandelListTab
   {
     model = m;
     m.addMandelListListener(new Listener());
+  }
+
+  @Override
+  public int getSize() {
+    return model.getSize();
+  }
+
+  @Override
+  public Object getElementAt(int index) {
+    return model.getElementAt(index);
+  }
+
+  @Override
+  public void addListDataListener(ListDataListener l) {
+    model.addListDataListener(l);
+  }
+
+  @Override
+  public void removeListDataListener(ListDataListener l) {
+    model.removeListDataListener(l);
   }
 
   private class Listener implements MandelListListener {

@@ -28,6 +28,7 @@ import javax.swing.text.DefaultFormatter;
 import javax.swing.text.DefaultFormatterFactory;
 import com.mandelsoft.mand.MandelData;
 import com.mandelsoft.mand.MandelInfo;
+import static com.mandelsoft.mand.MandelInfo.ATTR_COMPOSED_TIME;
 
 /**
  *
@@ -59,6 +60,7 @@ public class ModTimes extends MandelSpecDialog<ModTimes.ModPanel>  {
     private JFormattedTextField infotime;
     private JFormattedTextField rastertime;
     private JFormattedTextField imagetime;
+    private JFormattedTextField comptime;
 
     public ModPanel(String name)
     {
@@ -67,7 +69,8 @@ public class ModTimes extends MandelSpecDialog<ModTimes.ModPanel>  {
       infotime=createTextField("Area creation time",2);
       rastertime=createTextField("Raster creation time",3);
       imagetime=createTextField("Image creation time",4);
-      addBorder(0,1,2,4);
+      comptime=createTextField("Image composition time",5);
+      addBorder(0,1,2,5);
     }
 
     @Override
@@ -76,10 +79,26 @@ public class ModTimes extends MandelSpecDialog<ModTimes.ModPanel>  {
       MandelInfo info=data.getInfo();
       super.setInfo(info);
       if (data.getFile()!=null) {
+        modtime.setEnabled(true);
         setValue(modtime,data.getFile().getLastModified());
       }
       else {
+        modtime.setEnabled(false);
         setValue(modtime,0);
+      }
+      if (data.getInfo().hasProperty(ATTR_COMPOSED_TIME)) {
+        try {
+          long t = Long.parseLong(data.getInfo().getProperty(ATTR_COMPOSED_TIME));
+          comptime.setEnabled(true);
+          setValue(comptime, t);
+        }
+        catch (NumberFormatException ex) {
+           comptime.setEnabled(false);
+        }
+      }
+      else {
+        comptime.setEnabled(false);
+        setValue(comptime,0);
       }
     }
 

@@ -130,55 +130,6 @@
             </bookmark>
         </file>
         <file>
-            <url>src/com/mandelsoft/mand/tool/MandelImagePanel.java</url>
-            <bookmark id="0">
-                <name/>
-                <line>519</line>
-                <key/>
-            </bookmark>
-            <bookmark id="0">
-                <name/>
-                <line>947</line>
-                <key/>
-            </bookmark>
-            <bookmark id="0">
-                <name/>
-                <line>1341</line>
-                <key/>
-            </bookmark>
-            <bookmark id="0">
-                <name/>
-                <line>1999</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>src/my/reorg/convert/Convert.java</url>
-            <bookmark id="0">
-                <name/>
-                <line>265</line>
-                <key/>
-            </bookmark>
-            <bookmark id="0">
-                <name/>
-                <line>378</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>src/my/reorg/tool/ComponentTablet.java</url>
-            <bookmark id="0">
-                <name/>
-                <line>723</line>
-                <key/>
-            </bookmark>
-            <bookmark id="0">
-                <name/>
-                <line>739</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
             <url>src/my/mand/tool/ImageControl.java</url>
             <bookmark id="0">
                 <name/>
@@ -213,10 +164,41 @@
             </bookmark>
         </file>
         <file>
+            <url>src/com/mandelsoft/mand/tool/MandelImagePanel.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>523</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>957</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>1428</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>2108</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
             <url>src/my/mand/tool/cm/ColormapComponent.java</url>
             <bookmark id="0">
                 <name/>
                 <line>238</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/mand/tool/MandelAreaCreationDialog.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>268</line>
                 <key/>
             </bookmark>
         </file>
@@ -234,10 +216,15 @@
             </bookmark>
         </file>
         <file>
-            <url>src/my/mand/tool/MandelAreaCreationDialog.java</url>
+            <url>src/my/reorg/convert/Convert.java</url>
             <bookmark id="0">
                 <name/>
-                <line>268</line>
+                <line>265</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>378</line>
                 <key/>
             </bookmark>
         </file>
@@ -259,6 +246,19 @@
             <bookmark id="0">
                 <name/>
                 <line>286</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>src/my/reorg/tool/ComponentTablet.java</url>
+            <bookmark id="0">
+                <name/>
+                <line>723</line>
+                <key/>
+            </bookmark>
+            <bookmark id="0">
+                <name/>
+                <line>739</line>
                 <key/>
             </bookmark>
         </file>
@@ -311,6 +311,15 @@
         </file>
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/C:/Work/Mandelbrot.dev/src/com/mandelsoft/mand/tool/MandelImagePanel.java</file>
+            <file>file:/C:/Work/Mandelbrot.dev/src/com/mandelsoft/mand/tool/MandelAreaViewDialog.java</file>
+            <file>file:/C:/Work/Mandelbrot.dev/src/com/mandelsoft/mand/tool/ToolEnvironment.java</file>
+            <file>file:/C:/Work/Mandelbrot.dev/src/com/mandelsoft/swing/FormattedField.java</file>
+            <file>file:/C:/Work/Mandelbrot.dev/src/com/mandelsoft/swing/NumberField.java</file>
+            <file>file:/C:/Work/Mandelbrot.dev/src/com/mandelsoft/mand/tool/MandelAreaCreationDialog.java</file>
+            <file>file:/C:/Work/Mandelbrot.dev/src/com/mandelsoft/swing/BufferedComponent.java</file>
+            <file>file:/C:/Work/Mandelbrot.dev/src/com/mandelsoft/mand/tool/MandelImageFrame.java</file>
+        </group>
     </open-files>
 </project-private>

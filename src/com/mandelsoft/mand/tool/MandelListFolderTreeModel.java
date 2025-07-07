@@ -17,6 +17,7 @@ package com.mandelsoft.mand.tool;
 
 import javax.swing.tree.TreePath;
 import com.mandelsoft.mand.QualifiedMandelName;
+import com.mandelsoft.mand.scan.MandelFolder;
 import com.mandelsoft.mand.util.MandelListFolder;
 import com.mandelsoft.mand.util.MandelListFolderTree;
 import com.mandelsoft.swing.DnDTreeModel;
@@ -106,6 +107,21 @@ public interface MandelListFolderTreeModel extends DnDTreeModel {
 
       return m.isPathListModifiable(p);
               //&&!((MandelListFolder)p.getLastPathComponent()).isLeaf();
+    }
+    
+    public static MandelListFolder getFolder(MandelListFolderTreeModel m, String path) {
+      return getFolder(m, path.split("/"));
+    }
+    
+    public static MandelListFolder getFolder(MandelListFolderTreeModel m, String[] path) {
+      MandelListFolder f = m.getRoot();
+      for (String n : path) {
+        f = m.getChild(f, n);
+        if (f == null) {
+          return null;
+        }
+      }
+      return f;
     }
   }
 }

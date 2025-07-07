@@ -23,116 +23,121 @@ import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.mand.scan.ContextMandelScanner;
 import com.mandelsoft.mand.scan.MandelScanner;
+import javax.swing.event.ListDataListener;
 
 /**
  *
  * @author Uwe Krüger
  */
 public class DefaultMandelListTableModel extends AbstractMandelListTableModel
-                                      implements MandelListTableModel {
-  protected MandelList list;
-  protected MandelScanner scanner;
+        implements MandelListTableModel {
+
+  protected MandelListListModel model;
   private MandelListListenerSupport listeners;
-  private boolean duplicates;
   private boolean inupdate;
 
-  protected DefaultMandelListTableModel()
-  {
-    listeners=new MandelListListenerSupport();
+  protected DefaultMandelListTableModel() {
+    listeners = new MandelListListenerSupport();
   }
-  
-  public DefaultMandelListTableModel(MandelList list, MandelScanner scanner)
-  {
+
+  public DefaultMandelListTableModel(MandelList list, MandelScanner scanner) {
     this();
-    this.scanner=scanner;
-    this.list=list;
+    this.model = new DefaultMandelListListModel(list, scanner);
     if (scanner instanceof ContextMandelScanner) {
-      this.setShowLocation(((ContextMandelScanner)scanner).getContext().hasNested());
+      this.setShowLocation(((ContextMandelScanner) scanner).getContext().hasNested());
     }
   }
 
-  public void removeMandelListListener(MandelListListener h)
-  {
+  @Override
+  public void removeMandelListListener(MandelListListener h) {
     listeners.removeMandelListListener(h);
   }
 
-  public void addMandelListListener(MandelListListener h)
-  {
+  @Override
+  public void addMandelListListener(MandelListListener h) {
     listeners.addMandelListListener(h);
   }
 
   @Override
-  public void fireTableDataChanged()
-  {
+  public void addListDataListener(ListDataListener l) {
+    model.addListDataListener(l);
+  }
+
+  @Override
+  public void removeListDataListener(ListDataListener l) {
+    model.removeListDataListener(l);
+  }
+
+  @Override
+  public void fireTableDataChanged() {
     super.fireTableDataChanged();
     fireListChanged();
   }
 
-  protected void fireListChanged()
-  {
+  protected void fireListChanged() {
     listeners.fireChangeEvent(this);
   }
 
-
-  public void setDuplicates(boolean m)
-  { this.duplicates=m;
-  }
-
-  public boolean allowDuplicates()
-  {
-    return duplicates;
-  }
-
-  public MandelScanner getMandelScanner()
-  {
-    return scanner;
-  }
-
-  protected boolean isInUpdate()
-  {
-    return inupdate;
+  @Override
+  public void setModifiable(boolean m) {
+    super.setModifiable(m);
+    model.setModifiable(m);
   }
   
-  public void add(QualifiedMandelName name)
-  {
+  public void setDuplicates(boolean m) {
+    model.setDuplicates(m);
+  }
+
+  public boolean allowDuplicates() {
+    return model.allowDuplicates();
+  }
+
+  public MandelScanner getMandelScanner() {
+    return model.getMandelScanner();
+  }
+
+  protected boolean isInUpdate() {
+    return inupdate;
+  }
+
+  public void add(QualifiedMandelName name) {
     checkModifiable();
-    if (duplicates || !list.contains(name)) {
-      int max=list.size();
-      list.add(name);
-      if (list.size()!=max) {
+    if (model.allowDuplicates() || !model.getList().contains(name)) {
+      int max = model.getSize();
+      model.add(name);
+      if (model.getSize() != max) {
         try {
-          list.save();
-        }
-        catch (IOException ex) {
+          model.getList().save();
+        } catch (IOException ex) {
           JOptionPane.showMessageDialog(null,
-                                        "Cannot save list: "+ex,
-                                        "Error",
-                                        JOptionPane.ERROR_MESSAGE);
+                  "Cannot save list: " + ex,
+                  "Error",
+                  JOptionPane.ERROR_MESSAGE);
         }
-        int index=max;
-        fireTableRowsInserted(index,index);
+        int index = max;
+        fireTableRowsInserted(index, index);
         fireListChanged();
         //fireTableDataChanged();
       }
     }
   }
 
-  public void add(int index, QualifiedMandelName name)
-  {
-    if (index>=list.size()) add(name);
+  public void add(int index, QualifiedMandelName name) {
+    if (index >= model.getSize()) {
+      add(name);
+    }
     checkModifiable();
-    if (duplicates || !list.contains(name)) {
-      int max=list.size();
-      list.add(index,name);
-      if (list.size()!=max) {
+    if (model.allowDuplicates() || !model.getList().contains(name)) {
+      int max = model.getSize();
+      model.add(index, name);
+      if (model.getSize() != max) {
         try {
-          list.save();
-        }
-        catch (IOException ex) {
+          model.getList().save();
+        } catch (IOException ex) {
           JOptionPane.showMessageDialog(null,
-                                        "Cannot save list: "+ex,
-                                        "Error",
-                                        JOptionPane.ERROR_MESSAGE);
+                  "Cannot save list: " + ex,
+                  "Error",
+                  JOptionPane.ERROR_MESSAGE);
         }
         fireTableRowsInserted(index, index);
         fireListChanged();
@@ -140,81 +145,80 @@ public class DefaultMandelListTableModel extends AbstractMandelListTableModel
     }
   }
 
-  public void addAll(QualifiedMandelName[] names)
-  { int cnt=0;
+  public void addAll(QualifiedMandelName[] names) {
+    int cnt = 0;
 
     checkModifiable();
-    int max=list.size();
-    for (QualifiedMandelName name:names) {
-      if (duplicates||!list.contains(name)) {
-        list.add(name);
-        if (list.size()!=max+cnt) {
+    int max = model.getSize();
+    for (QualifiedMandelName name : names) {
+      if (model.allowDuplicates() || !model.getList().contains(name)) {
+        model.add(name);
+        if (model.getSize() != max + cnt) {
           cnt++;
         }
       }
     }
-    if (cnt!=0) {
+    if (cnt != 0) {
       try {
-        list.save();
-      }
-      catch (IOException ex) {
+        model.getList().save();
+      } catch (IOException ex) {
         JOptionPane.showMessageDialog(null,
-                "Cannot save list: "+ex,
+                "Cannot save list: " + ex,
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
       }
-      int index=list.size();
-      fireTableRowsInserted(index-cnt,index-1);
+      int index = model.getSize();
+      fireTableRowsInserted(index - cnt, index - 1);
       fireListChanged();
       //fireTableDataChanged();
     }
   }
 
-  public void addAll(int index, QualifiedMandelName[] names)
-  { int cnt=0;
+  public void addAll(int index, QualifiedMandelName[] names) {
+    int cnt = 0;
 
-    if (index>=list.size()) addAll(names);
+    if (index >= model.getSize()) {
+      addAll(names);
+    }
     checkModifiable();
-    int max=list.size();
-    for (QualifiedMandelName name:names) {
-      if (duplicates||!list.contains(name)) {
-        list.add(index+cnt,name);
-        if (list.size()!=max+cnt) {
+    int max = model.getSize();
+    for (QualifiedMandelName name : names) {
+      if (model.allowDuplicates() || !model.getList().contains(name)) {
+        model.add(index + cnt, name);
+        if (model.getSize() != max + cnt) {
           cnt++;
         }
       }
     }
-    if (cnt!=0) {
+    if (cnt != 0) {
       try {
-        list.save();
-      }
-      catch (IOException ex) {
+        model.getList().save();
+      } catch (IOException ex) {
         JOptionPane.showMessageDialog(null,
-                "Cannot save list: "+ex,
+                "Cannot save list: " + ex,
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
       }
-      fireTableRowsInserted(index,index+cnt-1);
+      fireTableRowsInserted(index, index + cnt - 1);
       fireListChanged();
     }
   }
 
-  public void remove(QualifiedMandelName name)
-  {
+  public void remove(QualifiedMandelName name) {
     int index;
 
     checkModifiable();
-    index=list.indexOf(name);
-    if (index>=0) {
-      list.remove(index);
-      if (!list.contains(name))
+    index = model.getList().indexOf(name);
+    if (index >= 0) {
+      model.remove(name);
+      if (!model.getList().contains(name)) {
         cleanupThumbnail(name);
-      try {
-        list.save();
       }
-      catch (IOException ex) {
+      try {
+        model.getList().save();
+      } catch (IOException ex) {
         JOptionPane.showMessageDialog(null,
-                "Cannot save list: "+ex,
+                "Cannot save list: " + ex,
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
       }
@@ -224,50 +228,54 @@ public class DefaultMandelListTableModel extends AbstractMandelListTableModel
     }
   }
 
-  public MandelList getList()
-  { return list;
+  public MandelList getList() {
+    return model.getList();
   }
 
-  public void setList(MandelList list)
-  {
-    this.list=list;
+  public void setList(MandelList list) {
+    this.model.setList(list);
     fireTableDataChanged();
   }
 
-  public void refresh(boolean soft)
-  {
+  public void refresh(boolean soft) {
     if (!inupdate) {
-      inupdate=true;
+      inupdate = true;
       try {
         if (debug) {
-            System.out.println("refresh "+this+" soft="+soft);
-         }
-        list.refresh(soft);
+          System.out.println("refresh " + this + " soft=" + soft);
+        }
+        model.refresh(soft);
         fireTableDataChanged();
-      }
-      finally {
-        inupdate=false;
+      } finally {
+        inupdate = false;
       }
     }
   }
 
-  public void refresh(Environment env)
-  {
+  public void refresh(Environment env) {
     if (!inupdate) {
-      inupdate=true;
+      inupdate = true;
       try {
-        env.refresh(list);
+        env.refresh(model);
         fireTableDataChanged();
-      }
-      finally {
-        inupdate=false;
+      } finally {
+        inupdate = false;
       }
     }
   }
 
-  public void clear()
-  {
+  public void clear() {
     getList().clear();
     fireTableDataChanged();
+  }
+
+  @Override
+  public int getSize() {
+    throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+  }
+
+  @Override
+  public Object getElementAt(int index) {
+    throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
   }
 }

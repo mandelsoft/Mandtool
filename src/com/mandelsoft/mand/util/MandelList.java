@@ -32,7 +32,7 @@ import java.io.PrintWriter;
  * @author Uwe Krüger
  */
 
-public interface MandelList extends BaseList<QualifiedMandelName> {
+public interface MandelList extends BaseList<QualifiedMandelName>, Refreshable {
   void write(OutputStream os, String dst) throws IOException;
   void read(InputStream is, String src) throws IOException ;
   QualifiedMandelName get(MandelName n);

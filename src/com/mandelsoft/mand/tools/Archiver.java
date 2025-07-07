@@ -453,8 +453,8 @@ public class Archiver extends Sync {
     boolean rflag=false;
     boolean cflag=false;
     boolean mainVariants=false;
-    File src=new File("C:/work/AccuRev/test/Mandel");
-    File dst=new File("C:/Tomcat/apache-tomcat-6.0.29/webapps/mandel/mandel");
+    AbstractFile src=AbstractFile.Factory.create(new File("C:/Mandel"));
+    AbstractFile dst=AbstractFile.Factory.create("http://mandelsoft.de/mandel/mandel", null, true);
     File arch=new File("mandel.zip");
     String sn=null;
     String dn=null;
@@ -463,7 +463,7 @@ public class Archiver extends Sync {
       System.out.println("MandelDB Delta Archiver");
       System.out.println("  <cmd> <options> <args>");
       System.out.println("    -a <achivename>  set the name of the used archive");
-      System.out.println("    -v               show wht would be done");
+      System.out.println("    -v               show what would be done");
       System.out.println("  Archive Writer:  <cmd> -w <options> <src> <dst>");
       System.out.println("    -lw               write an archive");
       System.out.println("    -m               main variants only");
@@ -518,15 +518,15 @@ public class Archiver extends Sync {
 
     if (wflag) {
       try {
-        if (args.length>c) src=new File(args[c++]);
-        if (args.length>c) dst=new File(args[c++]);
+        if (args.length>c) src=AbstractFile.Factory.create(args[c++], null, true);
+        if (args.length>c) dst=AbstractFile.Factory.create(args[c++],null, true);
         else Error("mar: [-v] [-a <archive>] -w <srcroot> <dstroot>");
         types=parseTypes(c, args);
         System.out.println("create update archive from "+src+" to "+dst);
-        if (!src.isDirectory()) Error(src+" is no directory");
-        if (!dst.isDirectory()) Error(dst+" is no directory");
-        Environment env_src=new Environment("mandtool", null, src);
-        Environment env_dst=new Environment("mandtool", null, dst);
+        if (src.isFile() && !src.getFile().isDirectory()) Error(src+" is no directory");
+        if (dst.isFile() && !dst.getFile().isDirectory()) Error(dst+" is no directory");
+        Environment env_src=new Environment("mandtool", new String[]{src.toString()});
+        Environment env_dst=new Environment("mandtool", new String[]{dst.toString()});
         a=new Archiver(env_src, env_dst, types);
         if (vflag) {
           a.setExecutionHandler(a.new VerboseSyncHandler());
@@ -545,12 +545,12 @@ public class Archiver extends Sync {
     }
     else if (rflag) {
       try {
-        if (args.length>c) dst=new File(args[c++]);
+        if (args.length>c) dst=AbstractFile.Factory.create(new File(args[c++]));
         else Error("mar: [-v] [-a <archive>] -r <dstroot>");
         types=parseTypes(c, args);
         System.out.println("extract update archive to "+dst);
-        if (!dst.isDirectory()) Error(dst+" is no directory");
-        Environment env_dst=new Environment("mandtool", null, dst);
+        if (!dst.getFile().isDirectory()) Error(dst+" is no directory");
+        Environment env_dst=new Environment("mandtool", null, dst.getFile());
         a=new Archiver(null, env_dst, types);
         a.setListCopyMode(cflag);
         if (vflag) {

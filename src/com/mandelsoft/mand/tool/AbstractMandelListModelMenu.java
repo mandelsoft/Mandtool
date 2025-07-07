@@ -19,6 +19,7 @@ import com.mandelsoft.mand.QualifiedMandelName;
 import com.mandelsoft.util.ChangeEvent;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.DefaultListModel;
 
 /**
  *
@@ -26,23 +27,23 @@ import java.util.List;
  */
 
 public abstract class AbstractMandelListModelMenu extends AbstractMandelListMenu {
-  private MandelListModel mlmodel;
+  private MandelListBaseModel mlmodel;
   private MandelListListener listener;
 
   public AbstractMandelListModelMenu(String name,
-                             MandelWindowAccess access, MandelListModel model)
+                             MandelWindowAccess access, MandelListBaseModel model)
   {
     super(name, access);
     setup(model);
   }
 
-  private final void setup(MandelListModel model)
+  private final void setup(MandelListBaseModel model)
   {
     listener = new Listener();
     setMandelListModel(model);
   }
 
-  public void setMandelListModel(MandelListModel model)
+  public void setMandelListModel(MandelListBaseModel model)
   {
     if (this.mlmodel!=null) this.mlmodel.removeMandelListListener(listener);
     this.mlmodel=model;

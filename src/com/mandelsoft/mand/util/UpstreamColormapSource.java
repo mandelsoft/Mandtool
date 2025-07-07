@@ -66,6 +66,9 @@ public class UpstreamColormapSource implements ColormapSource {
     }
     if (cm!=null) colormapFound(h,cm);
     else cm=defaultSource==null?null:defaultSource.getColormap();
+   if (h!=null) {
+     System.out.printf("using colormap from %s\n", h.getName());
+   }
     return cm;
   }
 

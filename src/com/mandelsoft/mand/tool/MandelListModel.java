@@ -31,7 +31,8 @@ import com.mandelsoft.mand.scan.MandelScanner;
  *
  * @author Uwe Krüger
  */
-public interface MandelListModel {
+public interface MandelListModel extends MandelListBaseModel{
+  @Override
   public MandelScanner getMandelScanner();
   public void setDuplicates(boolean m);
   public void setModifiable(boolean m);
@@ -48,6 +49,7 @@ public interface MandelListModel {
   public void addAll(int index, QualifiedMandelName[] names);
   public void remove(QualifiedMandelName name);
 
+  @Override
   public MandelList getList();
   public void setList(MandelList list);
   public void refresh();
@@ -68,6 +70,8 @@ public interface MandelListModel {
 
   ////////////////////////////////////////////////////////////////////
 
+  @Override
   public void addMandelListListener(MandelListListener l);
+  @Override
   public void removeMandelListListener(MandelListListener l);
 }

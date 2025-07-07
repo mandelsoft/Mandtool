@@ -57,15 +57,35 @@ public class RGBChooserPanel extends AbstractColorChooserPanel
 
   private void addPaletteListeners()
   {
-    paletteLabel.addMouseListener(new MouseAdapter() {
+    MouseAdapter a = new MouseAdapter() {
+      long last;
+      int delta=1;
+      
+      @Override
+      public void mouseWheelMoved(MouseWheelEvent e) {
+        long t = System.currentTimeMillis();
+        
+        if (t-last < 50) {
+          delta+=3;
+        } else {
+          delta=1;
+        }
+        last=t;
+        int notches = e.getWheelRotation();
+        System.out.printf("wheel %d\n", notches*delta);
+        wheel(notches*delta);
+      }
 
-      public void mousePressed(MouseEvent e)
-      {
-        float[] rgb=new float[3];
+      @Override
+      public void mousePressed(MouseEvent e) {
+        float[] rgb = new float[3];
         palette.getRGBForLocation(e.getX(), e.getY(), rgb);
         updateRGB(rgb[0], rgb[1], rgb[2]);
       }
-    });
+    };
+            
+    paletteLabel.addMouseListener(a);
+    paletteLabel.addMouseWheelListener(a);
 
     paletteLabel.addMouseMotionListener(new MouseMotionAdapter() {
 
@@ -101,6 +121,40 @@ public class RGBChooserPanel extends AbstractColorChooserPanel
     });
   }
 
+  private void wheel(int n) {
+    int v = 0;
+    Color c = getColorSelectionModel().getSelectedColor();
+    switch (currentMode) {
+      case RED_MODE:
+        v = c.getRed();
+        break;
+      case GREEN_MODE:
+        v = c.getGreen();
+        break;
+      case BLUE_MODE:
+        v = c.getBlue();
+        break;
+    }
+    v += n;
+    if (v <= 0) {
+      v = 0;
+    }
+    if (v > MAX_GREEN_VALUE) {
+      v = MAX_GREEN_VALUE;
+    }
+    switch (currentMode) {
+      case RED_MODE:
+        updateRGB(v, c.getGreen(), c.getBlue());
+        break;
+      case GREEN_MODE:
+        updateRGB(c.getRed(), v, c.getBlue());
+        break;
+      case BLUE_MODE:
+        updateRGB(palette.getRed(), palette.getGreen(), v);
+        break;
+    }
+  }
+  
   private void updatePalette(float r, float g, float b)
   {
     int x=0;
@@ -113,7 +167,7 @@ public class RGBChooserPanel extends AbstractColorChooserPanel
           palette.nextFrame();
         }
         x=(int)(g*PALETTE_DIMENSION/MAX_GREEN_VALUE);
-        y=(int)(b*PALETTE_DIMENSION/MAX_GREEN_VALUE);
+        y=(int)(b*PALETTE_DIMENSION/MAX_BLUE_VALUE);
         break;
       case GREEN_MODE:
         if (g!=palette.getGreen()) {

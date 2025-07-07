@@ -25,6 +25,8 @@ import com.mandelsoft.mand.util.MandelList;
 import com.mandelsoft.swing.TableSelection;
 import com.mandelsoft.swing.TablePanel;
 import java.awt.Dimension;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.SortOrder;
 
@@ -33,6 +35,8 @@ import javax.swing.SortOrder;
  * @author Uwe Krüger
  */
 public class MandelListsDialog extends ControlDialog {
+  private HistoryPanel history;
+  
   public MandelListsDialog(MandelWindowAccess owner)
   {
     super(owner, "Mandel Lists");
@@ -58,7 +62,7 @@ public class MandelListsDialog extends ControlDialog {
     if (getEnvironment().getTodosModel()!=null)
       addTab("Todos", new TodosPanel(),
                             "Images according local todo file");
-    addTab("History", new HistoryPanel(),
+    addTab("History", history=new HistoryPanel(),
                             "Display history of images");
 //    if (getEnvironment().getNewRastersModel()!=null) {
 //      addTab("New Images", new NewRasterPanel(),
@@ -82,6 +86,14 @@ public class MandelListsDialog extends ControlDialog {
     }
   }
 
+  public Action BackAction() {
+    return history.BackAction();
+  }
+
+  public Action ForthAction() {
+    return history.ForthAction();
+  }
+  
   /////////////////////////////////////////////////////////////////////////
   // refreshing list panel
   /////////////////////////////////////////////////////////////////////////
@@ -209,8 +221,8 @@ public class MandelListsDialog extends ControlDialog {
       this.setSortOrder(0, SortOrder.DESCENDING);
       LoadAction load=new LoadAction();
       addActionListener(load);
-      back=addButton("Back", new BackAction());
-      forth=addButton("Forth", new ForthAction());
+      back=addButton(new BackAction());
+      forth=addButton(new ForthAction());
 
       addButton("Load", load);
       addButton("Clear", new ClearAction());
@@ -233,15 +245,25 @@ public class MandelListsDialog extends ControlDialog {
     {
       super.modelUpdated();
       int cur=history.getCurrent();
-      back.setEnabled(cur>0);
-      forth.setEnabled(cur<history.getList().size()-1);
+      back.getAction().setEnabled(cur>0);
+      forth.getAction().setEnabled(cur<history.getList().size()-1);
       //System.out.printf("********** current %d\n",history.getCurrent() );
-      this.setSelectedRow(cur);
+      this.setSelectedIndex(cur);
     }
     
     /////////////////////////////////////////////////////////////////////////
-    private class LoadAction implements ActionListener {
+    private class LoadAction extends AbstractAction implements ActionListener {
 
+      public LoadAction()
+      {
+        super();
+      }
+      
+      public LoadAction(String name)
+      {
+        super(name);
+      }
+      
       public void actionPerformed(ActionEvent e)
       {   
         System.out.println("*** load history entry "+mandelname);
@@ -259,9 +281,21 @@ public class MandelListsDialog extends ControlDialog {
       }
     }
     
+    public Action BackAction() {
+       return this.back.getAction();
+    }
+    
+     public Action ForthAction() {
+       return this.forth.getAction();
+    }
+    
     /////////////////////////////////////////////////////////////////////////
     private class BackAction extends LoadAction {
-
+      public BackAction()
+      {
+        super("Back");
+      }
+      
       public void actionPerformed(ActionEvent e)
       {
         if (history.getCurrent() <= 0) {
@@ -274,7 +308,11 @@ public class MandelListsDialog extends ControlDialog {
     }
 
     private class ForthAction extends LoadAction {
-
+      public ForthAction()
+      {
+        super("Forth");
+      }
+      
       public void actionPerformed(ActionEvent e)
       {
         if (history.getCurrent() >= history.getList().size()) {
@@ -375,7 +413,7 @@ public class MandelListsDialog extends ControlDialog {
     public RequestsPanel()
     {
       super(null,getEnvironment().getRequestsModel(),null);
-      enableGalery(false);
+      enableGallery(false);
       enableSlideShow(false);
     }
   }

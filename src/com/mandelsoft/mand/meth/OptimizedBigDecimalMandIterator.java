@@ -211,7 +211,7 @@ public class OptimizedBigDecimalMandIterator extends BigDecimalMandIterator
   public void setup()
   {
     if (stdref != null) {
-      stdrefDepth = buildref("standard", stdIterations, ref);
+      stdrefDepth = buildref("standard", stdIterations, stdref);
     }
     refDepth = buildref(null, iterations, ref);
     setProperties(-1, -1, ref, refDepth);

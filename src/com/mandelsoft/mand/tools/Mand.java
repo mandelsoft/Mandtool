@@ -822,6 +822,7 @@ public class Mand extends Command implements PixelIterator.PropertySource.Proper
     boolean fast;
     boolean variants;
     int limit;
+    boolean isOptimized;
 
     public void addPrefix(MandelName name) {
       if (prefix == null) {
@@ -854,8 +855,15 @@ public class Mand extends Command implements PixelIterator.PropertySource.Proper
       if (variants && name.getQualifier() == null) {
         return false;
       }
-      if (fast && !pi.isFast()) {
-        return false;
+      
+      if (fast) {
+        if (!isOptimized && !pi.isFast()) {
+          return false;
+        }
+        int tlimit = (limit > 0) ? limit : 300;
+        if (!pi.isFast() && (parent == null || parent.getTime() > tlimit) || name.getQualifier() != null) {
+          return false;
+        }
       }
       if (limit > 0) {
         if (parent == null) {
@@ -863,7 +871,7 @@ public class Mand extends Command implements PixelIterator.PropertySource.Proper
           return false;
         }
         System.out.printf("parent %s time %s\n", name.getMandelName().getParentName(), MandUtils.time(parent.getTime()));
-        if (limit > 0 && parent.getTime() > limit) {
+        if (limit > 0 && (parent.getTime() > limit || name.getQualifier() != null)) {
           return false;
         }
       }
@@ -888,6 +896,7 @@ public class Mand extends Command implements PixelIterator.PropertySource.Proper
         switch (opt = arg.charAt(i)) {
           case 'o':
             MandIter.optimized = true;
+            filter.isOptimized = true;
             break;
           case 's':
             sflag = true;

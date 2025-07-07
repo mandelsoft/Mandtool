@@ -20,7 +20,7 @@ Calling:
 
   As long as the database localized in MANDEL_HOME is used the commands
   can be called from any folder. If you want to use another database
-  on your machine the the cammand should be started from the
+  on your machine the the command should be started from the
   appropriate root folder. For the UI, the root folder can be passed
   as argument to the explorer command.
 

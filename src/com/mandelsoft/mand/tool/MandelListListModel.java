@@ -16,6 +16,7 @@
 package com.mandelsoft.mand.tool;
 
 import com.mandelsoft.mand.QualifiedMandelName;
+import com.mandelsoft.mand.util.Refreshable;
 import com.mandelsoft.swing.ThumbnailListModel;
 
 /**
@@ -23,7 +24,7 @@ import com.mandelsoft.swing.ThumbnailListModel;
  * @author Uwe Krüger
  */
 public interface MandelListListModel 
-        extends  ThumbnailListModel<QualifiedMandelName>, MandelListModel  {
+        extends  ThumbnailListModel<QualifiedMandelName>, MandelListModel, Refreshable  {
 
   ///////////////////////////////////////////////////////////////////////////
   // Drag & Drop support by model

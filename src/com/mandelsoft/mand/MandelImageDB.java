@@ -126,7 +126,9 @@ public class MandelImageDB implements MandelConstants  {
 
     if (!this.readonly) {
       ttodos=createMandelListFolderTree(Settings.TODO);
-      todos=ttodos.getRoot().getMandelList();
+      if (ttodos != null) {
+        todos=ttodos.getRoot().getMandelList();
+      }
       seenrasters=createMandelList(Settings.SEEN, false);
     }
   }
@@ -182,10 +184,10 @@ public class MandelImageDB implements MandelConstants  {
     }
 
     copyright=settings.getProperty(Settings.COPYRIGHT);
-    if (copyright!=null) {
+    if (copyright != null) {
       if (copyright.equals("")) {
-        copyright=getCopyright(settings.getProperty(Settings.USER),
-                               settings.getProperty(Settings.SITE));
+        copyright = getCopyright(settings.getProperty(Settings.USER),
+                settings.getProperty(Settings.SITE));
       }
     }
    

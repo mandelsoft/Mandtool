@@ -336,9 +336,9 @@ public class HSBChooserPanel extends AbstractColorChooserPanel implements
     blueField.setHorizontalAlignment(JTextField.RIGHT);
     blueField.setInheritsPopupMenu(true);
 
-    String redString=UIManager.getString("ColorChooser.hsbRedText");
-    String greenString=UIManager.getString("ColorChooser.hsbGreenText");
-    String blueString=UIManager.getString("ColorChooser.hsbBlueText");
+    String redString="R"; // UIManager.getString("ColorChooser.hsbRedText");
+    String greenString="G"; //UIManager.getString("ColorChooser.hsbGreenText");
+    String blueString="B"; //UIManager.getString("ColorChooser.hsbBlueText");
 
     panel.add(new JLabel(redString),new GBC(0,0));
     panel.add(redField, new GBC(1,0));
@@ -356,9 +356,9 @@ public class HSBChooserPanel extends AbstractColorChooserPanel implements
   private JComponent buildHSBControls()
   {
 
-    String hueString=UIManager.getString("ColorChooser.hsbHueText");
-    String saturationString=UIManager.getString("ColorChooser.hsbSaturationText");
-    String brightnessString=UIManager.getString("ColorChooser.hsbBrightnessText");
+    String hueString="H"; // UIManager.getString("ColorChooser.hsbHueText");
+    String saturationString="S"; // UIManager.getString("ColorChooser.hsbSaturationText");
+    String brightnessString="B"; // UIManager.getString("ColorChooser.hsbBrightnessText");
 
     RadioButtonHandler handler=new RadioButtonHandler();
 

@@ -102,6 +102,11 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog implements Up
     }
   }
 
+  protected long getAreaCreationTime()
+  {
+    return System.currentTimeMillis();
+  }
+  
   ///////////////////////////////////////////////////////////////////////
   // view
   ///////////////////////////////////////////////////////////////////////
@@ -292,7 +297,7 @@ public class MandelAreaCreationDialog extends MandelAreaViewDialog implements Up
         MandelInfo info = getInfo();
         info.setSite(getEnvironment().getProperty(Settings.SITE));
         info.setCreator(getEnvironment().getProperty(Settings.USER));
-        info.setCreationTime(System.currentTimeMillis());
+        info.setCreationTime(getAreaCreationTime());
         MandelData md = new MandelData(info);
         MandelFileName name;
 

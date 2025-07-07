@@ -16,7 +16,12 @@
 
 package com.mandelsoft.swing;
 
+import com.mandelsoft.util.upd.UpdatableObject;
+import com.mandelsoft.util.upd.UpdateContext;
+import com.mandelsoft.util.upd.UpdateSource;
+import com.mandelsoft.util.upd.UpdateSourceSupport;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.Action;
@@ -32,14 +37,17 @@ import javax.swing.border.BevelBorder;
  *
  * @author Uwe Krueger
  */
-public class ActionPanel extends GBCSupportPanel {
+public class ActionPanel extends GBCSupportPanel implements UpdatableObject  {
   private JPanel content;
   private JPanel buttons;
   private GBCPanel container;
+  private UpdateSourceSupport update;
 
   public ActionPanel()
   {
     super();
+    update = new UpdateSourceSupport();
+    
     BorderLayout lo;
     setLayout(lo=new BorderLayout());
     container=new GBCPanel();
@@ -65,6 +73,32 @@ public class ActionPanel extends GBCSupportPanel {
     if (content!=null) container.add(c, GBC(0, 0,GBC.BOTH).setInsets(5));
   }
 
+  public JComponent addBorder(int col, int row, int colspan, int rowspan) {
+    if (content instanceof GBCPanel) {
+      return ((GBCPanel) content).addBorder(col, row, colspan, rowspan);
+    }
+    return null;
+  }
+
+  public JComponent addBorder(int col, int row, int colspan, int rowspan, boolean raise) {
+    if (content instanceof GBCPanel) {
+      return ((GBCPanel) content).addBorder(col, row, colspan, rowspan, raise);
+    }
+    return null;
+  }
+
+  public JComponent addBorder(int col, int row, int colspan, int rowspan, boolean raise, String title) {
+    if (content instanceof GBCPanel) {
+      return ((GBCPanel) content).addBorder(col, row, colspan, rowspan, raise, title);
+    }
+    return null;
+  }
+
+  public void setPreferredContentSize(Dimension d)
+  {
+    content.setPreferredSize(d);
+  }
+  
   public final JButton addButton(String txt, ActionListener l, String tooltip)
   {
     JButton b=addButton(txt,l);
@@ -85,34 +119,39 @@ public class ActionPanel extends GBCSupportPanel {
     return addButton(b);
   }
 
-  public final JButton addButton(JButton b)
-  {
+  public final JButton addButton(JButton b) {
     buttons.add(b);
-    //System.out.println("add button");
+    update.tryAddUpdatableObject(b);
+    update.tryAddUpdatableObject(b.getAction());
     revalidate();
     return b;
   }
 
-  public final void addButton(JComponent m)
-  {
+  public final void addButton(JComponent m) {
     buttons.add(m);
-    //System.out.println("add button");
+    update.tryAddUpdatableObject(m);
     revalidate();
   }
 
-  protected void removeButton(JButton b)
-  {
+  protected void removeButton(JButton b) {
     buttons.remove(b);
-    //System.out.println("remove button");
+    update.tryRemoveUpdatableObject( b);
+    update.tryRemoveUpdatableObject( b.getAction());
     revalidate();
   }
 
   public void addContent(JComponent c, Object o)
   {
     content.add(c, o);
+    update.tryAddUpdatableObject(c);
     content.revalidate();
   }
 
+   @Override
+  public void updateObject(UpdateContext c) {
+    update.updateObjects(c);
+  }
+  
   ///////////////////////////////////////////////////////////////////////
   // test
   ///////////////////////////////////////////////////////////////////////

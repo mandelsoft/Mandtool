@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jnlp codebase="http://mandelsoft.de/mandel" href="launch.jnlp" spec="1.0+">
+    <information>
+        <title>Mandelbrot.dev</title>
+        <vendor>Uwe Krüger</vendor>
+        <homepage href="www.mandelsoft.de"/>
+        <description>Mandelbrot.dev</description>
+        <description kind="short">Mandelbrot.dev</description>
+        <icon href="applets/splash.png" kind="default"/>
+        <offline-allowed/>
+    </information>
+    <update check="background"/>
+    <resources>
+        <jar href="applets/Mandelbrot.jar" main="true"/>
+    </resources>
+    <applet-desc height="350" main-class="com.mandelsoft.mand.applet.MandToolStarter2" name="Mandelbrot.dev" width="635">
+        <param name="datasource" value="mandel"/>
+        <param name="framewidth" value="800"/>
+        <param name="itemwidth" value="246"/>
+        <param name="ticker" value="true"/>
+        <param name="upstreamcolormap" value="true"/>
+        <param name="list" value=""/>
+    </applet-desc>
+</jnlp>

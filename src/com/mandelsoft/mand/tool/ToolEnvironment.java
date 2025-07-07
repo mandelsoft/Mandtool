@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.DefaultListModel;
+import javax.swing.JDialog;
 import javax.swing.ListModel;
 
 /**
@@ -579,12 +580,21 @@ public class ToolEnvironment extends Environment {
   synchronized
   public void incrementWindowCount()
   { windowcnt++;
+    System.out.printf("window %d opened\n", windowcnt);
   }
 
   synchronized
   public void decrementWindowCount()
   { windowcnt--;
+    System.out.printf("window %d closed\n", windowcnt);
+  
     if (windowcnt<=0 && doexit) System.exit(0);
+  }
+
+  synchronized
+  public int getWindowCount()
+  {
+    return windowcnt;
   }
 
   synchronized

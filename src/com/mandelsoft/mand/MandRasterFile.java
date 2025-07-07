@@ -15,13 +15,11 @@
  */
 package com.mandelsoft.mand;
 
-import sun.nio.ch.DirectBuffer;
+//import sun.nio.ch.DirectBuffer;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.lang.ref.Cleaner;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -83,13 +81,16 @@ public class MandRasterFile implements Closeable {
     public void close() throws IOException {
         for (MappedByteBuffer mapping : mappings)
             clean(mapping);
+        mappings.clear();
         raf.close();
     }
 
     private void clean(MappedByteBuffer mapping) {
+      /*
         if (mapping == null) return;
         jdk.internal.ref.Cleaner cleaner = ((DirectBuffer) mapping).cleaner();
         if (cleaner != null) cleaner.clean();
+      */
     }
   
 }

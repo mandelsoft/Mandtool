@@ -123,7 +123,7 @@ a3b-4000x3000@root or even a3b@root-variation@other.
 1.4.1 Lists
 The tool manages a set of so-called mandel lists. A mandel list contains
 a set of qualified area names. It can be visualized as a text table or as a
-galery of thumbnail views and used to navigate directly to a dedicated area
+gallery of thumbnail views and used to navigate directly to a dedicated area
 instead of diving into the tree subarea by subarea.
 
 There are several standard lists known and exploited by the tool: favorites,
@@ -177,12 +177,12 @@ for navigation and/or visualization purposes.
 1.5.1 The Favorites
 
 The favorites list is a list with a standard shortcut in the main window's
-Lists submenu. This allows a quick manipulation of the list by the user.
+Lists sub-menu. This allows a quick manipulation of the list by the user.
 
 The favorites file used to persist the favorites list may contain a
 whole folder tree of list folders maintained by the user. But there is only
-a quick access for the root list. Nevertheless alls contained areas in all
-folders are taken as favorites. The folder tree can be used to hierachically
+a quick access for the root list. Nevertheless, all contained areas in all
+folders are taken as favorites. The folder tree can be used to hierarchically
 organize the favorites instead of using a flat list.
 
 The meaning of the list is to remember special favorite areas. This is
@@ -190,9 +190,9 @@ supported by the tool by the possibility of highlighting. If an area is
 somewhere in the favorites folder tree a thick border for sub area highlights
 will be used for all parents of this area. This means, all
 highlighed subareas that contain a favorite area will be specially marked.
-This allows for a concious navigation down the tree towards favorites.
+This allows for a conscious navigation down the tree towards favorites.
 
-Addtionally favorites will be indicated in the Info Popup.
+Additionally favorites will be indicated in the Info Popup.
 
 1.5.2 The Todos
 
@@ -258,83 +258,126 @@ The browsing tool is able to generate dedicated structural lists based on the
 area hierarchy and the actually displayed area. After generation the list is
 immutable and does not reflect changes in the area tree.
 
-1.6.1 Favorites
+1.6.1 Parent Areas
+
+This generated list contains the diving history starting from the root area to
+the actual actual one.
+
+1.6.2 Related Areas
+
+This generated list shows the transitive closure following the explicit
+links of the actually displayed area.
+1.6.3 Favorites
 
 This generated list shows the favorites of the sub tree below the actually
 displayed area.
 
-1.6.2 Todos
+1.6.4 Todos
 
 This generated list shows the todos of the sub tree below the actually
 displayed area.
 
-1.6.3 Transitive Sub Areas
+1.6.5 Transitive Sub Areas
 
 This generated list shows all areas of the sub tree below the actually
 displayed area.
 
-1.6.4 Mandel Areas
+1.6.6 Mandel Areas
 
 This generated list shows the areas of the sub tree below the actually
 displayed showing the typical mandelbrot set shape.
 
-1.6.5 Leaf Images
+1.6.7 Leaf Images
 
 This generated list shows the leafes of the image sub tree below the actually
 displayed area. A leaf image is an area available as image that does not
 contain sub areas available as image, but only calculation requests or no
 further sub areas.
 
-1.6.6 Dead Ends
+1.6.8 Dead Ends
 
 This generated list shows the leaf areas of the sub tree below the actually
 displayed area (including calculation requests).
 
-1.6.7 Pending Work
+1.6.9 Pending Work
 
 This generated list shows the leafes of the sub tree below the actually
 displayed area not showing the typical mandelbrot set shape.
 
-1.6.8 Mandel Ends
+1.6.10 Mandel Ends
 
 This generated list shows the leafes of the sub tree below the actually
 displayed area showing thetypical mandelbrot set shape not having further
 sub requests.
 
-1.6.9 Unseen Areas
+1.6.11 Titled Areas
+
+This generated link contains all titled sub areas.
+ 
+1.6.12 Unseen Areas
 
 This generated list shows the unseen area images of the sub tree below the
-actually  displayed area.
+actually displayed area.
 
-1.6.10 Request List
+1.6.13 Seen Areas
+
+This generated list shows the seen area images of the sub tree below the
+actually displayed area.
+
+1.6.14 Request List
 
 This generated list shows the pending calculation requests of the sub tree below
 the actually displayed area.
 
-1.6.11 Direct Key Areas
+1.6.15 Corrupted
+
+This generated list shows areas marked as corrupted of the sub tree below
+the actually displayed area. Corrupted means, that superfractialthing maths
+failed to find a common reference coordinate.
+
+1.6.16 High Resolution
+
+This generated list shows areas with high resolution images in the sub tree
+below the actually displayed area.
+
+1.6.17 Variants
+
+This generated list shows areas with variants in the sub tree
+below the actually displayed area.
+
+1.6.18 Direct Key Areas
 
 This generated list shows the next key areas below the
 actually displayed area.
 
-1.6.12 Key Areas
+1.6.19 Key Areas
 
 This generated list shows the key areas of the sub tree below the actually
 displayed area.
 
-1.6.13 Direct Fork Areas
+1.6.20 Parent Key Areas
+
+This generated list shows the key areas above the actually displayed area.
+
+1.6.21 Direct Fork Areas
 
 This generated list shows the next fork areas below the actually
 displayed area. A fork area is an area that contains more than one sub areas.
 
-1.6.14 Fork Areas
+1.6.22 Fork Areas
 
 This generated list shows the fork areas of the sub tree below the actually
 displayed area.
 
-1.6.14 Related Areas
+1.6.23 Parent Fork Areas
 
-This generated list shows the transitive closue following the explicit
-links of the actually displayed area.
+This generated list shows the fork areas above the actually displayed area.
+
+1.6.24 Area Colormaps
+
+This generated list shows the area color maps of the sub tree below the actually
+displayed area.
+
 
 1.7 Colormaps for Displaying Area Images
 
@@ -365,18 +408,22 @@ available or even visible as menu entries.
 
 2.1 Main Window
 
-The main window displays an area of the choosen fractal type. So far,
+The main window displays an area of the chosen fractal type. So far,
 only the mandelbrot set is supported.
 
 It supports some mouse actions for navigation and image manipulation. First
 of all, the window corners are sensitive for single clicks
 (like invisible buttons):
-  - Upper left:   display area attributes in a separate window
-  - Upper right:  display colormap window for colormap manipulation
-  - Lower left:   go up to parent area
-  - Lower right;  toggle sub area display mode
+  - Upper left:    display area attributes in a separate window
+  - Upper right:   display colormap window for colormap manipulation
+  - Lower left:    go up to parent area
+  - Lower right:   toggle sub area display mode
+  - Middle top:    hover info field for basic area information
+  - Middle left:   menu for link areas
+  - Middle right:  menu for upper key areas
+  - Middle bottom: dive down towards marked area
 
-Clicking into a sub area (whether hightlighted or not) will issue actions
+Clicking into a sub area (whether highlighted or not) will issue actions
 on this sub area.
   - double click
      * without key: select sub area to display in main window (dive into)
@@ -389,12 +436,17 @@ on this sub area.
 If the Julia Image window is active the julia coordinate of the displayed
 image can be adjusted by moving the mouse while keeping the ALT key pressed.
 
+If scrolling is enabled you can move the shown area by moving the mouse with
+left button and control-alt keys pressed. With just moving the mouse with left
+button pressed, creates a new sub area (see next section), if the tool is not
+in readonly-mode.
+
 2.1.1 Sub Area creation (in non-readonly mode)
 
 Dragging can be used to create a new sub area or to modify an existing one.
 Clicking somewhere on the main window and moving the mouse with keeping the
-mouse button pressed draws a new rectangle for a new sub area. Relaesing the
-button show the sub area creation screen.
+left mouse button pressed draws a new rectangle for a new sub area. Releasing
+the button shows the sub area creation screen.
 
 The same screen appears when selecting an already existing sub area calculation
 request for modification. While this window is shown it is possible to modify
@@ -473,12 +525,22 @@ The following menu entries can be found:
       Show the image control window. It provides access to several settings
       controlling the raster mapping and display behaviour. It also allows
       to choose among different variants found for the actual area.
-  - Clean Black.
-      Single black pixels will be set to max iterations. The image control
-      can be used to configure the range for examined surrounding pixels and
-      the max percentage, which may be black to execute the substitution.
+  - Adjust.
+      Modify the actual raster data
+      - Clean Black: Single black pixels will be set to max iterations.
+                     The image control can be used to configure the range for
+                     examined surrounding pixels and the max percentage,
+                     which may be black to execute the substitution.
+      - Merge:       merge selected sub rasters (see Adjust control tab).
   - Image Meta Data.
       Show the area meta data window.
+  - Variants.
+      Switch between available variants.
+  - Galleries.
+      Direct access to important list galleries:
+      - Links:     link gallery
+      - Key Areas: upper key areas
+      - Zoom:      all areas between root area and actual one.
   - Parent.
       Navigate to the parent image
   - Key Area.
@@ -488,6 +550,12 @@ The following menu entries can be found:
 
   - Last Fork.
       Navigate back to the last area with more than one sub areas.
+  - Back.
+      Go back in history.
+  - Forth.
+      Go forth in history.
+  - Ref Coord.
+      Action in reference coordinates
   - Variation.
       Show the variation creation window.
   - Refine.
@@ -514,13 +582,15 @@ The following menu entries can be found:
       Start various slide shows or stop a currently running one.
   - New Window.
       Create a new main window displaying the same image.
-  - Save.
-      In non-readonly mode save the currently displayed image as a mandel
-      image file containing the raster, the colormap and the mapping.
-
   - Area colormaps
       In non-readonly mode this sub menu contains entries to save and delete
       an area colormap for the actual image (using the actual colormap).
+
+  - Save Image.
+      In non-readonly mode save the currently displayed image as a mandel
+      image file containing the raster, the colormap and the mapping.
+  - Save Raster.
+      Save unsaved rasters (without image info)
 
   - Home.
       Return to the root area image.
@@ -700,9 +770,18 @@ The display tab offers several settings for the main window.
   calculation method. It tries to find a black pixel surrounded by
   black pixels.
 
-2.4.8 Image
+2.4.8 Image base
 
-This tab show statistic informations about the actually used image base.
+This tab shows statistic informations about the actually used image base.
+
+2.4.9 Adjust
+
+This tab describes configuration for raster adjustment operations.
+
+- Clean Black: The neighborhood of every pixel (according to the specified
+               pixel range) is converted to the highest iteration value 
+               if the specified percentage of pixels are non-black.
+- Merge rasters: Select rasters (sub ares or ref rasters) to be merged.
 
 2.5 Area Lists Window
 
@@ -713,7 +792,7 @@ shown by the list browser window (see 2.6).
 2.5.1 Unseen
 
 The unseen list shows areas not listed in the seen list in the root folder
-of the image base. Whenever an area is displayed in a main window (no galery)
+of the image base. Whenever an area is displayed in a main window (no gallery)
 the seen list is updated. Freshly calculated rasters not yet displayed will
 popup in this list. This feature is only available for local image bases.
 The applet version does not show this tab.
@@ -783,12 +862,12 @@ recalculated with a modified (hopefully increased) maximum value for the
 iteration depth. Recalculatio means that only those pixels are recalculated
 that so far are considered to belong to the mandelbrot set.
 
-2.10 Galeries
+2.10 Galleries
 
-There are two types of galeries; list galeries and folder galeries.
+There are two types of galleries; list galleries and folder galleries.
 
-2.10.1 List Galery
-A list galery show large thumbnails of the images described by the contained
+2.10.1 List Gallery
+A list gallery show large thumbnails of the images described by the contained
 qualified mandel names. As the regular list views they can be used as drop
 targets for a set of qualified names or a whole folder (which is replaced by
 the contained list).
@@ -796,8 +875,8 @@ the contained list).
 If no displayable image information can be found for an area, it as shown as
 a black and white version of the root image.
 
-2.10.2 Folder Galery
-The folder galery shows a thumbnail view of the folders contained in a folder.
+2.10.2 Folder Gallery
+The folder gallery shows a thumbnail view of the folders contained in a folder.
 Thumbnails names can be assigned to modifiable folders using the context menu.
 Thumbnails are always qualified mandel names. Typically an area should be
 choosen that can act as a prototype for the areas contained in the assciated
@@ -834,10 +913,12 @@ The first mapping is determined according dedicated parameterized rules. So
 far, three different algorithms are supported by the diaply tool.
   - cyclic: successive assignment of iteration values to color indices
             according to the size of the selected colormap
-  - statistic: analysing the histogram of found iteration values of the
+  - statistic: analyzing the histogram of found iteration values of the
             raster data according to the size of the selected colormap.
-  - optimal: using the histogram to generate an optiomal mapping by
+  - optimal: using the histogram to generate an optional mapping by
             determining a minimum color index range.
+  - exponential: (experimental) linear mapping part followed by exponential
+            with factored maximal slope.
 
 The mapping method together with its parameterization is provided by a mapper
 that is able to apply the method to a given raw raster data.
@@ -852,10 +933,10 @@ indices are repeatingly used until the whole iteration range is covered.
 The result is nor really appealing in most cases. For dedicated areas it
 might result in interesting effects.
 
-3.2 Statistc  Mapper
+3.2 Statistic  Mapper
 
 The statistic mapper analyzes the raster data to generate a histogram for
-the used interation values. It then joins adjacent iteration values to one
+the used iteration values. It then joins adjacent iteration values to one
 color index until the requested target mapping size is reached.
 
 It used two parameters:
@@ -864,6 +945,10 @@ It used two parameters:
   adjustment limit
 
 3.3 Optimal Mapper
+
+3.4 Exponential Mapper (experimental)
+
+It map the colormap with a linear part followed by an exponential one.
 
 
 4. Data File Types

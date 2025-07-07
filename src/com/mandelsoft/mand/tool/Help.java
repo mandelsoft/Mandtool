@@ -73,7 +73,7 @@ public class Help extends JDialog {
     JScrollPane scroll=new JScrollPane(text);
     scroll.setVerticalScrollBarPolicy(
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-    scroll.setPreferredSize(new Dimension(580,400));
+    scroll.setPreferredSize(new Dimension(600,400));
 
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
